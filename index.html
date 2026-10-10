@@ -603,16 +603,15 @@
                                         <input type="number" id="prodPrice" required placeholder="480" class="w-full border rounded-xl p-2.5">
                                     </div>
                                     
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label class="block font-bold mb-1">Main Category</label>
-                                            <select id="prodCategory" onchange="onAdminCategorySelectChange()" required class="w-full border rounded-xl p-2.5"></select>
-                                        </div>
-                                        <div>
-                                            <label class="block font-bold mb-1">Sub-category / Variety</label>
-                                            <select id="prodSubCategory" class="w-full border rounded-xl p-2.5">
-                                                <option value="">None / General</option>
-                                            </select>
+                                    <div>
+                                        <label class="block font-bold mb-1">Main Category</label>
+                                        <select id="prodCategory" onchange="onAdminCategorySelectChange()" required class="w-full border rounded-xl p-2.5"></select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold mb-1 text-purple-900">Sub-categories / Varieties (Select multiple)</label>
+                                        <div id="prodSubCategoriesContainer" class="p-3 border rounded-xl bg-purple-50/40 max-h-36 overflow-y-auto custom-scrollbar space-y-1.5">
+                                            <!-- Dynamic checkboxes for multiple sub-categories -->
                                         </div>
                                     </div>
 
@@ -772,7 +771,6 @@
                     if (data.tree) {
                         window.categoryTree = data.tree;
                     } else if (data.list) {
-                        // convert legacy format to tree
                         const tree = {};
                         data.list.forEach(c => tree[c] = []);
                         window.categoryTree = tree;
@@ -810,7 +808,7 @@
         // App Local State
         window.products = [];
         window.categoryTree = {
-            'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag', 'Electric Water Bag'],
+            'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag', 'Electric Water Bag', 'Pocket system'],
             'Dresses': ['Casual Wear', 'Party Dress'],
             'Accessories': [],
             'Beauty & Care': [],
@@ -863,7 +861,11 @@
             const filtered = (products || []).filter(p => {
                 const matchesText = p.title ? p.title.toLowerCase().includes(filterText.toLowerCase()) : true;
                 const matchesCategory = category === 'all' || (p.category || 'Other') === category;
-                const matchesSubCategory = subCategory === 'all' || (p.subCategory || '') === subCategory;
+                
+                // Multi-subcategory check support
+                let pSubCats = Array.isArray(p.subCategory) ? p.subCategory : (p.subCategory ? [p.subCategory] : []);
+                const matchesSubCategory = subCategory === 'all' || pSubCats.includes(subCategory);
+
                 const matchesMin = minPrice === null || !p.showPrice || Number(p.price) >= minPrice;
                 const matchesMax = maxPrice === null || !p.showPrice || Number(p.price) <= maxPrice;
                 return matchesText && matchesCategory && matchesSubCategory && matchesMin && matchesMax;
@@ -884,6 +886,8 @@
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
                 
+                let subCategoryDisplay = Array.isArray(product.subCategory) ? product.subCategory.join(', ') : (product.subCategory || '');
+
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
                         <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
@@ -892,7 +896,7 @@
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
                         <div>
-                            <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${product.subCategory ? ' • ' + product.subCategory : ''}</span>
+                            <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${subCategoryDisplay ? ' • ' + subCategoryDisplay : ''}</span>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
                             ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price || 0).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
@@ -977,19 +981,30 @@
             filterProducts();
         }
 
-        function onAdminCategorySelectChange() {
+        function onAdminCategorySelectChange(selectedSubCats = []) {
             const cat = document.getElementById('prodCategory')?.value;
-            const subSelect = document.getElementById('prodSubCategory');
-            if (!subSelect) return;
+            const container = document.getElementById('prodSubCategoriesContainer');
+            if (!container) return;
 
-            subSelect.innerHTML = '<option value="">None / General</option>';
-
+            container.innerHTML = '';
             const tree = window.categoryTree || {};
-            if (cat && tree[cat]) {
-                tree[cat].forEach(sub => {
-                    subSelect.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`;
-                });
+            const subs = (cat && tree[cat]) ? tree[cat] : [];
+
+            if (subs.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400">No sub-categories in this category.</p>';
+                return;
             }
+
+            subs.forEach(sub => {
+                const isChecked = selectedSubCats.includes(sub);
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 cursor-pointer text-xs text-gray-800 hover:text-purple-700 font-medium py-0.5';
+                label.innerHTML = `
+                    <input type="checkbox" name="adminProdSubCat" value="${escapeHtml(sub)}" ${isChecked ? 'checked' : ''} class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4">
+                    <span>${escapeHtml(sub)}</span>
+                `;
+                container.appendChild(label);
+            });
         }
 
         function escapeHtml(value) {
@@ -1701,7 +1716,10 @@
             const showPrice = document.getElementById('prodShowPrice').checked;
             const directOrderEnabled = document.getElementById('prodDirectOrderEnabled').checked;
             const category = document.getElementById('prodCategory').value || 'Other';
-            const subCategory = document.getElementById('prodSubCategory').value || '';
+            
+            // Multiple sub-categories array collect
+            const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
+            const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
 
             const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
             const existing = editId ? products.find(p => p.id === editId) : null;
@@ -1718,7 +1736,7 @@
                 showPrice,
                 directOrderEnabled,
                 category,
-                subCategory,
+                subCategory: subCategories,
                 stockOut: document.getElementById('prodStockOut').checked
             };
 
@@ -1727,7 +1745,7 @@
             }
 
             resetProductForm();
-            alert('✅ Product saved successfully and synced across all devices!');
+            alert('✅ Product saved with multi-subcategories!');
         }
 
         function renderAdminProductsList() {
@@ -1737,6 +1755,8 @@
 
             products.forEach(p => {
                 const img = (p.images && p.images[0]) ? p.images[0] : 'https://placehold.co/100x100';
+                let subDisplay = Array.isArray(p.subCategory) ? p.subCategory.join(', ') : (p.subCategory || '');
+                
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs';
                 item.innerHTML = `
@@ -1745,7 +1765,7 @@
                         <div>
                             <strong class="block text-gray-800">${p.title}</strong>
                             <span class="text-purple-700 font-bold">৳${p.price}</span>
-                            <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${p.subCategory ? ' > ' + p.subCategory : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
+                            <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${subDisplay ? ' > ' + subDisplay : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
                         </div>
                     </div>
                     <div class="flex gap-2">
@@ -1767,8 +1787,9 @@
             document.getElementById('prodPrice').value = p.price;
             renderCategoryControls();
             document.getElementById('prodCategory').value = p.category || 'Other';
-            onAdminCategorySelectChange();
-            document.getElementById('prodSubCategory').value = p.subCategory || '';
+            
+            const existingSubs = Array.isArray(p.subCategory) ? p.subCategory : (p.subCategory ? [p.subCategory] : []);
+            onAdminCategorySelectChange(existingSubs);
 
             document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
@@ -1785,7 +1806,7 @@
             document.getElementById('productForm').reset();
             selectedProductPhotoData = [];
             renderProductPhotoPreview();
-            onAdminCategorySelectChange();
+            onAdminCategorySelectChange([]);
         }
 
         async function deleteProduct(id) {
