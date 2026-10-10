@@ -767,8 +767,16 @@
             });
 
             onSnapshot(doc(db, "settings", "categories"), (snapshot) => {
-                if (snapshot.exists() && snapshot.data().tree) {
-                    window.categoryTree = snapshot.data().tree;
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    if (data.tree) {
+                        window.categoryTree = data.tree;
+                    } else if (data.list) {
+                        // convert legacy format to tree
+                        const tree = {};
+                        data.list.forEach(c => tree[c] = []);
+                        window.categoryTree = tree;
+                    }
                     window.renderCategoryControls();
                 }
             });
@@ -852,37 +860,46 @@
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
 
-            const filtered = products.filter(p => {
-                const matchesText = p.title.toLowerCase().includes(filterText.toLowerCase());
+            const filtered = (products || []).filter(p => {
+                const matchesText = p.title ? p.title.toLowerCase().includes(filterText.toLowerCase()) : true;
                 const matchesCategory = category === 'all' || (p.category || 'Other') === category;
                 const matchesSubCategory = subCategory === 'all' || (p.subCategory || '') === subCategory;
                 const matchesMin = minPrice === null || !p.showPrice || Number(p.price) >= minPrice;
                 const matchesMax = maxPrice === null || !p.showPrice || Number(p.price) <= maxPrice;
                 return matchesText && matchesCategory && matchesSubCategory && matchesMin && matchesMax;
             });
-            document.getElementById('productCount').innerText = `Showing ${filtered.length} items`;
+
+            const countEl = document.getElementById('productCount');
+            if (countEl) {
+                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : `Showing ${filtered.length} items`;
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400 font-semibold">No products found.</div>`;
+                return;
+            }
 
             filtered.forEach(product => {
-                const mainImg = product.images[0] || 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
+                const mainImg = (product.images && product.images[0]) ? product.images[0] : 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
                 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" alt="${product.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
                         <div>
                             <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${product.subCategory ? ' • ' + product.subCategory : ''}</span>
-                            <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title}</h3>
-                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
+                            <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
+                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price || 0).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
                         
                         <div class="space-y-2">
                             ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="openDirectCheckout('${product.id}')" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : 'Direct Order'}</button>`}
-                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + product.title)}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
+                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + (product.title || ''))}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
                         </div>
                     </div>
                 `;
@@ -896,7 +913,8 @@
             const productSelect = document.getElementById('prodCategory');
             const adminList = document.getElementById('adminCategoryList');
 
-            const categories = Object.keys(categoryTree);
+            const tree = window.categoryTree || {};
+            const categories = Object.keys(tree);
 
             if (filter) {
                 const oldValue = filter.value || 'all';
@@ -922,7 +940,7 @@
                     const wrap = document.createElement('div');
                     wrap.className = 'p-3 rounded-xl bg-purple-50/50 border border-purple-100';
                     
-                    let subsHtml = (categoryTree[cat] || []).map(sub => `
+                    let subsHtml = (tree[cat] || []).map(sub => `
                         <span class="inline-flex items-center gap-1 bg-white border text-gray-700 px-2 py-0.5 rounded-md text-xs">
                             ${escapeHtml(sub)}
                             <button type="button" onclick="removeSubCategory('${escapeHtml(cat)}', '${escapeHtml(sub)}')" class="text-red-500 font-bold ml-1">×</button>
@@ -944,12 +962,15 @@
         }
 
         function onCustomerCategoryChange() {
-            const cat = document.getElementById('categoryFilter').value;
+            const cat = document.getElementById('categoryFilter')?.value;
             const subFilter = document.getElementById('subCategoryFilter');
+            if (!subFilter) return;
+
             subFilter.innerHTML = '<option value="all">All sub-categories</option>';
 
-            if (cat !== 'all' && categoryTree[cat]) {
-                categoryTree[cat].forEach(sub => {
+            const tree = window.categoryTree || {};
+            if (cat && cat !== 'all' && tree[cat]) {
+                tree[cat].forEach(sub => {
                     subFilter.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`;
                 });
             }
@@ -957,19 +978,22 @@
         }
 
         function onAdminCategorySelectChange() {
-            const cat = document.getElementById('prodCategory').value;
+            const cat = document.getElementById('prodCategory')?.value;
             const subSelect = document.getElementById('prodSubCategory');
+            if (!subSelect) return;
+
             subSelect.innerHTML = '<option value="">None / General</option>';
 
-            if (cat && categoryTree[cat]) {
-                categoryTree[cat].forEach(sub => {
+            const tree = window.categoryTree || {};
+            if (cat && tree[cat]) {
+                tree[cat].forEach(sub => {
                     subSelect.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`;
                 });
             }
         }
 
         function escapeHtml(value) {
-            return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+            return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
         }
 
         async function addProductCategory() {
@@ -1192,21 +1216,23 @@
                 ? '<i class="fas fa-lock"></i> Stock Out'
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
-            mainImg.src = selectedDetailProd.images[0] || 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
+            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
             thumbsContainer.innerHTML = '';
-            selectedDetailProd.images.forEach((img, idx) => {
-                const thumb = document.createElement('img');
-                thumb.src = img;
-                thumb.className = `w-14 h-14 rounded-lg object-cover cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
-                thumb.onclick = () => {
-                    mainImg.src = img;
-                    Array.from(thumbsContainer.children).forEach(c => c.classList.replace('border-purple-600', 'border-transparent'));
-                    thumb.classList.replace('border-transparent', 'border-purple-600');
-                };
-                thumbsContainer.appendChild(thumb);
-            });
+            if (selectedDetailProd.images) {
+                selectedDetailProd.images.forEach((img, idx) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = img;
+                    thumb.className = `w-14 h-14 rounded-lg object-cover cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
+                    thumb.onclick = () => {
+                        mainImg.src = img;
+                        Array.from(thumbsContainer.children).forEach(c => c.classList.replace('border-purple-600', 'border-transparent'));
+                        thumb.classList.replace('border-transparent', 'border-purple-600');
+                    };
+                    thumbsContainer.appendChild(thumb);
+                });
+            }
 
             const waBtn = document.getElementById('detailWhatsappBtn');
             waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + selectedDetailProd.title)}`;
@@ -1254,7 +1280,7 @@
             updateShippingLabels();
 
             const summaryBox = document.getElementById('checkoutSummaryItem');
-            const img = prod.images[0] || 'https://placehold.co/100x100/8b5cf6/ffffff?text=Delofia';
+            const img = (prod.images && prod.images[0]) ? prod.images[0] : 'https://placehold.co/100x100/8b5cf6/ffffff?text=Delofia';
             
             summaryBox.innerHTML = `
                 <div class="flex items-center gap-3">
@@ -1451,4 +1477,324 @@
             const error = document.getElementById('passwordChangeError');
             error.classList.add('hidden');
             if (current !== (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
-                error.textContent = 'Current password is incorrect
+                error.textContent = 'Current password is incorrect.';
+                error.classList.remove('hidden');
+                return;
+            }
+            if (next.length < 8) {
+                error.textContent = 'New password must be at least 8 characters.';
+                error.classList.remove('hidden');
+                return;
+            }
+            if (next !== confirmNext) {
+                error.textContent = 'New password and confirmation do not match.';
+                error.classList.remove('hidden');
+                return;
+            }
+            localStorage.setItem('delofia_admin_password', next);
+            document.getElementById('currentAdminPassword').value = '';
+            document.getElementById('newAdminPassword').value = '';
+            document.getElementById('confirmAdminPassword').value = '';
+            alert('Admin password updated successfully! Use your new password next time you log in.');
+            logoutAdmin();
+        }
+
+        function switchAdminTab(tab) {
+            ['Orders', 'Shipping', 'Products', 'Store', 'Password'].forEach(t => {
+                const panel = document.getElementById(`adminTab${t}`);
+                const button = document.getElementById(`tabBtn${t}`);
+                if (panel) panel.classList.add('hidden');
+                if (button) button.className = 'py-3 text-gray-500 hover:text-purple-800';
+            });
+
+            const currentTabName = tab.charAt(0).toUpperCase() + tab.slice(1);
+            const currentPanel = document.getElementById(`adminTab${currentTabName}`);
+            const currentButton = document.getElementById(`tabBtn${currentTabName}`);
+            if (currentPanel) currentPanel.classList.remove('hidden');
+            if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
+            if (tab === 'store') {
+                renderCategoryControls();
+                document.getElementById('settingWhatsappEnabled').checked = !!storeSettings.whatsappEnabled;
+                document.getElementById('settingWhatsappNumber').value = storeSettings.whatsappNumber || '01410947236';
+                document.getElementById('settingFacebookUrl').value = storeSettings.facebookUrl || '';
+                document.getElementById('settingInstagramUrl').value = storeSettings.instagramUrl || '';
+                document.getElementById('settingTiktokUrl').value = storeSettings.tiktokUrl || '';
+                document.getElementById('settingYoutubeUrl').value = storeSettings.youtubeUrl || '';
+                document.getElementById('settingOtherSocialUrl').value = storeSettings.otherSocialUrl || '';
+                pendingStoreLogo = null; applyStoreLogo();
+            }
+        }
+
+        function loadAdminData() {
+            renderCategoryControls();
+            document.getElementById('settingInsideDhaka').value = shippingSettings.inside;
+            document.getElementById('settingSubDhaka').value = shippingSettings.sub;
+            document.getElementById('settingOutsideDhaka').value = shippingSettings.outside;
+            document.getElementById('settingWhatsappEnabled').checked = !!storeSettings.whatsappEnabled;
+            document.getElementById('settingWhatsappNumber').value = storeSettings.whatsappNumber || '01410947236';
+            document.getElementById('settingFacebookUrl').value = storeSettings.facebookUrl || '';
+            document.getElementById('settingInstagramUrl').value = storeSettings.instagramUrl || '';
+            document.getElementById('settingTiktokUrl').value = storeSettings.tiktokUrl || '';
+            document.getElementById('settingYoutubeUrl').value = storeSettings.youtubeUrl || '';
+            document.getElementById('settingOtherSocialUrl').value = storeSettings.otherSocialUrl || '';
+            pendingStoreLogo = null; applyStoreLogo();
+
+            renderOrdersTable();
+            renderAdminProductsList();
+        }
+
+        function renderOrdersTable() {
+            document.getElementById('ordersCount').innerText = orders.length;
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No direct orders placed yet.</td></tr>`;
+                return;
+            }
+
+            orders.forEach((o) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-purple-50/50 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold">
+                        <span class="text-purple-800 font-bold block">${o.orderId}</span>
+                        <span class="text-[10px] text-gray-400">${o.date}</span>
+                    </td>
+                    <td class="p-3">
+                        <strong class="block text-gray-900">${o.customerName}</strong>
+                        <span class="text-emerald-700 font-semibold block"><i class="fab fa-whatsapp"></i> ${o.phone}</span>
+                        <span class="text-[11px] text-gray-500 block">${o.address}</span>
+                    </td>
+                    <td class="p-3">
+                        <span class="font-bold text-gray-800">${o.productTitle}</span>
+                        <span class="text-xs text-purple-700 block font-semibold">Qty: ${o.quantity}</span>
+                    </td>
+                    <td class="p-3">
+                        <span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${o.shippingArea}</span>
+                        <div class="text-gray-600">৳${Number(o.shippingFee).toFixed(2)}</div>
+                    </td>
+                    <td class="p-3 font-black text-purple-900 text-sm">৳${Number(o.grandTotal || 0).toFixed(2)}</td>
+                    <td class="p-3 min-w-[145px]">
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status">
+                            <option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
+                    <td class="p-3">
+                        <button onclick="deleteOrder('${o.id}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order">
+                            <i class="fas fa-trash"></i> <span class="ml-1">Delete</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function orderStatusClass(status) {
+            return ({ Pending: 'text-amber-700 border-amber-200', Confirmed: 'text-blue-700 border-blue-200', Delivered: 'text-emerald-700 border-emerald-200', Cancelled: 'text-red-700 border-red-200' })[status || 'Pending'] || 'text-gray-700';
+        }
+
+        async function updateOrderStatus(id, status) {
+            if (window.db && id) {
+                await window.fsSetDoc(window.fsDoc(window.db, "orders", id), { status: status }, { merge: true });
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (confirm('Delete this order permanently? This cannot be undone.')) {
+                if (window.db && id) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "orders", id));
+                }
+            }
+        }
+
+        async function clearAllOrders() {
+            if (confirm('Delete ALL order histories?')) {
+                if (window.db && orders.length > 0) {
+                    for (const o of orders) {
+                        await window.fsDeleteDoc(window.fsDoc(window.db, "orders", o.id));
+                    }
+                }
+            }
+        }
+
+        async function saveShippingSettings(e) {
+            e.preventDefault();
+            shippingSettings.inside = Number(document.getElementById('settingInsideDhaka').value) || 90;
+            shippingSettings.sub = Number(document.getElementById('settingSubDhaka').value) || 100;
+            shippingSettings.outside = Number(document.getElementById('settingOutsideDhaka').value) || 110;
+
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "shipping"), shippingSettings);
+            }
+            updateShippingLabels();
+            alert('✅ Delivery Charges updated successfully!');
+        }
+
+        let selectedProductPhotoData = [];
+
+        function resizeProductPhoto(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Could not read image file.'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('This image could not be opened.'));
+                    img.onload = () => {
+                        const maxSide = 1100;
+                        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round(img.width * scale));
+                        canvas.height = Math.max(1, Math.round(img.height * scale));
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL('image/jpeg', 0.78));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleProductPhotoSelection(event) {
+            const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
+            if (!files.length) return;
+            if (selectedProductPhotoData.length + files.length > 5) {
+                alert('Please choose up to 5 photos in total.'); event.target.value = ''; return;
+            }
+            const help = document.getElementById('productPhotoHelp');
+            help.textContent = 'Preparing your photos…';
+            try {
+                for (const file of files) selectedProductPhotoData.push(await resizeProductPhoto(file));
+                renderProductPhotoPreview();
+                help.textContent = selectedProductPhotoData.length + ' photo(s) selected.';
+            } catch (err) {
+                alert('Could not load a photo. Please try a JPG or PNG image.');
+            }
+            event.target.value = '';
+        }
+
+        function renderProductPhotoPreview() {
+            const box = document.getElementById('productPhotoPreview');
+            if (!box) return;
+            box.innerHTML = '';
+            selectedProductPhotoData.forEach((src, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white';
+                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-cover'; img.alt = 'Selected product photo';
+                const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'absolute top-1 right-1 w-7 h-7 rounded-full bg-red-600 text-white shadow flex items-center justify-center'; remove.innerHTML = '<i class="fas fa-times"></i>'; remove.setAttribute('aria-label', 'Remove photo');
+                remove.onclick = () => { selectedProductPhotoData.splice(i, 1); renderProductPhotoPreview(); };
+                wrap.append(img, remove); box.appendChild(wrap);
+            });
+        }
+
+        async function handleProductSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('editProductId').value;
+            const title = document.getElementById('prodTitle').value.trim();
+            const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+            const imagesStr = document.getElementById('prodImages').value.trim();
+            const desc = document.getElementById('prodDesc').value.trim();
+            const showPrice = document.getElementById('prodShowPrice').checked;
+            const directOrderEnabled = document.getElementById('prodDirectOrderEnabled').checked;
+            const category = document.getElementById('prodCategory').value || 'Other';
+            const subCategory = document.getElementById('prodSubCategory').value || '';
+
+            const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const existing = editId ? products.find(p => p.id === editId) : null;
+            const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
+            const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
+
+            const prodId = editId || ('p-' + Date.now());
+            const productDoc = {
+                id: prodId,
+                title,
+                price,
+                images: finalImages,
+                description: desc,
+                showPrice,
+                directOrderEnabled,
+                category,
+                subCategory,
+                stockOut: document.getElementById('prodStockOut').checked
+            };
+
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "products", prodId), productDoc);
+            }
+
+            resetProductForm();
+            alert('✅ Product saved successfully and synced across all devices!');
+        }
+
+        function renderAdminProductsList() {
+            const list = document.getElementById('adminProductsList');
+            if(!list) return;
+            list.innerHTML = '';
+
+            products.forEach(p => {
+                const img = (p.images && p.images[0]) ? p.images[0] : 'https://placehold.co/100x100';
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
+                        <div>
+                            <strong class="block text-gray-800">${p.title}</strong>
+                            <span class="text-purple-700 font-bold">৳${p.price}</span>
+                            <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${p.subCategory ? ' > ' + p.subCategory : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="editProduct('${p.id}')" class="bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-lg">Edit</button>
+                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-lg">Delete</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function editProduct(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('productFormTitle').innerText = 'Edit Product';
+            document.getElementById('editProductId').value = p.id;
+            document.getElementById('prodTitle').value = p.title;
+            document.getElementById('prodPrice').value = p.price;
+            renderCategoryControls();
+            document.getElementById('prodCategory').value = p.category || 'Other';
+            onAdminCategorySelectChange();
+            document.getElementById('prodSubCategory').value = p.subCategory || '';
+
+            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
+            selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
+            renderProductPhotoPreview();
+            document.getElementById('prodDesc').value = p.description || '';
+            document.getElementById('prodShowPrice').checked = p.showPrice;
+            document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
+            document.getElementById('prodStockOut').checked = !!p.stockOut;
+        }
+
+        function resetProductForm() {
+            document.getElementById('productFormTitle').innerText = 'Add New Product';
+            document.getElementById('editProductId').value = '';
+            document.getElementById('productForm').reset();
+            selectedProductPhotoData = [];
+            renderProductPhotoPreview();
+            onAdminCategorySelectChange();
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Delete this product from store?')) {
+                if (window.db && id) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "products", id));
+                }
+            }
+        }
+    </script>
+</body>
+</html>
