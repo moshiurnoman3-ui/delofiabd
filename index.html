@@ -777,6 +777,27 @@
     </script>
 
     <script>
+        // Hardware Back Button / History Support
+        window.addEventListener('popstate', function(event) {
+            closeAllModalsSilently();
+        });
+
+        function pushModalState(modalName) {
+            history.pushState({ modal: modalName }, '', window.location.href);
+        }
+
+        function closeAllModalsSilently() {
+            const pModal = document.getElementById('productDetailModal');
+            const cModal = document.getElementById('checkoutModal');
+            const aModal = document.getElementById('adminModal');
+            const sModal = document.getElementById('orderSuccessModal');
+
+            if (pModal) { pModal.classList.add('hidden'); pModal.classList.remove('flex'); }
+            if (cModal) { cModal.classList.add('hidden'); }
+            if (aModal) { aModal.classList.add('hidden'); aModal.classList.remove('flex'); }
+            if (sModal) { sModal.classList.add('hidden'); sModal.classList.remove('flex'); }
+        }
+
         // Initial Sample Products
         window.initialProducts = [
             {
@@ -1161,12 +1182,17 @@
             const modal = document.getElementById('productDetailModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+
+            pushModalState('productDetail');
         }
 
         function closeProductDetail() {
             const modal = document.getElementById('productDetailModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            if (history.state && history.state.modal === 'productDetail') {
+                history.back();
+            }
         }
 
         function updateDetailQty(delta) {
@@ -1213,10 +1239,15 @@
 
             const modal = document.getElementById('checkoutModal');
             modal.classList.remove('hidden');
+
+            pushModalState('checkout');
         }
 
         function closeCheckoutModal() {
             document.getElementById('checkoutModal').classList.add('hidden');
+            if (history.state && history.state.modal === 'checkout') {
+                history.back();
+            }
         }
 
         function updateShippingLabels() {
