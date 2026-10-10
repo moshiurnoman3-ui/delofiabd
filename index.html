@@ -73,7 +73,6 @@
                 <a href="https://wa.me/8801410947236" target="_blank" class="hidden sm:flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-full text-xs font-semibold shadow-sm transition">
                     <i class="fab fa-whatsapp text-base"></i> WhatsApp
                 </a>
-                <!-- Admin access is hidden from customers. Press Ctrl+Shift+A to open the admin login in a separate tab. -->
             </div>
         </div>
     </header>
@@ -123,7 +122,7 @@
                 <h2 class="text-2xl font-bold text-gray-900">Featured Products</h2>
                 <p class="text-xs text-gray-500">Pick your favorite items and order directly</p>
             </div>
-            <div id="productCount" class="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full">Showing all items</div>
+            <div id="productCount" class="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full">Loading products...</div>
         </div>
 
         <!-- Products Grid Container -->
@@ -188,7 +187,7 @@
         </div>
     </div>
 
-    <!-- DIRECT CHECKOUT MODAL (Matches user's screenshot design) -->
+    <!-- DIRECT CHECKOUT MODAL -->
     <div id="checkoutModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md hidden overflow-y-auto">
         <div class="min-h-screen w-full flex items-center justify-center p-2 sm:p-4">
             <div class="bg-[#FAF7F8] w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden relative my-auto border border-purple-200">
@@ -243,7 +242,7 @@
                                 </div>
                             </div>
 
-                            <!-- Shipping Method Section (Radio buttons match user screenshot) -->
+                            <!-- Shipping Method Section -->
                             <div class="mb-8">
                                 <h3 class="text-lg font-bold text-gray-900 mb-3">Shipping method</h3>
                                 <div class="bg-white rounded-2xl border border-gray-300 overflow-hidden shadow-sm divide-y divide-gray-200">
@@ -257,7 +256,7 @@
                                         <span class="text-sm font-bold text-gray-900">৳<span id="labelChargeInside">90.00</span></span>
                                     </label>
 
-                                    <!-- Sub Area Dhaka (customized charge or no extra charge badge) -->
+                                    <!-- Sub Area Dhaka -->
                                     <label class="flex items-center justify-between p-4 cursor-pointer hover:bg-purple-50/50 transition">
                                         <div class="flex items-center gap-3">
                                             <input type="radio" name="shippingMethod" value="sub_dhaka" onchange="recalculateTotals()" class="text-purple-600 focus:ring-purple-500 h-4 w-4">
@@ -404,7 +403,7 @@
                 <div class="bg-purple-900 text-white px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="font-black text-lg">DELOFIA ADMIN</span>
-                        <span class="bg-purple-700 text-purple-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">v2.5 Full Control</span>
+                        <span class="bg-purple-700 text-purple-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">v2.5 Firestore Connected</span>
                     </div>
                     <button onclick="logoutAdmin()" class="text-xs bg-purple-800 hover:bg-purple-700 text-purple-200 px-3 py-1.5 rounded-xl transition">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -460,7 +459,7 @@
                         </div>
                     </div>
 
-                    <!-- TAB 2: DELIVERY CHARGES SETTINGS (Dynamic Shipping Charges) -->
+                    <!-- TAB 2: DELIVERY CHARGES SETTINGS -->
                     <div id="adminTabShipping" class="hidden max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-purple-100">
                         <div class="mb-6">
                             <h4 class="text-lg font-bold text-purple-900 mb-1">Customize Delivery Charges</h4>
@@ -504,7 +503,6 @@
                                         <button type="button" onclick="removeStoreLogo()" class="mt-2 text-xs font-bold text-red-600 underline">Remove image / use D again</button>
                                     </div>
                                 </div>
-                                <p class="text-[11px] text-gray-500">Logo setting is saved in this browser/device only in this HTML version.</p>
                             </div>
                             <label class="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
                                 <input type="checkbox" id="settingWhatsappEnabled" checked class="h-5 w-5 rounded text-emerald-600">
@@ -668,9 +666,119 @@
         </div>
     </footer>
 
+    <!-- FIREBASE SDK INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyBzKio6DyX5kyaxYZvNGGcfXmVsQD4H2o4",
+          authDomain: "delofia.firebaseapp.com",
+          projectId: "delofia",
+          storageBucket: "delofia.firebasestorage.app",
+          messagingSenderId: "734114286266",
+          appId: "1:734114286266:web:21fd353e848f12cbc0d083",
+          measurementId: "G-QFZ1D6VW7X"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Global Firebase references
+        window.db = db;
+        window.fsDoc = doc;
+        window.fsSetDoc = setDoc;
+        window.fsDeleteDoc = deleteDoc;
+        window.fsCollection = collection;
+
+        // Auto Migration from LocalStorage to Firestore
+        async function migrateLocalToFirestore() {
+            try {
+                const pSnap = await getDocs(collection(db, "products"));
+                if (pSnap.empty) {
+                    const localProducts = JSON.parse(localStorage.getItem('delofia_products')) || window.initialProducts;
+                    const batch = writeBatch(db);
+                    localProducts.forEach(p => {
+                        const ref = doc(db, "products", String(p.id));
+                        batch.set(ref, p);
+                    });
+                    await batch.commit();
+                    console.log("Products migrated to Firestore");
+                }
+
+                const sSnap = await getDocs(collection(db, "settings"));
+                if (sSnap.empty) {
+                    const localShipping = JSON.parse(localStorage.getItem('delofia_shipping')) || { inside: 90, sub: 100, outside: 110 };
+                    const localStore = JSON.parse(localStorage.getItem('delofia_store_settings')) || { whatsappEnabled: true, whatsappNumber: '01410947236' };
+                    const localCats = JSON.parse(localStorage.getItem('delofia_categories')) || ['Hot Water Bags', 'Dresses', 'Accessories', 'Beauty & Care', 'Other'];
+                    await setDoc(doc(db, "settings", "shipping"), localShipping);
+                    await setDoc(doc(db, "settings", "store"), localStore);
+                    await setDoc(doc(db, "settings", "categories"), { list: localCats });
+                }
+            } catch (err) {
+                console.error("Migration error:", err);
+            }
+        }
+
+        // Realtime Listeners
+        function setupRealtimeSync() {
+            // Sync Products
+            onSnapshot(collection(db, "products"), (snapshot) => {
+                const list = [];
+                snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
+                if (list.length > 0) {
+                    window.products = list;
+                    window.renderProducts(document.getElementById('searchInput')?.value || '');
+                    if (!document.getElementById('adminModal').classList.contains('hidden')) {
+                        window.renderAdminProductsList();
+                    }
+                }
+            });
+
+            // Sync Orders
+            onSnapshot(collection(db, "orders"), (snapshot) => {
+                const list = [];
+                snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
+                list.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
+                window.orders = list;
+                if (!document.getElementById('adminModal').classList.contains('hidden')) {
+                    window.renderOrdersTable();
+                }
+            });
+
+            // Sync Settings
+            onSnapshot(doc(db, "settings", "shipping"), (snapshot) => {
+                if (snapshot.exists()) {
+                    window.shippingSettings = snapshot.data();
+                    window.updateShippingLabels();
+                }
+            });
+
+            onSnapshot(doc(db, "settings", "store"), (snapshot) => {
+                if (snapshot.exists()) {
+                    window.storeSettings = { ...window.storeSettings, ...snapshot.data() };
+                    window.updateWhatsappUI();
+                    window.renderSocialLinks();
+                    window.applyStoreLogo();
+                }
+            });
+
+            onSnapshot(doc(db, "settings", "categories"), (snapshot) => {
+                if (snapshot.exists() && snapshot.data().list) {
+                    window.productCategories = snapshot.data().list;
+                    window.renderCategoryControls();
+                }
+            });
+        }
+
+        migrateLocalToFirestore().then(() => {
+            setupRealtimeSync();
+        });
+    </script>
+
     <script>
         // Initial Sample Products
-        const initialProducts = [
+        window.initialProducts = [
             {
                 id: 'p1',
                 title: 'Honey Baze Stone Brown Dress',
@@ -716,21 +824,19 @@
         ];
 
         // App Local State
-        let products = JSON.parse(localStorage.getItem('delofia_products')) || initialProducts;
-        let productCategories = JSON.parse(localStorage.getItem('delofia_categories')) || ['Hot Water Bags', 'Dresses', 'Accessories', 'Beauty & Care', 'Other'];
-        products = products.map(p => ({ ...p, category: p.category || (/water\s*bag|hot bag/i.test(p.title) ? 'Hot Water Bags' : /dress|wear|outfit|fashion|silk|velvet/i.test(p.title) ? 'Dresses' : 'Other') }));
-        let orders = JSON.parse(localStorage.getItem('delofia_orders')) || [];
-        let storeSettings = JSON.parse(localStorage.getItem('delofia_store_settings')) || { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '' };
-        storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', ...storeSettings };
+        window.products = JSON.parse(localStorage.getItem('delofia_products')) || window.initialProducts;
+        window.productCategories = JSON.parse(localStorage.getItem('delofia_categories')) || ['Hot Water Bags', 'Dresses', 'Accessories', 'Beauty & Care', 'Other'];
+        window.products = window.products.map(p => ({ ...p, category: p.category || (/water\s*bag|hot bag/i.test(p.title) ? 'Hot Water Bags' : /dress|wear|outfit|fashion|silk|velvet/i.test(p.title) ? 'Dresses' : 'Other') }));
+        window.orders = JSON.parse(localStorage.getItem('delofia_orders')) || [];
+        window.storeSettings = JSON.parse(localStorage.getItem('delofia_store_settings')) || { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '' };
+        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', ...window.storeSettings };
         
-        // Shipping charges state (Default: Inside Dhaka=90, Sub=100, Outside=110)
-        let shippingSettings = JSON.parse(localStorage.getItem('delofia_shipping')) || {
+        window.shippingSettings = JSON.parse(localStorage.getItem('delofia_shipping')) || {
             inside: 90,
             sub: 100,
             outside: 110
         };
 
-        // Current active checkout item
         let currentCheckoutProduct = null;
         let currentCheckoutQty = 1;
         let appliedDiscount = 0;
@@ -747,7 +853,6 @@
                 document.title = 'Delofia Admin Login';
                 document.body.classList.add('admin-only-mode');
             }
-            renderSocialLinks();
         });
 
         function getPriceContactLinksHTML(productTitle = '') {
@@ -762,6 +867,7 @@
 
         function renderProducts(filterText = '') {
             const grid = document.getElementById('productsGrid');
+            if(!grid) return;
             grid.innerHTML = '';
 
             const category = document.getElementById('categoryFilter')?.value || 'all';
@@ -792,7 +898,7 @@
                     <div class="p-4 flex-1 flex flex-col justify-between">
                         <div>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title}</h3>
-                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${product.price.toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
+                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
                         
                         <div class="space-y-2">
@@ -804,7 +910,6 @@
                 grid.appendChild(card);
             });
         }
-
 
         function renderCategoryControls() {
             const filter = document.getElementById('categoryFilter');
@@ -836,25 +941,30 @@
             return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
         }
 
-        function addProductCategory() {
+        async function addProductCategory() {
             const input = document.getElementById('newCategoryName');
             const name = input.value.trim();
             if (!name) return alert('Enter a category name first.');
             if (productCategories.some(c => c.toLowerCase() === name.toLowerCase())) return alert('This category already exists.');
             productCategories.push(name);
-            localStorage.setItem('delofia_categories', JSON.stringify(productCategories));
             input.value = '';
+            
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { list: productCategories });
+            }
             renderCategoryControls();
             renderProducts(document.getElementById('searchInput')?.value || '');
         }
 
-        function removeProductCategory(name) {
+        async function removeProductCategory(name) {
             if (productCategories.length <= 1) return alert('At least one category must remain.');
             if (!confirm(`Remove category "${name}"? Products in it will move to the first remaining category.`)) return;
             productCategories = productCategories.filter(c => c !== name);
             products = products.map(p => p.category === name ? {...p, category: productCategories[0]} : p);
-            localStorage.setItem('delofia_categories', JSON.stringify(productCategories));
-            localStorage.setItem('delofia_products', JSON.stringify(products));
+            
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { list: productCategories });
+            }
             renderCategoryControls(); renderAdminProductsList(); renderProducts();
         }
 
@@ -867,7 +977,7 @@
         }
 
         function getWhatsappDigits() {
-            return String(storeSettings.whatsappNumber || '01410947236').replace(/\\D/g, '').replace(/^0/, '880');
+            return String(storeSettings.whatsappNumber || '01410947236').replace(/\D/g, '').replace(/^0/, '880');
         }
 
         function previewStoreLogo(event) {
@@ -878,7 +988,6 @@
             reader.onload = function() {
                 const img = new Image();
                 img.onload = function() {
-                    // Compress the image to keep localStorage usage modest.
                     const canvas = document.createElement('canvas');
                     const max = 320;
                     const scale = Math.min(1, max / Math.max(img.width, img.height));
@@ -912,7 +1021,7 @@
             if (preview && pendingStoreLogo === null) preview.innerHTML = src ? `<img src="${src}" alt="Current logo" class="w-full h-full object-cover">` : 'D';
         }
 
-        function saveStoreSettings(e) {
+        async function saveStoreSettings(e) {
             e.preventDefault();
             if (pendingStoreLogo !== null) storeSettings.logoImage = pendingStoreLogo;
             storeSettings.whatsappEnabled = document.getElementById('settingWhatsappEnabled').checked;
@@ -922,7 +1031,10 @@
             storeSettings.tiktokUrl = document.getElementById('settingTiktokUrl').value.trim();
             storeSettings.youtubeUrl = document.getElementById('settingYoutubeUrl').value.trim();
             storeSettings.otherSocialUrl = document.getElementById('settingOtherSocialUrl').value.trim();
-            try { localStorage.setItem('delofia_store_settings', JSON.stringify(storeSettings)); } catch (err) { alert('Could not save settings. The image may be too large; try a smaller image.'); return; }
+            
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "store"), storeSettings);
+            }
             pendingStoreLogo = null;
             applyStoreLogo();
             updateWhatsappUI();
@@ -930,7 +1042,6 @@
             renderProducts(document.getElementById('searchInput')?.value || '');
             alert('Store settings saved successfully!');
         }
-
 
         function renderSocialLinks() {
             const container = document.getElementById('socialMediaLinks');
@@ -999,15 +1110,13 @@
             document.getElementById('detailQty').innerText = detailQtyVal;
             document.getElementById('detailTitle').innerText = selectedDetailProd.title;
             const detailPriceEl = document.getElementById('detailPrice');
-            const detailPriceRow = detailPriceEl.parentElement;
-            detailPriceEl.innerText = selectedDetailProd.showPrice ? `৳${selectedDetailProd.price.toFixed(2)}` : '';
+            detailPriceEl.innerText = selectedDetailProd.showPrice ? `৳${Number(selectedDetailProd.price).toFixed(2)}` : '';
             detailPriceEl.classList.toggle('hidden', !selectedDetailProd.showPrice);
             const priceContact = document.getElementById('detailPriceContact');
             priceContact.classList.toggle('hidden', !!selectedDetailProd.showPrice);
             document.getElementById('detailPriceSocialLinks').innerHTML = getPriceContactLinksHTML(selectedDetailProd.title);
             document.getElementById('detailDescription').innerText = selectedDetailProd.description || 'No additional details provided.';
 
-            // Keep the detail modal stock badge, image overlay, and order buttons in sync.
             const isStockOut = !!selectedDetailProd.stockOut;
             const stockOverlay = document.getElementById('detailStockOverlay');
             stockOverlay.classList.toggle('hidden', !isStockOut);
@@ -1029,7 +1138,6 @@
             const mainImg = document.getElementById('detailMainImage');
             mainImg.src = selectedDetailProd.images[0] || 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
 
-            // Thumbnails
             const thumbsContainer = document.getElementById('detailThumbnails');
             thumbsContainer.innerHTML = '';
             selectedDetailProd.images.forEach((img, idx) => {
@@ -1044,7 +1152,6 @@
                 thumbsContainer.appendChild(thumb);
             });
 
-            // WhatsApp ordering must also be unavailable for stock-out products.
             const waBtn = document.getElementById('detailWhatsappBtn');
             waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + selectedDetailProd.title)}`;
             waBtn.classList.toggle('hidden', isStockOut);
@@ -1085,7 +1192,6 @@
 
             updateShippingLabels();
 
-            // Summary Item Render
             const summaryBox = document.getElementById('checkoutSummaryItem');
             const img = prod.images[0] || 'https://placehold.co/100x100/8b5cf6/ffffff?text=Delofia';
             
@@ -1125,7 +1231,6 @@
             const subtotal = currentCheckoutProduct.price * currentCheckoutQty;
             document.getElementById('checkoutSubtotal').innerText = subtotal.toFixed(2);
 
-            // Get selected shipping method
             const selectedRadio = document.querySelector('input[name="shippingMethod"]:checked').value;
             let shippingFee = shippingSettings.inside;
 
@@ -1154,7 +1259,7 @@
             }
         }
 
-        function handlePlaceOrder(e) {
+        async function handlePlaceOrder(e) {
             e.preventDefault();
             if (!currentCheckoutProduct) return;
 
@@ -1196,10 +1301,10 @@
                 status: 'Pending'
             };
 
-            orders.unshift(orderObj);
-            localStorage.setItem('delofia_orders', JSON.stringify(orders));
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "orders", orderId), orderObj);
+            }
 
-            // Close checkout modal & show confirmation
             closeCheckoutModal();
             document.getElementById('successOrderId').innerText = orderId;
             document.getElementById('successName').innerText = orderObj.customerName;
@@ -1210,7 +1315,6 @@
             successModal.classList.remove('hidden');
             successModal.classList.add('flex');
 
-            // Reset checkout form
             document.getElementById('checkoutForm').reset();
         }
 
@@ -1226,8 +1330,6 @@
             window.open(adminUrl.toString(), '_blank', 'noopener');
         }
 
-        // Hidden admin entry: no visible Admin button on either phone or PC.
-        // Phone: tap the Delofia logo 5 times quickly. PC: Ctrl+Shift+A or the same logo gesture.
         let adminLogoTapCount = 0;
         let adminLogoTapTimer = null;
         document.addEventListener('DOMContentLoaded', function() {
@@ -1333,7 +1435,6 @@
 
         function loadAdminData() {
             renderCategoryControls();
-            // Populate shipping inputs
             document.getElementById('settingInsideDhaka').value = shippingSettings.inside;
             document.getElementById('settingSubDhaka').value = shippingSettings.sub;
             document.getElementById('settingOutsideDhaka').value = shippingSettings.outside;
@@ -1346,10 +1447,7 @@
             document.getElementById('settingOtherSocialUrl').value = storeSettings.otherSocialUrl || '';
             pendingStoreLogo = null; applyStoreLogo();
 
-            // Render Orders Table
             renderOrdersTable();
-
-            // Render Product List
             renderAdminProductsList();
         }
 
@@ -1363,7 +1461,7 @@
                 return;
             }
 
-            orders.forEach((o, index) => {
+            orders.forEach((o) => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-purple-50/50 transition';
                 tr.innerHTML = `
@@ -1382,11 +1480,11 @@
                     </td>
                     <td class="p-3">
                         <span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${o.shippingArea}</span>
-                        <div class="text-gray-600">৳${o.shippingFee.toFixed(2)}</div>
+                        <div class="text-gray-600">৳${Number(o.shippingFee).toFixed(2)}</div>
                     </td>
                     <td class="p-3 font-black text-purple-900 text-sm">৳${Number(o.grandTotal || 0).toFixed(2)}</td>
                     <td class="p-3 min-w-[145px]">
-                        <select onchange="updateOrderStatus(${index}, this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status">
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status">
                             <option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option>
                             <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
                             <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
@@ -1394,7 +1492,7 @@
                         </select>
                     </td>
                     <td class="p-3">
-                        <button onclick="deleteOrder(${index})" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order">
+                        <button onclick="deleteOrder('${o.id}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order">
                             <i class="fas fa-trash"></i> <span class="ml-1">Delete</span>
                         </button>
                     </td>
@@ -1407,43 +1505,43 @@
             return ({ Pending: 'text-amber-700 border-amber-200', Confirmed: 'text-blue-700 border-blue-200', Delivered: 'text-emerald-700 border-emerald-200', Cancelled: 'text-red-700 border-red-200' })[status || 'Pending'] || 'text-gray-700';
         }
 
-        function updateOrderStatus(index, status) {
-            const allowedStatuses = ['Pending', 'Confirmed', 'Delivered', 'Cancelled'];
-            if (!orders[index] || !allowedStatuses.includes(status)) return;
-            orders[index].status = status;
-            localStorage.setItem('delofia_orders', JSON.stringify(orders));
-            renderOrdersTable();
+        async function updateOrderStatus(id, status) {
+            if (window.db && id) {
+                await window.fsSetDoc(window.fsDoc(window.db, "orders", id), { status: status }, { merge: true });
+            }
         }
 
-        function deleteOrder(index) {
+        async function deleteOrder(id) {
             if (confirm('Delete this order permanently? This cannot be undone.')) {
-                orders.splice(index, 1);
-                localStorage.setItem('delofia_orders', JSON.stringify(orders));
-                renderOrdersTable();
+                if (window.db && id) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "orders", id));
+                }
             }
         }
 
-        function clearAllOrders() {
+        async function clearAllOrders() {
             if (confirm('Delete ALL order histories?')) {
-                orders = [];
-                localStorage.setItem('delofia_orders', JSON.stringify(orders));
-                renderOrdersTable();
+                if (window.db && orders.length > 0) {
+                    for (const o of orders) {
+                        await window.fsDeleteDoc(window.fsDoc(window.db, "orders", o.id));
+                    }
+                }
             }
         }
 
-        function saveShippingSettings(e) {
+        async function saveShippingSettings(e) {
             e.preventDefault();
             shippingSettings.inside = Number(document.getElementById('settingInsideDhaka').value) || 90;
             shippingSettings.sub = Number(document.getElementById('settingSubDhaka').value) || 100;
             shippingSettings.outside = Number(document.getElementById('settingOutsideDhaka').value) || 110;
 
-            localStorage.setItem('delofia_shipping', JSON.stringify(shippingSettings));
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "shipping"), shippingSettings);
+            }
             updateShippingLabels();
             alert('✅ Delivery Charges updated successfully!');
         }
 
-        // Selected local photos are resized before being stored. This is convenient for a demo,
-        // but localStorage is browser/device-specific; shared live storage needs Firebase/Cloudinary.
         let selectedProductPhotoData = [];
 
         function resizeProductPhoto(file) {
@@ -1480,7 +1578,7 @@
             try {
                 for (const file of files) selectedProductPhotoData.push(await resizeProductPhoto(file));
                 renderProductPhotoPreview();
-                help.textContent = selectedProductPhotoData.length + ' photo(s) selected. Photos will be saved with this browser version.';
+                help.textContent = selectedProductPhotoData.length + ' photo(s) selected.';
             } catch (err) {
                 alert('Could not load a photo. Please try a JPG or PNG image.');
             }
@@ -1501,7 +1599,7 @@
             });
         }
 
-        function handleProductSubmit(e) {
+        async function handleProductSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editProductId').value;
             const title = document.getElementById('prodTitle').value.trim();
@@ -1516,30 +1614,30 @@
             const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
             const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
 
-            if (editId) {
-                const index = products.findIndex(p => p.id === editId);
-                if (index !== -1) {
-                    products[index] = { ...products[index], title, price, images: finalImages, description: desc, showPrice, directOrderEnabled, category, stockOut: document.getElementById('prodStockOut').checked };
-                }
-            } else {
-                products.unshift({ id: 'p-' + Date.now(), title, price, images: finalImages, description: desc, showPrice, directOrderEnabled, category, stockOut: document.getElementById('prodStockOut').checked });
+            const prodId = editId || ('p-' + Date.now());
+            const productDoc = {
+                id: prodId,
+                title,
+                price,
+                images: finalImages,
+                description: desc,
+                showPrice,
+                directOrderEnabled,
+                category,
+                stockOut: document.getElementById('prodStockOut').checked
+            };
+
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "products", prodId), productDoc);
             }
 
-            try {
-                localStorage.setItem('delofia_products', JSON.stringify(products));
-            } catch (err) {
-                alert('Photo storage is full in this browser. Please use fewer/smaller photos or connect cloud image storage.');
-                return;
-            }
-            renderCategoryControls();
             resetProductForm();
-            renderAdminProductsList();
-            renderProducts();
-            alert('✅ Product saved successfully!');
+            alert('✅ Product saved successfully and synced across all devices!');
         }
 
         function renderAdminProductsList() {
             const list = document.getElementById('adminProductsList');
+            if(!list) return;
             list.innerHTML = '';
 
             products.forEach(p => {
@@ -1588,15 +1686,13 @@
             document.getElementById('productForm').reset();
             selectedProductPhotoData = [];
             renderProductPhotoPreview();
-            const photoHelp = document.getElementById('productPhotoHelp'); if (photoHelp) photoHelp.textContent = 'Tip: select 1–5 clear product photos. Images are resized to help keep storage small.';
         }
 
-        function deleteProduct(id) {
+        async function deleteProduct(id) {
             if (confirm('Delete this product from store?')) {
-                products = products.filter(p => p.id !== id);
-                localStorage.setItem('delofia_products', JSON.stringify(products));
-                renderAdminProductsList();
-                renderProducts();
+                if (window.db && id) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "products", id));
+                }
             }
         }
     </script>
