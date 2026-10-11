@@ -56,6 +56,11 @@
         @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh; max-height:98vh; width:96vw; padding:1rem; } }
         body.admin-only-mode #adminModal > div { width: 100%; max-width: none; min-height: 100vh; border-radius: 0; }
     </style>
+<style>
+.product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
+.product-photo-dragging { opacity: .58; transform: scale(.96); outline: 3px dashed #7c3aed; outline-offset: -3px; }
+.product-photo-drop-target { outline: 3px solid #7c3aed; outline-offset: -3px; }
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
@@ -2301,17 +2306,54 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             event.target.value = '';
         }
 
+        // Photo ordering works with mouse drag on computers and finger drag on touchscreens.
+        let productPhotoDragFrom = null;
+        function startProductPhotoDrag(event, index) {
+            if (event.button !== undefined && event.button !== 0) return;
+            event.preventDefault();
+            productPhotoDragFrom = index;
+            const tile = event.currentTarget.closest('.product-photo-tile');
+            if (tile) tile.classList.add('product-photo-dragging');
+        }
+
+        document.addEventListener('pointerup', function(event) {
+            if (productPhotoDragFrom === null) return;
+            const from = productPhotoDragFrom;
+            productPhotoDragFrom = null;
+            document.querySelectorAll('.product-photo-tile').forEach(el => el.classList.remove('product-photo-dragging', 'product-photo-drop-target'));
+            const underPointer = document.elementFromPoint(event.clientX, event.clientY);
+            const targetTile = underPointer && underPointer.closest ? underPointer.closest('.product-photo-tile') : null;
+            if (!targetTile) return;
+            const to = Number(targetTile.dataset.photoIndex);
+            if (!Number.isInteger(to) || from === to || from < 0 || to < 0 || from >= selectedProductPhotoData.length || to >= selectedProductPhotoData.length) return;
+            const moved = selectedProductPhotoData.splice(from, 1)[0];
+            selectedProductPhotoData.splice(to, 0, moved);
+            renderProductPhotoPreview();
+        });
+
+        document.addEventListener('pointermove', function(event) {
+            if (productPhotoDragFrom === null) return;
+            const underPointer = document.elementFromPoint(event.clientX, event.clientY);
+            document.querySelectorAll('.product-photo-tile').forEach(el => el.classList.remove('product-photo-drop-target'));
+            const targetTile = underPointer && underPointer.closest ? underPointer.closest('.product-photo-tile') : null;
+            if (targetTile) targetTile.classList.add('product-photo-drop-target');
+        });
+
         function renderProductPhotoPreview() {
             const box = document.getElementById('productPhotoPreview');
             if (!box) return;
             box.innerHTML = '';
             selectedProductPhotoData.forEach((src, i) => {
                 const wrap = document.createElement('div');
-                wrap.className = 'relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white';
-                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-cover'; img.alt = 'Selected product photo';
+                wrap.className = 'product-photo-tile relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white select-none';
+                wrap.dataset.photoIndex = String(i);
+                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-cover pointer-events-none'; img.alt = 'Selected product photo ' + (i + 1); img.draggable = false;
+                const number = document.createElement('span'); number.className = 'absolute left-1 top-1 rounded-full bg-black/75 text-white text-[10px] font-bold px-2 py-1 pointer-events-none'; number.textContent = 'Photo ' + (i + 1);
+                const handle = document.createElement('button'); handle.type = 'button'; handle.className = 'absolute left-1 bottom-1 rounded-lg bg-purple-700 text-white shadow px-2 py-1 text-xs font-bold'; handle.innerHTML = '<i class="fas fa-arrows-alt mr-1"></i>Drag'; handle.setAttribute('aria-label', 'Drag to reorder photo ' + (i + 1)); handle.style.touchAction = 'none';
+                handle.addEventListener('pointerdown', ev => startProductPhotoDrag(ev, i));
                 const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'absolute top-1 right-1 w-7 h-7 rounded-full bg-red-600 text-white shadow flex items-center justify-center'; remove.innerHTML = '<i class="fas fa-times"></i>'; remove.setAttribute('aria-label', 'Remove photo');
                 remove.onclick = () => { selectedProductPhotoData.splice(i, 1); renderProductPhotoPreview(); };
-                wrap.append(img, remove); box.appendChild(wrap);
+                wrap.append(img, number, handle, remove); box.appendChild(wrap);
             });
         }
 
