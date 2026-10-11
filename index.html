@@ -170,7 +170,7 @@
                 <div class="p-6 bg-purple-50/50 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-purple-100">
                     <div class="w-full flex-1 flex flex-col justify-center items-center">
                         <div class="w-full aspect-square bg-white rounded-2xl overflow-hidden shadow-sm mb-4 relative border border-purple-100">
-                            <img id="detailMainImage" src="" alt="Product" class="w-full h-full object-cover">
+                            <img id="detailMainImage" src="" alt="Product" class="w-full h-full object-contain bg-white">
                             <div id="detailStockOverlay" class="hidden absolute inset-0 flex items-center justify-center pointer-events-none"><span class="bg-black/45 text-white font-black text-2xl sm:text-3xl px-5 py-3 rounded-xl -rotate-12 border-2 border-white/70">STOCK OUT</span></div>
                         </div>
                         <!-- Thumbnails list -->
@@ -1114,7 +1114,7 @@
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1">
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
@@ -1494,7 +1494,7 @@
                 selectedDetailProd.images.forEach((img, idx) => {
                     const thumb = document.createElement('img');
                     thumb.src = img;
-                    thumb.className = `w-14 h-14 rounded-lg object-cover cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
+                    thumb.className = `w-14 h-14 rounded-lg object-contain bg-white cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
                     thumb.onclick = () => {
                         mainImg.src = img;
                         Array.from(thumbsContainer.children).forEach(c => c.classList.replace('border-purple-600', 'border-transparent'));
@@ -1555,7 +1555,7 @@
             summaryBox.innerHTML = `
                 <div class="flex items-center gap-3">
                     <div class="relative w-16 h-16 bg-white rounded-xl overflow-hidden border border-gray-300 flex-shrink-0">
-                        <img src="${img}" class="w-full h-full object-cover">
+                        <img src="${img}" class="w-full h-full object-contain bg-white">
                         <span class="absolute -top-1 -right-1 bg-gray-700 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">${currentCheckoutQty}</span>
                     </div>
                     <div>
@@ -2347,7 +2347,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 const wrap = document.createElement('div');
                 wrap.className = 'product-photo-tile relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white select-none';
                 wrap.dataset.photoIndex = String(i);
-                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-cover pointer-events-none'; img.alt = 'Selected product photo ' + (i + 1); img.draggable = false;
+                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-contain pointer-events-none'; img.alt = 'Selected product photo ' + (i + 1); img.draggable = false;
                 const number = document.createElement('span'); number.className = 'absolute left-1 top-1 rounded-full bg-black/75 text-white text-[10px] font-bold px-2 py-1 pointer-events-none'; number.textContent = 'Photo ' + (i + 1);
                 const handle = document.createElement('button'); handle.type = 'button'; handle.className = 'absolute left-1 bottom-1 rounded-lg bg-purple-700 text-white shadow px-2 py-1 text-xs font-bold'; handle.innerHTML = '<i class="fas fa-arrows-alt mr-1"></i>Drag'; handle.setAttribute('aria-label', 'Drag to reorder photo ' + (i + 1)); handle.style.touchAction = 'none';
                 handle.addEventListener('pointerdown', ev => startProductPhotoDrag(ev, i));
@@ -2418,7 +2418,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 item.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs';
                 item.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
+                        <img src="${img}" class="w-10 h-10 object-contain bg-white rounded-lg border">
                         <div>
                             <strong class="block text-gray-800">${p.title}</strong>
                             <span class="text-purple-700 font-bold">৳${p.price}</span>
