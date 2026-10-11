@@ -38,6 +38,19 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #c084fc; border-radius: 4px; }
         body.admin-only-mode > *:not(#adminModal) { display: none !important; }
         body.admin-only-mode #adminModal { position: static !important; display: flex !important; min-height: 100vh; background: #f8f7fb !important; padding: 0 !important; }
+        /* Mobile admin panel: swipe the tab bar horizontally and scroll the content vertically */
+        #adminTabsScroller { max-width:100%; overscroll-behavior-x:contain; }
+        #adminTabsScroller button { min-height:44px; }
+        #adminDashboardView { min-height:0; }
+        @media(max-width:640px){
+          #adminModal { align-items:flex-start !important; padding:0 !important; }
+          #adminModal > div { margin:0 !important; width:100% !important; max-width:none !important; min-height:100dvh; border-radius:0 !important; }
+          #adminDashboardView { height:100dvh !important; max-height:100dvh !important; }
+          #adminDashboardView > div:first-child { padding-left:12px !important; padding-right:12px !important; }
+          #adminTabsScroller { gap:12px; padding-left:10px !important; padding-right:10px !important; }
+          #adminTabsScroller::-webkit-scrollbar { height:4px; }
+          #adminTabsScroller::-webkit-scrollbar-thumb { background:#c084fc; border-radius:99px; }
+        }
         #productEditBackdrop { display:none; position:fixed; inset:0; z-index:70; background:rgba(17,24,39,.65); backdrop-filter:blur(3px); }
         #productFormCard.product-edit-active { position:fixed !important; z-index:71; top:3vh; left:50%; transform:translateX(-50%); width:min(94vw,680px); max-height:94vh; overflow-y:auto; box-shadow:0 25px 80px rgba(0,0,0,.3); }
         @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh; max-height:98vh; width:96vw; padding:1rem; } }
@@ -427,7 +440,7 @@
             </div>
 
             <!-- Dashboard Content View -->
-            <div id="adminDashboardView" class="hidden flex flex-col h-[85vh]">
+            <div id="adminDashboardView" class="hidden flex flex-col h-[85vh] max-h-[85dvh] min-h-0 overflow-hidden">
                 <div class="bg-purple-900 text-white px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="font-black text-lg">DELOFIA ADMIN</span>
@@ -439,31 +452,31 @@
                 </div>
 
                 <!-- Admin Tabs -->
-                <div class="bg-purple-50 border-b border-purple-100 px-6 flex gap-4 text-xs font-bold">
-                    <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="py-3 text-purple-800 border-b-2 border-purple-700">
+                <div id="adminTabsScroller" class="bg-purple-50 border-b border-purple-100 px-3 sm:px-6 flex gap-4 text-xs font-bold flex-shrink-0 overflow-x-auto whitespace-nowrap touch-pan-x" style="-webkit-overflow-scrolling:touch; scrollbar-width:thin; overscroll-behavior-x:contain;">
+                    <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="flex-shrink-0 py-3 text-purple-800 border-b-2 border-purple-700">
                         <i class="fas fa-shopping-cart mr-1"></i> Direct Orders (<span id="ordersCount">0</span>)
                     </button>
-                    <button onclick="switchAdminTab('shipping')" id="tabBtnShipping" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('shipping')" id="tabBtnShipping" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-truck mr-1"></i> Delivery Charges Settings
                     </button>
-                    <button onclick="switchAdminTab('payment')" id="tabBtnPayment" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('payment')" id="tabBtnPayment" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-credit-card mr-1"></i> Payment & Coupons
                     </button>
-                    <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-boxes mr-1"></i> Product Management
                     </button>
-                    <button onclick="switchAdminTab('store')" id="tabBtnStore" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('store')" id="tabBtnStore" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-sliders-h mr-1"></i> Store Settings
                     </button>
-                    <button onclick="switchAdminTab('password')" id="tabBtnPassword" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('password')" id="tabBtnPassword" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-key mr-1"></i> Change Password
                     </button>
-                    <button onclick="switchAdminTab('sessions')" id="tabBtnSessions" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('sessions')" id="tabBtnSessions" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-shield-alt mr-1"></i> Sessions & Timeout
                     </button>
                 </div>
 
-                <div class="flex-1 p-6 overflow-y-auto custom-scrollbar bg-gray-50">
+                <div class="flex-1 min-h-0 p-3 sm:p-6 overflow-y-auto overflow-x-hidden custom-scrollbar bg-gray-50" style="-webkit-overflow-scrolling:touch;">
                     
                     <!-- TAB 1: ORDERS LIST -->
                     <div id="adminTabOrders">
