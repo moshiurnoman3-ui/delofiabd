@@ -1631,6 +1631,12 @@
             if (selectedDetailProd.directOrderEnabled === false) return;
             const pId = selectedDetailProd.id;
             const qty = detailQtyVal;
+            const requiredGroups = (selectedDetailProd.variantEnabled && Array.isArray(selectedDetailProd.variantGroups)) ? selectedDetailProd.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
+            const missingGroup = requiredGroups.find(g => !selectedVariantChoices[g.name]);
+            if (missingGroup) { alert('Please choose ' + missingGroup.name + ' before ordering.'); return; }
+            const colorGroup = requiredGroups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const selectedColor = colorGroup && colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]);
+            if (selectedColor && Array.isArray(selectedColor.childVariants) && selectedColor.childVariants.some(v => String(v.name || '').trim()) && !selectedVariantChoices['__size']) { alert('Please choose a size / variant for this color.'); return; }
             const choices = { ...(selectedVariantChoices || {}) };
             const meta = { ...(selectedVariantMeta || {}) };
             // Hide product details without calling history.back(). Calling history.back()
@@ -2627,6 +2633,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     const optName = document.createElement('input'); optName.value = option.name || ''; optName.placeholder = 'Option name (Blue / Pink / Small / Large)'; optName.className = 'w-full border rounded-lg p-2 text-xs'; optName.oninput = () => updateAdminVariantOptionName(gi, oi, optName.value);
                     const upload = document.createElement('input'); upload.type = 'file'; upload.accept = 'image/*'; upload.className = 'block w-full text-[11px]'; upload.onchange = ev => handleVariantImageUpload(ev, gi, oi);
                     const hint = document.createElement('p'); hint.className = 'text-[10px] text-gray-500'; hint.textContent = option.image ? 'Image added ✓ (choose again to replace)' : 'Optional: upload this option’s photo';
+                    const compatibleLabel = document.createElement('label'); compatibleLabel.className = 'block text-[11px] font-bold text-gray-700'; compatibleLabel.textContent = 'Only show with these Color options (optional; comma-separated; blank = all colors)';
+                    const compatibleInput = document.createElement('input'); compatibleInput.type = 'text'; compatibleInput.value = Array.isArray(option.availableWith) ? option.availableWith.join(', ') : (option.availableWith || ''); compatibleInput.placeholder = 'e.g. Brown, Blue'; compatibleInput.className = 'w-full border rounded-lg p-2 text-xs'; compatibleInput.oninput = () => { option.availableWith = compatibleInput.value.split(',').map(v => v.trim()).filter(Boolean); };
                     const priceLabel = document.createElement('label'); priceLabel.className = 'block text-[11px] font-bold text-gray-700'; priceLabel.textContent = 'Variant price (৳; blank = use main price)';
                     const priceInput = document.createElement('input'); priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = option.price ?? ''; priceInput.placeholder = 'e.g. 599'; priceInput.className = 'w-full border rounded-lg p-2 text-xs'; priceInput.oninput = () => { option.price = priceInput.value; };
                     const descHead = document.createElement('div'); descHead.className = 'font-bold text-xs text-purple-900 pt-2'; descHead.textContent = 'This variant’s description table';
@@ -2642,7 +2650,30 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     copySelect.onchange = () => { if (copySelect.value) copyVariantDescriptionTo(gi, oi, copySelect.value); };
                     descControls.append(addRowBtn, addColBtn, copyBaseBtn, copySelect);
                     const descEditor = document.createElement('div'); descEditor.id = `variantDescTable-${gi}-${oi}`; descEditor.className = 'overflow-x-auto';
-                    left.append(optName, upload, hint, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor); row.appendChild(left);
+                    const nestedWrap = document.createElement('div');
+                    const isColorGroup = /color|colour|রং/i.test(group.name || '');
+                    if (isColorGroup) {
+                        nestedWrap.className = 'mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2';
+                        const nestedTitle = document.createElement('p'); nestedTitle.className = 'text-xs font-extrabold text-indigo-900'; nestedTitle.textContent = 'Sizes / variants available ONLY for ' + (option.name || 'this color');
+                        const nestedHelp = document.createElement('p'); nestedHelp.className = 'text-[10px] text-gray-600'; nestedHelp.textContent = 'Add 100 ml, 500 ml, etc. Each color has its own list. Customer clicks this color to see its image and only these options.';
+                        nestedWrap.append(nestedTitle, nestedHelp);
+                        option.childVariants = Array.isArray(option.childVariants) ? option.childVariants : [];
+                        option.childVariants.forEach((child, ci) => {
+                            const childRow = document.createElement('div'); childRow.className = 'grid grid-cols-1 sm:grid-cols-[1fr_100px_auto] gap-2 items-center bg-white p-2 rounded border';
+                            const childName = document.createElement('input'); childName.value = child.name || ''; childName.placeholder = 'e.g. 100 ml'; childName.className = 'w-full border rounded p-2 text-xs'; childName.oninput = () => { child.name = childName.value; };
+                            const childPrice = document.createElement('input'); childPrice.type = 'number'; childPrice.min = '0'; childPrice.step = '0.01'; childPrice.value = child.price ?? ''; childPrice.placeholder = 'Price ৳'; childPrice.className = 'w-full border rounded p-2 text-xs'; childPrice.oninput = () => { child.price = childPrice.value; };
+                            const childRemove = document.createElement('button'); childRemove.type = 'button'; childRemove.textContent = 'Remove'; childRemove.className = 'text-red-600 text-[10px] font-bold'; childRemove.onclick = () => { option.childVariants.splice(ci,1); renderAdminVariantEditor(); };
+                            childRow.append(childName, childPrice, childRemove);
+                            const childImage = document.createElement('input'); childImage.type = 'file'; childImage.accept = 'image/*'; childImage.className = 'block w-full text-[10px] mt-1';
+                            childImage.onchange = ev => { const f = ev.target.files && ev.target.files[0]; if (!f) return; if (f.size > 700000) { alert('Please use an image smaller than 700 KB.'); ev.target.value=''; return; } const reader = new FileReader(); reader.onload = () => { child.image = reader.result; }; reader.readAsDataURL(f); };
+                            const childImageLabel = document.createElement('label'); childImageLabel.className = 'block text-[10px] text-gray-500 mt-1'; childImageLabel.textContent = child.image ? 'Variant image added ✓ (choose to replace)' : 'Optional image for this size'; childImageLabel.appendChild(childImage);
+                            const childDetails = document.createElement('textarea'); childDetails.value = child.details || ''; childDetails.placeholder = 'Optional details for this size'; childDetails.className = 'w-full border rounded p-2 text-xs mt-1'; childDetails.oninput = () => { child.details = childDetails.value; };
+                            nestedWrap.append(childRow, childImageLabel, childDetails);
+                        });
+                        const addChild = document.createElement('button'); addChild.type = 'button'; addChild.className = 'rounded bg-indigo-700 text-white px-3 py-2 text-xs font-bold'; addChild.textContent = '+ Add size / variant'; addChild.onclick = () => { option.childVariants.push({name:'',price:'',image:'',details:''}); renderAdminVariantEditor(); };
+                        nestedWrap.appendChild(addChild);
+                    }
+                    left.append(optName, upload, hint, compatibleLabel, compatibleInput, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
                     setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
                     if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
                     const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-red-600 text-[11px] font-bold'; remove.textContent = 'Remove option'; remove.onclick = () => removeAdminVariantOption(gi, oi); row.appendChild(remove);
@@ -2669,6 +2700,35 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             if (el) { el.innerText = selectedDetailProd.showPrice ? `৳${price.toFixed(2)}` : ''; el.classList.toggle('hidden', !selectedDetailProd.showPrice); }
         }
 
+        function renderChildVariants(colorOption) {
+            const container = document.getElementById('detailVariantOptions');
+            if (!container) return;
+            const old = container.querySelector('[data-child-variant-box]');
+            if (old) old.remove();
+            const children = Array.isArray(colorOption?.childVariants) ? colorOption.childVariants.filter(v => v && String(v.name || '').trim()) : [];
+            if (!children.length) return;
+            const box = document.createElement('div'); box.dataset.childVariantBox = '1'; box.className = 'mt-4';
+            const title = document.createElement('p'); title.className = 'text-xs font-bold text-gray-800 mb-2'; title.textContent = 'Size / Variant';
+            const opts = document.createElement('div'); opts.className = 'flex flex-wrap gap-2';
+            children.forEach(child => {
+                const b = document.createElement('button'); b.type = 'button';
+                const selected = selectedVariantChoices['__size'] === child.name;
+                b.className = 'border rounded-xl px-3 py-2 text-xs font-bold ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
+                b.textContent = child.name;
+                b.onclick = () => {
+                    selectedVariantChoices['__size'] = child.name;
+                    selectedVariantMeta['__size'] = child;
+                    if (child.image) { const img = document.getElementById('detailMainImage'); if (img) img.src = child.image; }
+                    renderChildVariants(colorOption);
+                    updateDetailPriceFromVariants();
+                    if (child.details) { const d = document.getElementById('detailDescription'); if (d) d.textContent = child.details; }
+                    updateDetailWhatsappVariantLink();
+                };
+                opts.appendChild(b);
+            });
+            box.append(title, opts); container.appendChild(box);
+        }
+
         function renderCustomerVariantOptions(product) {
             const container = document.getElementById('detailVariantOptions');
             if (!container) return;
@@ -2676,35 +2736,64 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 ? product.variantGroups.map(g => ({ ...g, options: (g.options || []).filter(o => o && String(o.name || '').trim()) })).filter(g => String(g.name || '').trim() && g.options.length)
                 : [];
             container.innerHTML = '';
+            selectedVariantChoices = {};
+            selectedVariantMeta = {};
             container.classList.toggle('hidden', !groups.length);
             if (!groups.length) return;
             const mainImg = document.getElementById('detailMainImage');
-            groups.forEach((group, gi) => {
-                const wrapper = document.createElement('div');
-                const title = document.createElement('p'); title.className = 'text-xs font-bold text-gray-800 mb-2'; title.textContent = group.name;
-                const options = document.createElement('div'); options.className = 'flex flex-wrap gap-2';
-                group.options.forEach((option, oi) => {
-                    const button = document.createElement('button'); button.type = 'button';
-                    const isFirst = oi === 0;
-                    if (isFirst) { selectedVariantChoices[group.name] = option.name; selectedVariantMeta[group.name] = option; }
-                    button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition ' + (isFirst ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
-                    button.textContent = option.name;
-                    button.onclick = () => {
-                        selectedVariantChoices[group.name] = option.name;
-                        selectedVariantMeta[group.name] = option;
-                        Array.from(options.children).forEach(child => { child.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition border-gray-300 bg-white text-gray-700'; });
-                        button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition border-purple-700 bg-purple-100 text-purple-900';
-                        if (option.image) mainImg.src = option.image;
-                        updateDetailPriceFromVariants();
-                        renderCustomerDescription(selectedDetailProd, option);
-                        updateDetailWhatsappVariantLink();
-                    };
-                    options.appendChild(button);
+            const normalize = v => String(v || '').trim().toLowerCase();
+            const isColorGroup = g => /color|colour|রং/i.test(g.name || '');
+            const colorGroup = groups.find(isColorGroup);
+            const render = () => {
+                container.innerHTML = '';
+                groups.forEach((group, gi) => {
+                    const wrapper = document.createElement('div');
+                    const title = document.createElement('p'); title.className = 'text-xs font-bold text-gray-800 mb-2'; title.textContent = group.name;
+                    const options = document.createElement('div'); options.className = 'flex flex-wrap gap-2';
+                    let available = group.options;
+                    if (colorGroup && group !== colorGroup) {
+                        available = group.options.filter(option => {
+                            const allowed = option.availableWith;
+                            if (!allowed || (Array.isArray(allowed) ? !allowed.length : !String(allowed).trim())) return true;
+                            const list = Array.isArray(allowed) ? allowed : String(allowed).split(',').map(x => x.trim()).filter(Boolean);
+                            const chosenColor = selectedVariantChoices[colorGroup.name];
+                            return !!chosenColor && list.some(c => normalize(c) === normalize(chosenColor));
+                        });
+                    }
+                    if (!available.some(o => o.name === selectedVariantChoices[group.name])) {
+                        delete selectedVariantChoices[group.name]; delete selectedVariantMeta[group.name];
+                    }
+                    if (!available.length) {
+                        const note = document.createElement('p'); note.className = 'text-xs text-gray-500'; note.textContent = 'এই রঙের জন্য কোনো অপশন নেই';
+                        wrapper.append(title, note); container.appendChild(wrapper); return;
+                    }
+                    available.forEach(option => {
+                        const button = document.createElement('button'); button.type = 'button';
+                        const selected = selectedVariantChoices[group.name] === option.name;
+                        button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
+                        button.textContent = option.name;
+                        button.onclick = () => {
+                            selectedVariantChoices[group.name] = option.name;
+                            selectedVariantMeta[group.name] = option;
+                            if (option.image && mainImg) mainImg.src = option.image;
+                            // Selecting a color clears any previous child size and renders only this color's sizes.
+                            if (isColorGroup(group)) {
+                                delete selectedVariantChoices['__size'];
+                                delete selectedVariantMeta['__size'];
+                            }
+                            render();
+                            if (isColorGroup(group)) renderChildVariants(option);
+                            updateDetailPriceFromVariants();
+                            renderCustomerDescription(selectedDetailProd, option);
+                            updateDetailWhatsappVariantLink();
+                        };
+                        options.appendChild(button);
+                    });
+                    wrapper.append(title, options); container.appendChild(wrapper);
                 });
-                if (gi === 0 && group.options[0]?.image) mainImg.src = group.options[0].image;
-                if (gi === 0 && group.options[0]) renderCustomerDescription(product, group.options[0]);
-                wrapper.append(title, options); container.appendChild(wrapper);
-            });
+            };
+            // Do not preselect anything: customer must explicitly choose every required option.
+            render();
             updateDetailPriceFromVariants();
         }
 
@@ -2761,7 +2850,9 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                             image: o.image || '',
                             price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
                             descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
-                            showDescriptionTable: o.showDescriptionTable !== false
+                            showDescriptionTable: o.showDescriptionTable !== false,
+                            availableWith: Array.isArray(o.availableWith) ? o.availableWith : [],
+                            childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
                         })).filter(o => o.name)
                     })).filter(g => g.name && g.options.length) : [],
                     stockOut: document.getElementById('prodStockOut').checked,
@@ -2846,7 +2937,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 
             document.getElementById('prodVariantsEnabled').checked = !!p.variantEnabled;
             const showDescTable = document.getElementById('prodShowDescriptionTable'); if (showDescTable) showDescTable.checked = p.showDescriptionTable !== false;
-            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false })) })) : [];
+            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false, availableWith: o.availableWith || [], childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: cv.name || '', price: cv.price ?? '', image: cv.image || '', details: cv.details || '' })) : [] })) })) : [];
             adminBaseDescriptionTable = normalizeDescriptionTable(p.descriptionTable || { columns: 2, rows: [['Product Size', ''], ['Material', '']] });
             toggleAdminVariants();
             renderAdminVariantEditor();
