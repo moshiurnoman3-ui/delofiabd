@@ -370,7 +370,7 @@
         </div>
     </div>
 
-    <!-- EDIT PRODUCT POPUP MODAL (MOBILE FRIENDLY) -->
+    <!-- EDIT PRODUCT POPUP MODAL (REPAIRED) -->
     <div id="editProductModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
             <button onclick="closeEditProductModal()" class="absolute top-4 right-4 z-30 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition">
@@ -396,8 +396,8 @@
                             <input type="number" id="modalProdPrice" required class="w-full border rounded-xl p-2.5">
                         </div>
                         <div>
-                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order / Position (1 = Top)</label>
-                            <input type="number" id="modalProdSortOrder" min="1" placeholder="e.g. 1 (Top)" class="w-full border-2 border-purple-400 bg-purple-50 rounded-xl p-2.5 font-bold text-purple-900">
+                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order (1 = Top)</label>
+                            <input type="number" id="modalProdSortOrder" min="1" placeholder="e.g. 1" class="w-full border-2 border-purple-400 bg-purple-50 rounded-xl p-2.5 font-bold text-purple-900">
                         </div>
                     </div>
                     
@@ -1014,7 +1014,7 @@
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
 
-            // CUSTOM SORTING: Order by sortOrder if available, or fallback to creation/default
+            // SORTING LOGIC: sortOrder ascending, missing ones at end
             let listToRender = [...(products || [])];
             listToRender.sort((a, b) => {
                 const orderA = (a.sortOrder !== undefined && a.sortOrder !== null && a.sortOrder !== '') ? Number(a.sortOrder) : 999999;
@@ -1393,7 +1393,6 @@
         let selectedDetailProd = null;
         let detailQtyVal = 1;
 
-        // Detect platform & icon for Video Links
         function getVideoPlatformInfo(url) {
             const str = String(url || '').toLowerCase();
             if (str.includes('instagram.com')) {
@@ -1409,7 +1408,7 @@
         }
 
         function openProductDetail(prodId) {
-            selectedDetailProd = products.find(p => p.id === prodId);
+            selectedDetailProd = window.products.find(p => String(p.id) === String(prodId));
             if (!selectedDetailProd) return;
 
             detailQtyVal = 1;
@@ -1423,7 +1422,6 @@
             document.getElementById('detailPriceSocialLinks').innerHTML = getPriceContactLinksHTML(selectedDetailProd.title);
             document.getElementById('detailDescription').innerText = selectedDetailProd.description || 'No additional details provided.';
 
-            // Render Video Button Option
             const vContainer = document.getElementById('detailVideoContainer');
             const vBtn = document.getElementById('detailVideoBtn');
             const hasVideoUrl = !!(selectedDetailProd.videoUrl && selectedDetailProd.videoUrl.trim());
@@ -1512,7 +1510,7 @@
         }
 
         function openDirectCheckout(prodId, qty = 1) {
-            const prod = products.find(p => p.id === prodId);
+            const prod = window.products.find(p => String(p.id) === String(prodId));
             if (!prod || prod.stockOut) return;
 
             currentCheckoutProduct = prod;
@@ -1700,7 +1698,6 @@
                 document.getElementById('adminDashboardView').classList.remove('hidden');
                 document.getElementById('adminAuthError').classList.add('hidden');
 
-                // Create Admin Session for tracking logged in status
                 const sessionId = 'sess_' + Date.now() + '_' + Math.floor(Math.random()*1000);
                 window.currentSessionId = sessionId;
                 localStorage.setItem('delofia_session_id', sessionId);
@@ -2059,7 +2056,8 @@
             const editId = document.getElementById('editProductId').value;
             const title = document.getElementById('prodTitle').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value) || 0;
-            const sortOrder = parseInt(document.getElementById('prodSortOrder').value) || null;
+            const sortOrderVal = document.getElementById('prodSortOrder').value;
+            const sortOrder = sortOrderVal !== '' ? parseInt(sortOrderVal) : null;
             const imagesStr = document.getElementById('prodImages').value.trim();
             const desc = document.getElementById('prodDesc').value.trim();
             const showPrice = document.getElementById('prodShowPrice').checked;
@@ -2073,7 +2071,7 @@
             const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
 
             const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            const existing = editId ? products.find(p => p.id === editId) : null;
+            const existing = editId ? window.products.find(p => String(p.id) === String(editId)) : null;
             const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
             const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
 
@@ -2107,7 +2105,7 @@
             if(!list) return;
             list.innerHTML = '';
 
-            let sortedList = [...products];
+            let sortedList = [...(window.products || [])];
             sortedList.sort((a, b) => {
                 const orderA = (a.sortOrder !== undefined && a.sortOrder !== null && a.sortOrder !== '') ? Number(a.sortOrder) : 999999;
                 const orderB = (b.sortOrder !== undefined && b.sortOrder !== null && b.sortOrder !== '') ? Number(b.sortOrder) : 999999;
@@ -2126,32 +2124,32 @@
                         <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
                         <div>
                             <div class="flex items-center gap-2">
-                                <strong class="block text-gray-800">${p.title}</strong>
+                                <strong class="block text-gray-800">${escapeHtml(p.title)}</strong>
                                 ${(p.sortOrder !== undefined && p.sortOrder !== null && p.sortOrder !== '') ? `<span class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-full">Pos: #${p.sortOrder}</span>` : ''}
                             </div>
                             <span class="text-purple-700 font-bold">৳${p.price}</span>
-                            <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${subDisplay ? ' > ' + subDisplay : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
+                            <span class="block text-gray-500 mt-0.5">${escapeHtml(p.category || 'Other')}${subDisplay ? ' > ' + escapeHtml(subDisplay) : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
                             ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editProductModal('${p.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-3 py-1.5 rounded-lg transition"><i class="fas fa-edit mr-1"></i> Edit</button>
-                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
+                        <button type="button" onclick="editProductModal('${p.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-3 py-1.5 rounded-lg transition"><i class="fas fa-edit mr-1"></i> Edit</button>
+                        <button type="button" onclick="deleteProduct('${p.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);
             });
         }
 
-        // OPEN EDIT POPUP MODAL (MOBILE FRIENDLY)
-        function editProductModal(id) {
-            const p = products.find(prod => prod.id === id);
+        // OPEN EDIT POPUP MODAL (REPAIRED & BINDED TO GLOBAL)
+        window.editProductModal = function(id) {
+            const p = window.products.find(prod => String(prod.id) === String(id));
             if (!p) return;
 
             document.getElementById('modalEditProductId').value = p.id;
-            document.getElementById('modalProdTitle').value = p.title;
-            document.getElementById('modalProdPrice').value = p.price;
-            document.getElementById('modalProdSortOrder').value = (p.sortOrder !== undefined && p.sortOrder !== null) ? p.sortOrder : '';
+            document.getElementById('modalProdTitle').value = p.title || '';
+            document.getElementById('modalProdPrice').value = p.price || 0;
+            document.getElementById('modalProdSortOrder').value = (p.sortOrder !== undefined && p.sortOrder !== null && p.sortOrder !== '') ? p.sortOrder : '';
             
             renderCategoryControls();
             document.getElementById('modalProdCategory').value = p.category || 'Other';
@@ -2167,14 +2165,14 @@
             renderModalProductPhotoPreview();
 
             document.getElementById('modalProdDesc').value = p.description || '';
-            document.getElementById('modalProdShowPrice').checked = p.showPrice;
+            document.getElementById('modalProdShowPrice').checked = p.showPrice !== false;
             document.getElementById('modalProdDirectOrderEnabled').checked = p.directOrderEnabled !== false;
             document.getElementById('modalProdStockOut').checked = !!p.stockOut;
 
             const modal = document.getElementById('editProductModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-        }
+        };
 
         function closeEditProductModal() {
             const modal = document.getElementById('editProductModal');
@@ -2202,7 +2200,7 @@
             const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
 
             const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            const existing = editId ? products.find(p => p.id === editId) : null;
+            const existing = editId ? window.products.find(p => String(p.id) === String(editId)) : null;
             const imagesArr = [...selectedModalProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedModalProductPhotoData.length ? [] : (existing?.images || [])))];
             const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
 
