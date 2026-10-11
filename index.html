@@ -370,6 +370,114 @@
         </div>
     </div>
 
+    <!-- EDIT PRODUCT POPUP MODAL (MOBILE FRIENDLY) -->
+    <div id="editProductModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
+            <button onclick="closeEditProductModal()" class="absolute top-4 right-4 z-30 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+
+            <div class="p-6 sm:p-8 max-h-[85vh] overflow-y-auto custom-scrollbar">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 border-b pb-2 flex items-center gap-2">
+                    <i class="fas fa-edit text-purple-700"></i> Edit Product
+                </h3>
+
+                <form id="editProductForm" onsubmit="handleEditProductSubmit(event)" class="space-y-3 text-xs">
+                    <input type="hidden" id="modalEditProductId">
+                    
+                    <div>
+                        <label class="block font-bold mb-1 text-gray-700">Product Title</label>
+                        <input type="text" id="modalProdTitle" required class="w-full border rounded-xl p-2.5">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold mb-1 text-gray-700">Price (BDT ৳)</label>
+                            <input type="number" id="modalProdPrice" required class="w-full border rounded-xl p-2.5">
+                        </div>
+                        <div>
+                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order / Position (1 = Top)</label>
+                            <input type="number" id="modalProdSortOrder" min="1" placeholder="e.g. 1 (Top)" class="w-full border-2 border-purple-400 bg-purple-50 rounded-xl p-2.5 font-bold text-purple-900">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block font-bold mb-1 text-gray-700">Main Category</label>
+                        <select id="modalProdCategory" onchange="onModalAdminCategorySelectChange()" required class="w-full border rounded-xl p-2.5"></select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-1 text-purple-900">Sub-categories / Varieties (Select multiple)</label>
+                        <div id="modalProdSubCategoriesContainer" class="p-3 border rounded-xl bg-purple-50/40 max-h-36 overflow-y-auto custom-scrollbar space-y-1.5"></div>
+                    </div>
+
+                    <!-- VIDEO LINK CONTROL FOR PRODUCT -->
+                    <div class="p-3 border rounded-xl bg-purple-50/50 border-purple-100 space-y-2">
+                        <label class="block font-bold text-purple-900">Product Video Link (Instagram, Facebook, YouTube, TikTok)</label>
+                        <input type="url" id="modalProdVideoUrl" placeholder="https://www.instagram.com/reel/... or FB / YT / TikTok video link" class="w-full border rounded-xl p-2.5">
+                        <label class="flex items-center gap-2 font-bold text-emerald-800 bg-emerald-50 p-2 rounded-lg cursor-pointer">
+                            <input type="checkbox" id="modalProdVideoApproved" checked class="rounded text-emerald-600 h-4 w-4">
+                            Approve / Enable Video for Web Storefront
+                        </label>
+                    </div>
+
+                    <div class="rounded-2xl border-2 border-dashed border-purple-200 bg-purple-50/60 p-4">
+                        <label class="block font-bold text-gray-800 mb-1">Product Photos</label>
+                        <p class="text-gray-500 mb-3">Choose photos directly from phone Gallery or computer.</p>
+                        <input id="modalProdImageFiles" type="file" accept="image/*" multiple class="hidden" onchange="handleModalProductPhotoSelection(event)">
+                        <button type="button" onclick="document.getElementById('modalProdImageFiles').click()" class="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-3 text-sm shadow-sm">
+                            <i class="fas fa-plus-circle"></i> + Add Photos
+                        </button>
+                        <div id="modalProductPhotoPreview" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3"></div>
+                        <details class="mt-3">
+                            <summary class="cursor-pointer text-[11px] font-semibold text-purple-700">Advanced: use image links instead</summary>
+                            <textarea id="modalProdImages" rows="2" placeholder="Paste image URLs separated by commas" class="w-full border rounded-xl p-2.5 mt-2"></textarea>
+                        </details>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-1 text-gray-700">Description</label>
+                        <textarea id="modalProdDesc" rows="3" class="w-full border rounded-xl p-2.5"></textarea>
+                    </div>
+
+                    <div class="flex flex-col gap-3 pt-2">
+                        <label class="flex items-center gap-2 font-bold text-gray-700">
+                            <input type="checkbox" id="modalProdShowPrice" checked class="rounded text-purple-600">
+                            Display Price Publicly
+                        </label>
+                        <label class="flex items-center gap-2 font-bold text-gray-700">
+                            <input type="checkbox" id="modalProdDirectOrderEnabled" checked class="rounded text-purple-600">
+                            Enable Direct Order / Checkout
+                        </label>
+                        <label class="flex items-center gap-2 p-3 rounded-xl border border-red-200 bg-red-50 font-bold text-red-700">
+                            <input type="checkbox" id="modalProdStockOut" class="rounded text-red-600 w-4 h-4">
+                            Mark as STOCK OUT (orders disabled)
+                        </label>
+                    </div>
+
+                    <div class="pt-4 flex gap-2">
+                        <button type="submit" class="flex-1 bg-purple-700 text-white font-bold py-3 rounded-xl hover:bg-purple-800 transition text-sm">Update Product Changes</button>
+                        <button type="button" onclick="closeEditProductModal()" class="bg-gray-200 text-gray-700 font-bold px-4 py-3 rounded-xl text-sm">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORCE LOGOUT PASSWORD CONFIRM MODAL -->
+    <div id="forceLogoutModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative border border-purple-200">
+            <h4 class="font-bold text-purple-900 text-lg mb-2">Force Logout Admin Device</h4>
+            <p class="text-xs text-gray-500 mb-4">Enter current Admin Password to terminate this login session.</p>
+            <input type="password" id="forceLogoutPasswordInput" placeholder="Enter Admin Password" class="w-full border rounded-xl p-3 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <p id="forceLogoutError" class="text-xs text-red-500 hidden mb-3">Incorrect password!</p>
+            <div class="flex gap-2">
+                <button onclick="confirmForceLogoutSession()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl text-xs">Confirm Force Logout</button>
+                <button onclick="closeForceLogoutModal()" class="bg-gray-200 text-gray-700 font-bold px-3 py-2.5 rounded-xl text-xs">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ADMIN PANEL MODAL -->
     <div id="adminModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
@@ -409,20 +517,23 @@
                 </div>
 
                 <!-- Admin Tabs -->
-                <div class="bg-purple-50 border-b border-purple-100 px-6 flex gap-4 text-xs font-bold">
-                    <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="py-3 text-purple-800 border-b-2 border-purple-700">
+                <div class="bg-purple-50 border-b border-purple-100 px-6 flex gap-4 text-xs font-bold overflow-x-auto custom-scrollbar">
+                    <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="py-3 text-purple-800 border-b-2 border-purple-700 whitespace-nowrap">
                         <i class="fas fa-shopping-cart mr-1"></i> Direct Orders (<span id="ordersCount">0</span>)
                     </button>
-                    <button onclick="switchAdminTab('shipping')" id="tabBtnShipping" class="py-3 text-gray-500 hover:text-purple-800">
-                        <i class="fas fa-truck mr-1"></i> Delivery Charges Settings
-                    </button>
-                    <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap">
                         <i class="fas fa-boxes mr-1"></i> Product Management
                     </button>
-                    <button onclick="switchAdminTab('store')" id="tabBtnStore" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('sessions')" id="tabBtnSessions" class="py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap">
+                        <i class="fas fa-users-cog mr-1"></i> Active Admin Sessions (<span id="activeAdminCount">0</span>)
+                    </button>
+                    <button onclick="switchAdminTab('shipping')" id="tabBtnShipping" class="py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap">
+                        <i class="fas fa-truck mr-1"></i> Delivery Charges
+                    </button>
+                    <button onclick="switchAdminTab('store')" id="tabBtnStore" class="py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap">
                         <i class="fas fa-sliders-h mr-1"></i> Store Settings
                     </button>
-                    <button onclick="switchAdminTab('password')" id="tabBtnPassword" class="py-3 text-gray-500 hover:text-purple-800">
+                    <button onclick="switchAdminTab('password')" id="tabBtnPassword" class="py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap">
                         <i class="fas fa-key mr-1"></i> Change Password
                     </button>
                 </div>
@@ -451,6 +562,32 @@
                                     </thead>
                                     <tbody id="ordersTableBody" class="divide-y divide-gray-100">
                                         <!-- Dynamic orders rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB: ACTIVE ADMIN SESSIONS -->
+                    <div id="adminTabSessions" class="hidden">
+                        <div class="mb-4">
+                            <h4 class="text-lg font-bold text-purple-900 mb-1">Active Admin Logged-In Sessions</h4>
+                            <p class="text-xs text-gray-500">View devices currently logged in to Admin Panel. You can forcibly log out any session using the admin password.</p>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-xs text-gray-700">
+                                    <thead class="bg-gray-100 uppercase font-bold text-gray-600 border-b border-gray-200">
+                                        <tr>
+                                            <th class="p-3">Device / Browser Info</th>
+                                            <th class="p-3">Login Time</th>
+                                            <th class="p-3">Last Active</th>
+                                            <th class="p-3">Session Status</th>
+                                            <th class="p-3">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sessionsTableBody" class="divide-y divide-gray-100">
+                                        <!-- Dynamic session rows -->
                                     </tbody>
                                 </table>
                             </div>
@@ -572,12 +709,12 @@
                     <!-- TAB 3: PRODUCT MANAGEMENT -->
                     <div id="adminTabProducts" class="hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            <!-- Add/Edit Form -->
+                            <!-- Add Form -->
                             <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 id="productFormTitle" class="font-bold text-gray-900">Add New Product</h4>
                                     <button type="button" onclick="resetProductForm()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-sm flex items-center gap-1">
-                                        <i class="fas fa-plus"></i> + Add New Product
+                                        <i class="fas fa-plus"></i> Clear / Reset
                                     </button>
                                 </div>
                                 <form id="productForm" onsubmit="handleProductSubmit(event)" class="space-y-3 text-xs">
@@ -588,9 +725,15 @@
                                         <input type="text" id="prodTitle" required placeholder="e.g. Honey Baze Stone Brown" class="w-full border rounded-xl p-2.5">
                                     </div>
 
-                                    <div>
-                                        <label class="block font-bold mb-1">Price (BDT ৳)</label>
-                                        <input type="number" id="prodPrice" required placeholder="480" class="w-full border rounded-xl p-2.5">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block font-bold mb-1">Price (BDT ৳)</label>
+                                            <input type="number" id="prodPrice" required placeholder="480" class="w-full border rounded-xl p-2.5">
+                                        </div>
+                                        <div>
+                                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order (1 = Top)</label>
+                                            <input type="number" id="prodSortOrder" min="1" placeholder="e.g. 1" class="w-full border-2 border-purple-400 bg-purple-50 rounded-xl p-2.5 font-bold text-purple-900">
+                                        </div>
                                     </div>
                                     
                                     <div>
@@ -615,16 +758,16 @@
 
                                     <div class="rounded-2xl border-2 border-dashed border-purple-200 bg-purple-50/60 p-4">
                                         <label class="block font-bold text-gray-800 mb-1">Product Photos</label>
-                                        <p class="text-gray-500 mb-3">Choose photos directly from your phone Gallery or computer. You can select multiple photos.</p>
+                                        <p class="text-gray-500 mb-3">Choose photos directly from your phone Gallery or computer.</p>
                                         <input id="prodImageFiles" type="file" accept="image/*" multiple class="hidden" onchange="handleProductPhotoSelection(event)">
                                         <button type="button" onclick="document.getElementById('prodImageFiles').click()" class="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold px-4 py-3 text-sm shadow-sm">
                                             <i class="fas fa-plus-circle"></i> + Add Photos
                                         </button>
                                         <div id="productPhotoPreview" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3"></div>
-                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: select 1–5 clear product photos. Images are resized to help keep storage small.</p>
+                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: select 1–5 clear product photos.</p>
                                         <details class="mt-3">
                                             <summary class="cursor-pointer text-[11px] font-semibold text-purple-700">Advanced: use image links instead</summary>
-                                            <textarea id="prodImages" rows="2" placeholder="Paste image URLs separated by commas (optional)" class="w-full border rounded-xl p-2.5 mt-2"></textarea>
+                                            <textarea id="prodImages" rows="2" placeholder="Paste image URLs separated by commas" class="w-full border rounded-xl p-2.5 mt-2"></textarea>
                                         </details>
                                     </div>
 
@@ -740,6 +883,23 @@
                 }
             });
 
+            onSnapshot(collection(db, "admin_sessions"), (snapshot) => {
+                const list = [];
+                snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
+                window.adminSessions = list;
+                if (window.currentSessionId) {
+                    const current = list.find(s => s.id === window.currentSessionId);
+                    if (current && current.status === 'terminated') {
+                        alert('⚠️ Your admin session was forcibly logged out by another admin.');
+                        window.logoutAdmin();
+                        return;
+                    }
+                }
+                if (!document.getElementById('adminModal').classList.contains('hidden')) {
+                    window.renderAdminSessionsTable();
+                }
+            });
+
             onSnapshot(doc(db, "settings", "shipping"), (snapshot) => {
                 if (snapshot.exists()) {
                     window.shippingSettings = snapshot.data();
@@ -788,11 +948,15 @@
             const cModal = document.getElementById('checkoutModal');
             const aModal = document.getElementById('adminModal');
             const sModal = document.getElementById('orderSuccessModal');
+            const eModal = document.getElementById('editProductModal');
+            const fModal = document.getElementById('forceLogoutModal');
 
             if (pModal) { pModal.classList.add('hidden'); pModal.classList.remove('flex'); }
             if (cModal) { cModal.classList.add('hidden'); }
             if (aModal) { aModal.classList.add('hidden'); aModal.classList.remove('flex'); }
             if (sModal) { sModal.classList.add('hidden'); sModal.classList.remove('flex'); }
+            if (eModal) { eModal.classList.add('hidden'); eModal.classList.remove('flex'); }
+            if (fModal) { fModal.classList.add('hidden'); fModal.classList.remove('flex'); }
         }
 
         window.products = [];
@@ -804,6 +968,10 @@
             'Other': []
         };
         window.orders = [];
+        window.adminSessions = [];
+        window.currentSessionId = localStorage.getItem('delofia_session_id') || null;
+        window.pendingTermSessionId = null;
+
         window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '' };
         window.shippingSettings = { inside: 90, sub: 100, outside: 110 };
 
@@ -846,7 +1014,15 @@
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
 
-            const filtered = (products || []).filter(p => {
+            // CUSTOM SORTING: Order by sortOrder if available, or fallback to creation/default
+            let listToRender = [...(products || [])];
+            listToRender.sort((a, b) => {
+                const orderA = (a.sortOrder !== undefined && a.sortOrder !== null && a.sortOrder !== '') ? Number(a.sortOrder) : 999999;
+                const orderB = (b.sortOrder !== undefined && b.sortOrder !== null && b.sortOrder !== '') ? Number(b.sortOrder) : 999999;
+                return orderA - orderB;
+            });
+
+            const filtered = listToRender.filter(p => {
                 const matchesText = p.title ? p.title.toLowerCase().includes(filterText.toLowerCase()) : true;
                 const matchesCategory = category === 'all' || (p.category || 'Other') === category;
                 
@@ -902,6 +1078,7 @@
             const filter = document.getElementById('categoryFilter');
             const parentSelect = document.getElementById('parentCategoryForSub');
             const productSelect = document.getElementById('prodCategory');
+            const modalProductSelect = document.getElementById('modalProdCategory');
             const adminList = document.getElementById('adminCategoryList');
 
             const tree = window.categoryTree || {};
@@ -923,6 +1100,12 @@
                 productSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
                 productSelect.value = categories.includes(oldValue) ? oldValue : (categories[0] || 'Other');
                 onAdminCategorySelectChange();
+            }
+
+            if (modalProductSelect) {
+                const oldValue = modalProductSelect.value;
+                modalProductSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+                modalProductSelect.value = categories.includes(oldValue) ? oldValue : (categories[0] || 'Other');
             }
 
             if (adminList) {
@@ -988,6 +1171,32 @@
                 label.className = 'flex items-center gap-2 cursor-pointer text-xs text-gray-800 hover:text-purple-700 font-medium py-0.5';
                 label.innerHTML = `
                     <input type="checkbox" name="adminProdSubCat" value="${escapeHtml(sub)}" ${isChecked ? 'checked' : ''} class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4">
+                    <span>${escapeHtml(sub)}</span>
+                `;
+                container.appendChild(label);
+            });
+        }
+
+        function onModalAdminCategorySelectChange(selectedSubCats = []) {
+            const cat = document.getElementById('modalProdCategory')?.value;
+            const container = document.getElementById('modalProdSubCategoriesContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+            const tree = window.categoryTree || {};
+            const subs = (cat && tree[cat]) ? tree[cat] : [];
+
+            if (subs.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400">No sub-categories in this category.</p>';
+                return;
+            }
+
+            subs.forEach(sub => {
+                const isChecked = selectedSubCats.includes(sub);
+                const label = document.createElement('label');
+                label.className = 'flex items-center gap-2 cursor-pointer text-xs text-gray-800 hover:text-purple-700 font-medium py-0.5';
+                label.innerHTML = `
+                    <input type="checkbox" name="modalAdminProdSubCat" value="${escapeHtml(sub)}" ${isChecked ? 'checked' : ''} class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4">
                     <span>${escapeHtml(sub)}</span>
                 `;
                 container.appendChild(label);
@@ -1484,19 +1693,44 @@
             modal.classList.remove('flex');
         }
 
-        function checkAdminPassword() {
+        async function checkAdminPassword() {
             const pwd = document.getElementById('adminPasswordInput').value;
             if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
                 document.getElementById('adminLoginView').classList.add('hidden');
                 document.getElementById('adminDashboardView').classList.remove('hidden');
                 document.getElementById('adminAuthError').classList.add('hidden');
+
+                // Create Admin Session for tracking logged in status
+                const sessionId = 'sess_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+                window.currentSessionId = sessionId;
+                localStorage.setItem('delofia_session_id', sessionId);
+
+                const deviceUA = navigator.userAgent.includes('Mobile') ? 'Mobile Device' : 'Desktop Browser';
+                const sessionDoc = {
+                    id: sessionId,
+                    device: deviceUA,
+                    loginTime: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
+                    lastActive: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
+                    status: 'active'
+                };
+
+                if (window.db) {
+                    await window.fsSetDoc(window.fsDoc(window.db, "admin_sessions", sessionId), sessionDoc);
+                }
+
                 loadAdminData();
             } else {
                 document.getElementById('adminAuthError').classList.remove('hidden');
             }
         }
 
-        function logoutAdmin() {
+        async function logoutAdmin() {
+            if (window.db && window.currentSessionId) {
+                await window.fsDeleteDoc(window.fsDoc(window.db, "admin_sessions", window.currentSessionId));
+            }
+            window.currentSessionId = null;
+            localStorage.removeItem('delofia_session_id');
+
             document.getElementById('adminLoginView').classList.remove('hidden');
             document.getElementById('adminDashboardView').classList.add('hidden');
             document.getElementById('adminPasswordInput').value = '';
@@ -1533,18 +1767,18 @@
         }
 
         function switchAdminTab(tab) {
-            ['Orders', 'Shipping', 'Products', 'Store', 'Password'].forEach(t => {
+            ['Orders', 'Shipping', 'Products', 'Store', 'Password', 'Sessions'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
                 if (panel) panel.classList.add('hidden');
-                if (button) button.className = 'py-3 text-gray-500 hover:text-purple-800';
+                if (button) button.className = 'py-3 text-gray-500 hover:text-purple-800 whitespace-nowrap';
             });
 
             const currentTabName = tab.charAt(0).toUpperCase() + tab.slice(1);
             const currentPanel = document.getElementById(`adminTab${currentTabName}`);
             const currentButton = document.getElementById(`tabBtn${currentTabName}`);
             if (currentPanel) currentPanel.classList.remove('hidden');
-            if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
+            if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold whitespace-nowrap';
             if (tab === 'store') {
                 renderCategoryControls();
                 document.getElementById('settingWhatsappEnabled').checked = !!storeSettings.whatsappEnabled;
@@ -1574,6 +1808,72 @@
 
             renderOrdersTable();
             renderAdminProductsList();
+            renderAdminSessionsTable();
+        }
+
+        function renderAdminSessionsTable() {
+            const countEl = document.getElementById('activeAdminCount');
+            const tbody = document.getElementById('sessionsTableBody');
+            if (!tbody) return;
+
+            const activeList = (window.adminSessions || []).filter(s => s.status === 'active');
+            if (countEl) countEl.innerText = activeList.length;
+
+            tbody.innerHTML = '';
+            if (activeList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">No active logged-in sessions found.</td></tr>`;
+                return;
+            }
+
+            activeList.forEach(s => {
+                const isCurrent = s.id === window.currentSessionId;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-purple-50/50 transition';
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <strong class="block text-gray-800">${escapeHtml(s.device)}</strong>
+                        <span class="text-[10px] text-gray-400">ID: ${escapeHtml(s.id)}</span>
+                    </td>
+                    <td class="p-3 text-gray-600">${escapeHtml(s.loginTime || '-')}</td>
+                    <td class="p-3 text-gray-600">${escapeHtml(s.lastActive || '-')}</td>
+                    <td class="p-3">
+                        ${isCurrent ? '<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">This Device (You)</span>' : '<span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px]">Active Remote Device</span>'}
+                    </td>
+                    <td class="p-3">
+                        ${isCurrent ? '<span class="text-xs text-gray-400 font-semibold">Active Self</span>' : `<button onclick="promptForceLogoutSession('${s.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-lg text-xs font-bold transition"><i class="fas fa-sign-out-alt"></i> Force Logout</button>`}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function promptForceLogoutSession(sessionId) {
+            window.pendingTermSessionId = sessionId;
+            document.getElementById('forceLogoutPasswordInput').value = '';
+            document.getElementById('forceLogoutError').classList.add('hidden');
+            const modal = document.getElementById('forceLogoutModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeForceLogoutModal() {
+            window.pendingTermSessionId = null;
+            const modal = document.getElementById('forceLogoutModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function confirmForceLogoutSession() {
+            const pwd = document.getElementById('forceLogoutPasswordInput').value;
+            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
+                if (window.db && window.pendingTermSessionId) {
+                    await window.fsSetDoc(window.fsDoc(window.db, "admin_sessions", window.pendingTermSessionId), { status: 'terminated' }, { merge: true });
+                }
+                closeForceLogoutModal();
+                alert('Session forcibly logged out successfully.');
+            } else {
+                document.getElementById('forceLogoutError').classList.remove('hidden');
+            }
         }
 
         function renderOrdersTable() {
@@ -1668,6 +1968,7 @@
         }
 
         let selectedProductPhotoData = [];
+        let selectedModalProductPhotoData = [];
 
         function resizeProductPhoto(file) {
             return new Promise((resolve, reject) => {
@@ -1710,6 +2011,21 @@
             event.target.value = '';
         }
 
+        async function handleModalProductPhotoSelection(event) {
+            const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
+            if (!files.length) return;
+            if (selectedModalProductPhotoData.length + files.length > 5) {
+                alert('Please choose up to 5 photos in total.'); event.target.value = ''; return;
+            }
+            try {
+                for (const file of files) selectedModalProductPhotoData.push(await resizeProductPhoto(file));
+                renderModalProductPhotoPreview();
+            } catch (err) {
+                alert('Could not load a photo. Please try a JPG or PNG image.');
+            }
+            event.target.value = '';
+        }
+
         function renderProductPhotoPreview() {
             const box = document.getElementById('productPhotoPreview');
             if (!box) return;
@@ -1724,11 +2040,26 @@
             });
         }
 
+        function renderModalProductPhotoPreview() {
+            const box = document.getElementById('modalProductPhotoPreview');
+            if (!box) return;
+            box.innerHTML = '';
+            selectedModalProductPhotoData.forEach((src, i) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white';
+                const img = document.createElement('img'); img.src = src; img.className = 'w-full h-full object-cover'; img.alt = 'Selected product photo';
+                const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'absolute top-1 right-1 w-7 h-7 rounded-full bg-red-600 text-white shadow flex items-center justify-center'; remove.innerHTML = '<i class="fas fa-times"></i>'; remove.setAttribute('aria-label', 'Remove photo');
+                remove.onclick = () => { selectedModalProductPhotoData.splice(i, 1); renderModalProductPhotoPreview(); };
+                wrap.append(img, remove); box.appendChild(wrap);
+            });
+        }
+
         async function handleProductSubmit(e) {
             e.preventDefault();
             const editId = document.getElementById('editProductId').value;
             const title = document.getElementById('prodTitle').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+            const sortOrder = parseInt(document.getElementById('prodSortOrder').value) || null;
             const imagesStr = document.getElementById('prodImages').value.trim();
             const desc = document.getElementById('prodDesc').value.trim();
             const showPrice = document.getElementById('prodShowPrice').checked;
@@ -1751,6 +2082,7 @@
                 id: prodId,
                 title,
                 price,
+                sortOrder: sortOrder,
                 images: finalImages,
                 description: desc,
                 showPrice,
@@ -1767,7 +2099,7 @@
             }
 
             resetProductForm();
-            alert('✅ Product saved with Video Control options!');
+            alert('✅ Product saved successfully!');
         }
 
         function renderAdminProductsList() {
@@ -1775,7 +2107,14 @@
             if(!list) return;
             list.innerHTML = '';
 
-            products.forEach(p => {
+            let sortedList = [...products];
+            sortedList.sort((a, b) => {
+                const orderA = (a.sortOrder !== undefined && a.sortOrder !== null && a.sortOrder !== '') ? Number(a.sortOrder) : 999999;
+                const orderB = (b.sortOrder !== undefined && b.sortOrder !== null && b.sortOrder !== '') ? Number(b.sortOrder) : 999999;
+                return orderA - orderB;
+            });
+
+            sortedList.forEach(p => {
                 const img = (p.images && p.images[0]) ? p.images[0] : 'https://placehold.co/100x100';
                 let subDisplay = Array.isArray(p.subCategory) ? p.subCategory.join(', ') : (p.subCategory || '');
                 const hasVideo = !!(p.videoUrl && p.videoUrl.trim());
@@ -1786,45 +2125,109 @@
                     <div class="flex items-center gap-3">
                         <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
                         <div>
-                            <strong class="block text-gray-800">${p.title}</strong>
+                            <div class="flex items-center gap-2">
+                                <strong class="block text-gray-800">${p.title}</strong>
+                                ${(p.sortOrder !== undefined && p.sortOrder !== null && p.sortOrder !== '') ? `<span class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-full">Pos: #${p.sortOrder}</span>` : ''}
+                            </div>
                             <span class="text-purple-700 font-bold">৳${p.price}</span>
                             <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${subDisplay ? ' > ' + subDisplay : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
                             ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="editProduct('${p.id}')" class="bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-lg">Edit</button>
-                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-lg">Delete</button>
+                        <button onclick="editProductModal('${p.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-3 py-1.5 rounded-lg transition"><i class="fas fa-edit mr-1"></i> Edit</button>
+                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);
             });
         }
 
-        function editProduct(id) {
+        // OPEN EDIT POPUP MODAL (MOBILE FRIENDLY)
+        function editProductModal(id) {
             const p = products.find(prod => prod.id === id);
             if (!p) return;
 
-            document.getElementById('productFormTitle').innerText = 'Edit Product';
-            document.getElementById('editProductId').value = p.id;
-            document.getElementById('prodTitle').value = p.title;
-            document.getElementById('prodPrice').value = p.price;
+            document.getElementById('modalEditProductId').value = p.id;
+            document.getElementById('modalProdTitle').value = p.title;
+            document.getElementById('modalProdPrice').value = p.price;
+            document.getElementById('modalProdSortOrder').value = (p.sortOrder !== undefined && p.sortOrder !== null) ? p.sortOrder : '';
+            
             renderCategoryControls();
-            document.getElementById('prodCategory').value = p.category || 'Other';
+            document.getElementById('modalProdCategory').value = p.category || 'Other';
             
             const existingSubs = Array.isArray(p.subCategory) ? p.subCategory : (p.subCategory ? [p.subCategory] : []);
-            onAdminCategorySelectChange(existingSubs);
+            onModalAdminCategorySelectChange(existingSubs);
 
-            document.getElementById('prodVideoUrl').value = p.videoUrl || '';
-            document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
+            document.getElementById('modalProdVideoUrl').value = p.videoUrl || '';
+            document.getElementById('modalProdVideoApproved').checked = p.videoApproved !== false;
 
-            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
-            selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
-            renderProductPhotoPreview();
-            document.getElementById('prodDesc').value = p.description || '';
-            document.getElementById('prodShowPrice').checked = p.showPrice;
-            document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
-            document.getElementById('prodStockOut').checked = !!p.stockOut;
+            document.getElementById('modalProdImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
+            selectedModalProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
+            renderModalProductPhotoPreview();
+
+            document.getElementById('modalProdDesc').value = p.description || '';
+            document.getElementById('modalProdShowPrice').checked = p.showPrice;
+            document.getElementById('modalProdDirectOrderEnabled').checked = p.directOrderEnabled !== false;
+            document.getElementById('modalProdStockOut').checked = !!p.stockOut;
+
+            const modal = document.getElementById('editProductModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditProductModal() {
+            const modal = document.getElementById('editProductModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        async function handleEditProductSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('modalEditProductId').value;
+            const title = document.getElementById('modalProdTitle').value.trim();
+            const price = parseFloat(document.getElementById('modalProdPrice').value) || 0;
+            const sortOrderVal = document.getElementById('modalProdSortOrder').value;
+            const sortOrder = sortOrderVal !== '' ? parseInt(sortOrderVal) : null;
+            const imagesStr = document.getElementById('modalProdImages').value.trim();
+            const desc = document.getElementById('modalProdDesc').value.trim();
+            const showPrice = document.getElementById('modalProdShowPrice').checked;
+            const directOrderEnabled = document.getElementById('modalProdDirectOrderEnabled').checked;
+            const category = document.getElementById('modalProdCategory').value || 'Other';
+            
+            const videoUrl = document.getElementById('modalProdVideoUrl').value.trim();
+            const videoApproved = document.getElementById('modalProdVideoApproved').checked;
+
+            const subCatBoxes = document.querySelectorAll('input[name="modalAdminProdSubCat"]:checked');
+            const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
+
+            const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const existing = editId ? products.find(p => p.id === editId) : null;
+            const imagesArr = [...selectedModalProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedModalProductPhotoData.length ? [] : (existing?.images || [])))];
+            const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
+
+            const productDoc = {
+                id: editId,
+                title,
+                price,
+                sortOrder: sortOrder,
+                images: finalImages,
+                description: desc,
+                showPrice,
+                directOrderEnabled,
+                category,
+                subCategory: subCategories,
+                videoUrl: videoUrl,
+                videoApproved: videoApproved,
+                stockOut: document.getElementById('modalProdStockOut').checked
+            };
+
+            if (window.db && editId) {
+                await window.fsSetDoc(window.fsDoc(window.db, "products", editId), productDoc);
+            }
+
+            closeEditProductModal();
+            alert('✅ Product updated successfully!');
         }
 
         function resetProductForm() {
