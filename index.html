@@ -701,7 +701,7 @@
         </div>
     </footer>
 
-    <!-- FIREBASE SDK INTEGRATION -->
+    <!-- SINGLE UNIFIED SCRIPT FOR FIREBASE & STOREFRONT LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -725,6 +725,23 @@
         window.fsDeleteDoc = deleteDoc;
         window.fsCollection = collection;
 
+        // Global States
+        window.products = [];
+        window.adminSessions = [];
+        window.categoryTree = { 'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag', 'Electric Water Bag', 'Pocket system'], 'Dresses': [], 'Accessories': [] };
+        window.orders = [];
+        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: '', instagramUrl: '' };
+        window.shippingSettings = { inside: 90, sub: 100, outside: 110 };
+
+        window.currentCheckoutProduct = null;
+        window.currentCheckoutQty = 1;
+        window.appliedDiscount = 0;
+        window.selectedDetailProd = null;
+        window.detailQtyVal = 1;
+        window.selectedProductPhotoData = [];
+        window.pendingStoreLogo = null;
+
+        // Realtime Sync
         function setupRealtimeSync() {
             onSnapshot(collection(db, "products"), (snapshot) => {
                 const list = [];
@@ -751,7 +768,6 @@
                 snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
                 window.adminSessions = list;
                 
-                // Check if my session was forcibly killed
                 const myToken = localStorage.getItem('delofia_session_token');
                 if (myToken && !list.some(s => s.token === myToken)) {
                     localStorage.removeItem('delofia_session_token');
@@ -789,61 +805,22 @@
         }
 
         setupRealtimeSync();
-    </script>
 
-    <script>
-        window.addEventListener('popstate', function(event) {
-            closeAllModalsSilently();
-        });
+        // Helper & Render Functions
+        window.getWhatsappDigits = function() {
+            return String(window.storeSettings.whatsappNumber || '01410947236').replace(/\D/g, '').replace(/^0/, '880');
+        };
 
-        function pushModalState(modalName) {
-            history.pushState({ modal: modalName }, '', window.location.href);
-        }
-
-        function closeAllModalsSilently() {
-            const pModal = document.getElementById('productDetailModal');
-            const cModal = document.getElementById('checkoutModal');
-            const aModal = document.getElementById('adminModal');
-            const sModal = document.getElementById('orderSuccessModal');
-            const apModal = document.getElementById('adminProductModal');
-
-            if (pModal) { pModal.classList.add('hidden'); pModal.classList.remove('flex'); }
-            if (cModal) { cModal.classList.add('hidden'); }
-            if (aModal) { aModal.classList.add('hidden'); aModal.classList.remove('flex'); }
-            if (sModal) { sModal.classList.add('hidden'); sModal.classList.remove('flex'); }
-            if (apModal) { apModal.classList.add('hidden'); apModal.classList.remove('flex'); }
-        }
-
-        window.products = [];
-        window.adminSessions = [];
-        window.categoryTree = { 'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag'], 'Dresses': [] };
-        window.orders = [];
-        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236' };
-        window.shippingSettings = { inside: 90, sub: 100, outside: 110 };
-
-        let currentCheckoutProduct = null;
-        let currentCheckoutQty = 1;
-        let appliedDiscount = 0;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            renderCategoryControls();
-            renderProducts();
-            renderSocialLinks();
-            updateShippingLabels();
-            updateWhatsappUI();
-            if (new URLSearchParams(window.location.search).get('admin') === '1') {
-                const modal = document.getElementById('adminModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
-                document.title = 'Delofia Admin Login';
-                document.body.classList.add('admin-only-mode');
-            }
-        });
-
-        function getPriceContactLinksHTML(productTitle = '') {
-            const wa = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, price জানতে চাই: ' + productTitle)}`;
+        window.getPriceContactLinksHTML = function(productTitle = '') {
+            const wa = `https://wa.me/${window.getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, price জানতে চাই: ' + productTitle)}`;
             return `<a href="${wa}" target="_blank" class="inline-flex items-center gap-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 text-xs font-bold"><i class="fab fa-whatsapp"></i> WhatsApp</a>`;
-        }
+        };
 
-        function renderProducts(filterText = '') {
+        window.escapeHtml = function(value) {
+            return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        };
+
+        window.renderProducts = function(filterText = '') {
             const grid = document.getElementById('productsGrid');
             if(!grid) return;
             grid.innerHTML = '';
@@ -851,8 +828,7 @@
             const category = document.getElementById('categoryFilter')?.value || 'all';
             const subCategory = document.getElementById('subCategoryFilter')?.value || 'all';
 
-            // SORT BY USER DEFINED SORT ORDER PRIORITY (1ST, 2ND POSITION FIRST)
-            const sortedList = [...(products || [])].sort((a,b) => {
+            const sortedList = [...(window.products || [])].sort((a,b) => {
                 const orderA = Number(a.sortOrder || 99);
                 const orderB = Number(b.sortOrder || 99);
                 return orderA - orderB;
@@ -891,7 +867,7 @@
                         <div>
                             <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${subCategoryDisplay ? ' • ' + subCategoryDisplay : ''}</span>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
-                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price || 0).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
+                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price || 0).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${window.getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
                         
                         <div class="space-y-2">
@@ -901,9 +877,9 @@
                 `;
                 grid.appendChild(card);
             });
-        }
+        };
 
-        function renderCategoryControls() {
+        window.renderCategoryControls = function() {
             const filter = document.getElementById('categoryFilter');
             const parentSelect = document.getElementById('parentCategoryForSub');
             const productSelect = document.getElementById('prodCategory');
@@ -911,12 +887,12 @@
             const tree = window.categoryTree || {};
             const categories = Object.keys(tree);
 
-            if (filter) filter.innerHTML = '<option value="all">All categories</option>' + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-            if (parentSelect) parentSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-            if (productSelect) productSelect.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-        }
+            if (filter) filter.innerHTML = '<option value="all">All categories</option>' + categories.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('');
+            if (parentSelect) parentSelect.innerHTML = categories.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('');
+            if (productSelect) productSelect.innerHTML = categories.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('');
+        };
 
-        function onCustomerCategoryChange() {
+        window.onCustomerCategoryChange = function() {
             const cat = document.getElementById('categoryFilter')?.value;
             const subFilter = document.getElementById('subCategoryFilter');
             if (!subFilter) return;
@@ -924,12 +900,12 @@
             subFilter.innerHTML = '<option value="all">All sub-categories</option>';
             const tree = window.categoryTree || {};
             if (cat && cat !== 'all' && tree[cat]) {
-                tree[cat].forEach(sub => { subFilter.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`; });
+                tree[cat].forEach(sub => { subFilter.innerHTML += `<option value="${window.escapeHtml(sub)}">${window.escapeHtml(sub)}</option>`; });
             }
-            filterProducts();
-        }
+            window.filterProducts();
+        };
 
-        function onAdminCategorySelectChange(selectedSubCats = []) {
+        window.onAdminCategorySelectChange = function(selectedSubCats = []) {
             const cat = document.getElementById('prodCategory')?.value;
             const container = document.getElementById('prodSubCategoriesContainer');
             if (!container) return;
@@ -947,25 +923,142 @@
                 const isChecked = selectedSubCats.includes(sub);
                 const label = document.createElement('label');
                 label.className = 'flex items-center gap-2 cursor-pointer text-xs text-gray-800 font-medium py-0.5';
-                label.innerHTML = `<input type="checkbox" name="adminProdSubCat" value="${escapeHtml(sub)}" ${isChecked ? 'checked' : ''} class="rounded text-purple-600 h-4 w-4"> <span>${escapeHtml(sub)}</span>`;
+                label.innerHTML = `<input type="checkbox" name="adminProdSubCat" value="${window.escapeHtml(sub)}" ${isChecked ? 'checked' : ''} class="rounded text-purple-600 h-4 w-4"> <span>${window.escapeHtml(sub)}</span>`;
                 container.appendChild(label);
             });
-        }
+        };
 
-        function escapeHtml(value) {
-            return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-        }
+        window.filterProducts = function() {
+            window.renderProducts(document.getElementById('searchInput')?.value || '');
+        };
 
-        function filterProducts() {
-            renderProducts(document.getElementById('searchInput')?.value || '');
-        }
+        window.getVideoPlatformInfo = function(url) {
+            const str = String(url || '').toLowerCase();
+            if (str.includes('instagram.com')) return { platform: 'Instagram', icon: 'fab fa-instagram', bg: 'bg-pink-600 hover:bg-pink-700 text-white' };
+            if (str.includes('facebook.com') || str.includes('fb.watch')) return { platform: 'Facebook', icon: 'fab fa-facebook-f', bg: 'bg-blue-600 hover:bg-blue-700 text-white' };
+            if (str.includes('youtube.com') || str.includes('youtu.be')) return { platform: 'YouTube', icon: 'fab fa-youtube', bg: 'bg-red-600 hover:bg-red-700 text-white' };
+            if (str.includes('tiktok.com')) return { platform: 'TikTok', icon: 'fab fa-tiktok', bg: 'bg-black hover:bg-gray-800 text-white' };
+            return { platform: 'Video', icon: 'fas fa-play-circle', bg: 'bg-purple-700 hover:bg-purple-800 text-white' };
+        };
 
-        function openAdminProductModal(prodId = null) {
+        window.openProductDetail = function(prodId) {
+            window.selectedDetailProd = window.products.find(p => p.id === prodId);
+            if (!window.selectedDetailProd) return;
+
+            window.detailQtyVal = 1;
+            document.getElementById('detailQty').innerText = window.detailQtyVal;
+            document.getElementById('detailTitle').innerText = window.selectedDetailProd.title;
+            const detailPriceEl = document.getElementById('detailPrice');
+            detailPriceEl.innerText = window.selectedDetailProd.showPrice ? `৳${Number(window.selectedDetailProd.price).toFixed(2)}` : '';
+            detailPriceEl.classList.toggle('hidden', !window.selectedDetailProd.showPrice);
+            document.getElementById('detailDescription').innerText = window.selectedDetailProd.description || 'No additional details provided.';
+
+            const vContainer = document.getElementById('detailVideoContainer');
+            const vBtn = document.getElementById('detailVideoBtn');
+            const hasVideoUrl = !!(window.selectedDetailProd.videoUrl && window.selectedDetailProd.videoUrl.trim());
+            const isApproved = window.selectedDetailProd.videoApproved !== false;
+
+            if (hasVideoUrl && isApproved) {
+                const info = window.getVideoPlatformInfo(window.selectedDetailProd.videoUrl);
+                vBtn.href = window.selectedDetailProd.videoUrl.trim();
+                vBtn.className = `w-full py-2.5 px-4 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-2 transition ${info.bg}`;
+                vBtn.innerHTML = `<i class="${info.icon} text-base"></i> Show Video by ${info.platform} (Click Here)`;
+                vContainer.classList.remove('hidden');
+            } else {
+                vContainer.classList.add('hidden');
+            }
+
+            const mainImg = document.getElementById('detailMainImage');
+            mainImg.src = (window.selectedDetailProd.images && window.selectedDetailProd.images[0]) ? window.selectedDetailProd.images[0] : 'https://placehold.co/400x400';
+
+            const modal = document.getElementById('productDetailModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeProductDetail = function() {
+            const modal = document.getElementById('productDetailModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        window.updateDetailQty = function(delta) {
+            window.detailQtyVal = Math.max(1, window.detailQtyVal + delta);
+            document.getElementById('detailQty').innerText = window.detailQtyVal;
+        };
+
+        window.startCheckoutFromDetail = function() {
+            if (!window.selectedDetailProd || window.selectedDetailProd.stockOut) return;
+            const pId = window.selectedDetailProd.id;
+            const qty = window.detailQtyVal;
+            window.closeProductDetail();
+            window.openDirectCheckout(pId, qty);
+        };
+
+        window.openDirectCheckout = function(prodId, qty = 1) {
+            const prod = window.products.find(p => p.id === prodId);
+            if (!prod || prod.stockOut) return;
+
+            window.currentCheckoutProduct = prod;
+            window.currentCheckoutQty = qty;
+            window.appliedDiscount = 0;
+
+            window.updateShippingLabels();
+
+            const summaryBox = document.getElementById('checkoutSummaryItem');
+            const img = (prod.images && prod.images[0]) ? prod.images[0] : 'https://placehold.co/100x100/8b5cf6/ffffff?text=Delofia';
+            
+            summaryBox.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="relative w-16 h-16 bg-white rounded-xl overflow-hidden border border-gray-300 flex-shrink-0">
+                        <img src="${img}" class="w-full h-full object-cover">
+                        <span class="absolute -top-1 -right-1 bg-gray-700 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">${window.currentCheckoutQty}</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-900">${prod.title}</h4>
+                        <p class="text-xs text-gray-500">Delofia Standard Package</p>
+                    </div>
+                </div>
+                <div class="font-bold text-gray-900 text-sm">৳${(prod.price * window.currentCheckoutQty).toFixed(2)}</div>
+            `;
+
+            window.recalculateTotals();
+            document.getElementById('checkoutModal').classList.remove('hidden');
+        };
+
+        window.closeCheckoutModal = function() {
+            document.getElementById('checkoutModal').classList.add('hidden');
+        };
+
+        window.updateShippingLabels = function() {
+            document.getElementById('labelChargeInside').innerText = Number(window.shippingSettings.inside).toFixed(2);
+            document.getElementById('labelChargeSub').innerText = Number(window.shippingSettings.sub).toFixed(2);
+            document.getElementById('labelChargeOutside').innerText = Number(window.shippingSettings.outside).toFixed(2);
+        };
+
+        window.recalculateTotals = function() {
+            if (!window.currentCheckoutProduct) return;
+
+            const subtotal = window.currentCheckoutProduct.price * window.currentCheckoutQty;
+            document.getElementById('checkoutSubtotal').innerText = subtotal.toFixed(2);
+
+            const selectedRadio = document.querySelector('input[name="shippingMethod"]:checked')?.value || 'inside_dhaka';
+            let shippingFee = window.shippingSettings.inside;
+
+            if (selectedRadio === 'sub_dhaka') shippingFee = window.shippingSettings.sub;
+            else if (selectedRadio === 'outside_dhaka') shippingFee = window.shippingSettings.outside;
+
+            document.getElementById('checkoutShipping').innerText = Number(shippingFee).toFixed(2);
+            const grandTotal = subtotal + Number(shippingFee) - window.appliedDiscount;
+            document.getElementById('checkoutGrandTotal').innerText = Math.max(0, grandTotal).toFixed(2);
+        };
+
+        window.openAdminProductModal = function(prodId = null) {
             const modal = document.getElementById('adminProductModal');
-            resetProductForm();
+            window.resetProductForm();
 
             if (prodId) {
-                const p = products.find(item => item.id === prodId);
+                const p = window.products.find(item => item.id === prodId);
                 if (p) {
                     document.getElementById('productModalTitle').innerText = 'Edit Product (Popup)';
                     document.getElementById('editProductId').value = p.id;
@@ -975,7 +1068,7 @@
                     document.getElementById('prodCategory').value = p.category || 'Other';
                     
                     const existingSubs = Array.isArray(p.subCategory) ? p.subCategory : (p.subCategory ? [p.subCategory] : []);
-                    onAdminCategorySelectChange(existingSubs);
+                    window.onAdminCategorySelectChange(existingSubs);
 
                     document.getElementById('prodVideoUrl').value = p.videoUrl || '';
                     document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
@@ -990,92 +1083,27 @@
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-        }
+        };
 
-        function closeAdminProductModal() {
+        window.closeAdminProductModal = function() {
             const modal = document.getElementById('adminProductModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-        }
+        };
 
-        async function registerAdminSession() {
-            const token = 'sess-' + Math.random().toString(36).substring(2) + Date.now();
-            localStorage.setItem('delofia_session_token', token);
+        window.resetProductForm = function() {
+            document.getElementById('editProductId').value = '';
+            document.getElementById('productModalForm').reset();
+            document.getElementById('prodSortOrder').value = '99';
+            window.onAdminCategorySelectChange([]);
+        };
 
-            const sessionObj = {
-                token: token,
-                device: navigator.userAgent.includes('Mobile') ? 'Smartphone Admin' : 'Desktop Browser Admin',
-                loginTime: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })
-            };
-
-            if (window.db) {
-                await window.fsSetDoc(window.fsDoc(window.db, "admin_sessions", token), sessionObj);
-            }
-        }
-
-        function checkAdminPassword() {
-            const pwd = document.getElementById('adminPasswordInput').value;
-            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
-                document.getElementById('adminLoginView').classList.add('hidden');
-                document.getElementById('adminDashboardView').classList.remove('hidden');
-                document.getElementById('adminAuthError').classList.add('hidden');
-                registerAdminSession();
-                loadAdminData();
-            } else {
-                document.getElementById('adminAuthError').classList.remove('hidden');
-            }
-        }
-
-        function renderSessionsList() {
-            const countEl = document.getElementById('sessionsCount');
-            if (countEl) countEl.innerText = adminSessions.length;
-
-            const box = document.getElementById('adminSessionsList');
-            if (!box) return;
-            box.innerHTML = '';
-
-            const myToken = localStorage.getItem('delofia_session_token');
-
-            if (adminSessions.length === 0) {
-                box.innerHTML = `<div class="p-4 text-center text-gray-400 text-xs">No active sessions logged.</div>`;
-                return;
-            }
-
-            adminSessions.forEach(s => {
-                const isMe = s.token === myToken;
-                const div = document.createElement('div');
-                div.className = `p-4 rounded-2xl border ${isMe ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'} flex items-center justify-between text-xs`;
-                div.innerHTML = `
-                    <div>
-                        <strong class="text-gray-900 block font-bold">${s.device} ${isMe ? '<span class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] ml-1">This Device (You)</span>' : ''}</strong>
-                        <span class="text-gray-500 text-[11px]">Logged in: ${s.loginTime}</span>
-                    </div>
-                    <div>
-                        ${isMe ? '' : `<button onclick="forceLogoutSession('${s.token}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-3 py-1.5 rounded-xl transition text-xs"><i class="fas fa-sign-out-alt mr-1"></i> Force Logout</button>`}
-                    </div>
-                `;
-                box.appendChild(div);
-            });
-        }
-
-        async function forceLogoutSession(token) {
-            const pwd = prompt('Enter Admin Security Password to Force Logout this device:');
-            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
-                if (window.db && token) {
-                    await window.fsDeleteDoc(window.fsDoc(window.db, "admin_sessions", token));
-                    alert('✅ Device logged out successfully!');
-                }
-            } else if (pwd !== null) {
-                alert('❌ Incorrect Password! Force logout cancelled.');
-            }
-        }
-
-        function renderAdminProductsList() {
+        window.renderAdminProductsList = function() {
             const list = document.getElementById('adminProductsList');
             if(!list) return;
             list.innerHTML = '';
 
-            const sortedList = [...(products || [])].sort((a,b) => Number(a.sortOrder || 99) - Number(b.sortOrder || 99));
+            const sortedList = [...(window.products || [])].sort((a,b) => Number(a.sortOrder || 99) - Number(b.sortOrder || 99));
 
             sortedList.forEach(p => {
                 const img = (p.images && p.images[0]) ? p.images[0] : 'https://placehold.co/100x100';
@@ -1104,9 +1132,9 @@
                 `;
                 list.appendChild(item);
             });
-        }
+        };
 
-        async function handleProductSubmit(e) {
+        window.handleProductSubmit = async function(e) {
             e.preventDefault();
             const editId = document.getElementById('editProductId').value;
             const title = document.getElementById('prodTitle').value.trim();
@@ -1123,7 +1151,7 @@
             const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
             const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
 
-            const existing = editId ? products.find(p => p.id === editId) : null;
+            const existing = editId ? window.products.find(p => p.id === editId) : null;
             const finalImages = existing?.images?.length ? existing.images : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
 
             const prodId = editId || ('p-' + Date.now());
@@ -1147,18 +1175,91 @@
                 await window.fsSetDoc(window.fsDoc(window.db, "products", prodId), productDoc);
             }
 
-            closeAdminProductModal();
+            window.closeAdminProductModal();
             alert('✅ Product saved with new position serial!');
-        }
+        };
 
-        function resetProductForm() {
-            document.getElementById('editProductId').value = '';
-            document.getElementById('productModalForm').reset();
-            document.getElementById('prodSortOrder').value = '99';
-            onAdminCategorySelectChange([]);
-        }
+        window.deleteProduct = async function(id) {
+            if (confirm('Delete this product from store?')) {
+                if (window.db && id) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "products", id));
+                }
+            }
+        };
 
-        function switchAdminTab(tab) {
+        window.registerAdminSession = async function() {
+            const token = 'sess-' + Math.random().toString(36).substring(2) + Date.now();
+            localStorage.setItem('delofia_session_token', token);
+
+            const sessionObj = {
+                token: token,
+                device: navigator.userAgent.includes('Mobile') ? 'Smartphone Admin' : 'Desktop Browser Admin',
+                loginTime: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })
+            };
+
+            if (window.db) {
+                await window.fsSetDoc(window.fsDoc(window.db, "admin_sessions", token), sessionObj);
+            }
+        };
+
+        window.checkAdminPassword = function() {
+            const pwd = document.getElementById('adminPasswordInput').value;
+            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
+                document.getElementById('adminLoginView').classList.add('hidden');
+                document.getElementById('adminDashboardView').classList.remove('hidden');
+                document.getElementById('adminAuthError').classList.add('hidden');
+                window.registerAdminSession();
+                window.loadAdminData();
+            } else {
+                document.getElementById('adminAuthError').classList.remove('hidden');
+            }
+        };
+
+        window.renderSessionsList = function() {
+            const countEl = document.getElementById('sessionsCount');
+            if (countEl) countEl.innerText = window.adminSessions.length;
+
+            const box = document.getElementById('adminSessionsList');
+            if (!box) return;
+            box.innerHTML = '';
+
+            const myToken = localStorage.getItem('delofia_session_token');
+
+            if (window.adminSessions.length === 0) {
+                box.innerHTML = `<div class="p-4 text-center text-gray-400 text-xs">No active sessions logged.</div>`;
+                return;
+            }
+
+            window.adminSessions.forEach(s => {
+                const isMe = s.token === myToken;
+                const div = document.createElement('div');
+                div.className = `p-4 rounded-2xl border ${isMe ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'} flex items-center justify-between text-xs`;
+                div.innerHTML = `
+                    <div>
+                        <strong class="text-gray-900 block font-bold">${s.device} ${isMe ? '<span class="text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] ml-1">This Device (You)</span>' : ''}</strong>
+                        <span class="text-gray-500 text-[11px]">Logged in: ${s.loginTime}</span>
+                    </div>
+                    <div>
+                        ${isMe ? '' : `<button onclick="forceLogoutSession('${s.token}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-3 py-1.5 rounded-xl transition text-xs"><i class="fas fa-sign-out-alt mr-1"></i> Force Logout</button>`}
+                    </div>
+                `;
+                box.appendChild(div);
+            });
+        };
+
+        window.forceLogoutSession = async function(token) {
+            const pwd = prompt('Enter Admin Security Password to Force Logout this device:');
+            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
+                if (window.db && token) {
+                    await window.fsDeleteDoc(window.fsDoc(window.db, "admin_sessions", token));
+                    alert('✅ Device logged out successfully!');
+                }
+            } else if (pwd !== null) {
+                alert('❌ Incorrect Password! Force logout cancelled.');
+            }
+        };
+
+        window.switchAdminTab = function(tab) {
             ['Orders', 'Shipping', 'Products', 'Sessions', 'Store', 'Password'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
@@ -1171,51 +1272,64 @@
             const currentButton = document.getElementById(`tabBtn${currentTabName}`);
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold flex-shrink-0';
-            if (tab === 'sessions') renderSessionsList();
-        }
+            if (tab === 'sessions') window.renderSessionsList();
+        };
 
-        function loadAdminData() {
-            renderCategoryControls();
-            renderOrdersTable();
-            renderAdminProductsList();
-            renderSessionsList();
-        }
+        window.loadAdminData = function() {
+            window.renderCategoryControls();
+            window.renderOrdersTable();
+            window.renderAdminProductsList();
+            window.renderSessionsList();
+        };
 
-        function openProductDetail(prodId) {
-            const selectedDetailProd = products.find(p => p.id === prodId);
-            if (!selectedDetailProd) return;
+        window.renderOrdersTable = function() {
+            const countEl = document.getElementById('ordersCount');
+            if (countEl) countEl.innerText = window.orders.length;
+            const tbody = document.getElementById('ordersTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
-            document.getElementById('detailQty').innerText = 1;
-            document.getElementById('detailTitle').innerText = selectedDetailProd.title;
-            const detailPriceEl = document.getElementById('detailPrice');
-            detailPriceEl.innerText = selectedDetailProd.showPrice ? `৳${Number(selectedDetailProd.price).toFixed(2)}` : '';
-            document.getElementById('detailDescription').innerText = selectedDetailProd.description || 'No additional details provided.';
+            if (window.orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400">No direct orders placed yet.</td></tr>`;
+                return;
+            }
 
-            const mainImg = document.getElementById('detailMainImage');
-            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : 'https://placehold.co/400x400';
+            window.orders.forEach((o) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-purple-50/50 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold"><span class="text-purple-800 font-bold block">${o.orderId}</span><span class="text-[10px] text-gray-400">${o.date}</span></td>
+                    <td class="p-3"><strong class="block text-gray-900">${o.customerName}</strong><span class="text-emerald-700 font-semibold block"><i class="fab fa-whatsapp"></i> ${o.phone}</span></td>
+                    <td class="p-3"><span class="font-bold text-gray-800">${o.productTitle}</span><span class="text-xs text-purple-700 block font-semibold">Qty: ${o.quantity}</span></td>
+                    <td class="p-3"><span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${o.shippingArea}</span><div>৳${Number(o.shippingFee).toFixed(2)}</div></td>
+                    <td class="p-3 font-black text-purple-900 text-sm">৳${Number(o.grandTotal || 0).toFixed(2)}</td>
+                    <td class="p-3 min-w-[145px]"><span class="font-bold text-xs">${o.status || 'Pending'}</span></td>
+                    <td class="p-3"><button onclick="deleteOrder('${o.id}')" class="text-red-600 bg-red-50 p-2 rounded-lg"><i class="fas fa-trash"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
 
-            const modal = document.getElementById('productDetailModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+        window.updateWhatsappUI = function() {};
+        window.renderSocialLinks = function() {};
+        window.applyStoreLogo = function() {};
+        window.closeAdminModal = function() {
+            document.getElementById('adminModal').classList.add('hidden');
+        };
+        window.logoutAdmin = function() { location.reload(); };
 
-        function closeProductDetail() {
-            const modal = document.getElementById('productDetailModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function openDirectCheckout(prodId) {
-            const prod = products.find(p => p.id === prodId);
-            if (!prod) return;
-            currentCheckoutProduct = prod;
-            document.getElementById('checkoutModal').classList.remove('hidden');
-        }
-
-        function closeCheckoutModal() { document.getElementById('checkoutModal').classList.add('hidden'); }
-        function updateShippingLabels() {}
-        function recalculateTotals() {}
-        function logoutAdmin() { location.reload(); }
+        // DOMContentLoaded Setup
+        window.addEventListener('DOMContentLoaded', () => {
+            window.renderCategoryControls();
+            window.renderProducts();
+            if (new URLSearchParams(window.location.search).get('admin') === '1') {
+                const modal = document.getElementById('adminModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.title = 'Delofia Admin Login';
+                document.body.classList.add('admin-only-mode');
+            }
+        });
     </script>
 </body>
 </html>
