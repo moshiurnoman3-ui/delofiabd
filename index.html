@@ -370,8 +370,8 @@
         </div>
     </div>
 
-    <!-- EDIT PRODUCT POPUP MODAL (REPAIRED) -->
-    <div id="editProductModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <!-- EDIT PRODUCT POPUP MODAL -->
+    <div id="editProductModal" class="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
             <button onclick="closeEditProductModal()" class="absolute top-4 right-4 z-30 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition">
                 <i class="fas fa-times text-lg"></i>
@@ -396,7 +396,7 @@
                             <input type="number" id="modalProdPrice" required class="w-full border rounded-xl p-2.5">
                         </div>
                         <div>
-                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order (1 = Top)</label>
+                            <label class="block font-bold mb-1 text-purple-900 font-extrabold">Display Order (1 = Top Position)</label>
                             <input type="number" id="modalProdSortOrder" min="1" placeholder="e.g. 1" class="w-full border-2 border-purple-400 bg-purple-50 rounded-xl p-2.5 font-bold text-purple-900">
                         </div>
                     </div>
@@ -456,7 +456,7 @@
                     </div>
 
                     <div class="pt-4 flex gap-2">
-                        <button type="submit" class="flex-1 bg-purple-700 text-white font-bold py-3 rounded-xl hover:bg-purple-800 transition text-sm">Update Product Changes</button>
+                        <button type="submit" class="flex-1 bg-purple-700 text-white font-bold py-3 rounded-xl hover:bg-purple-800 transition text-sm">Save Changes</button>
                         <button type="button" onclick="closeEditProductModal()" class="bg-gray-200 text-gray-700 font-bold px-4 py-3 rounded-xl text-sm">Cancel</button>
                     </div>
                 </form>
@@ -1014,7 +1014,6 @@
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
 
-            // SORTING LOGIC: sortOrder ascending, missing ones at end
             let listToRender = [...(products || [])];
             listToRender.sort((a, b) => {
                 const orderA = (a.sortOrder !== undefined && a.sortOrder !== null && a.sortOrder !== '') ? Number(a.sortOrder) : 999999;
@@ -2119,31 +2118,52 @@
 
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs';
-                item.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <strong class="block text-gray-800">${escapeHtml(p.title)}</strong>
-                                ${(p.sortOrder !== undefined && p.sortOrder !== null && p.sortOrder !== '') ? `<span class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-full">Pos: #${p.sortOrder}</span>` : ''}
-                            </div>
-                            <span class="text-purple-700 font-bold">৳${p.price}</span>
-                            <span class="block text-gray-500 mt-0.5">${escapeHtml(p.category || 'Other')}${subDisplay ? ' > ' + escapeHtml(subDisplay) : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
-                            ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
+                
+                const leftPart = document.createElement('div');
+                leftPart.className = 'flex items-center gap-3';
+                leftPart.innerHTML = `
+                    <img src="${img}" class="w-10 h-10 object-cover rounded-lg border">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <strong class="block text-gray-800">${escapeHtml(p.title)}</strong>
+                            ${(p.sortOrder !== undefined && p.sortOrder !== null && p.sortOrder !== '') ? `<span class="bg-purple-100 text-purple-800 font-extrabold text-[10px] px-2 py-0.5 rounded-full">Pos: #${p.sortOrder}</span>` : ''}
                         </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="editProductModal('${p.id}')" class="bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-3 py-1.5 rounded-lg transition"><i class="fas fa-edit mr-1"></i> Edit</button>
-                        <button type="button" onclick="deleteProduct('${p.id}')" class="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
+                        <span class="text-purple-700 font-bold">৳${p.price}</span>
+                        <span class="block text-gray-500 mt-0.5">${escapeHtml(p.category || 'Other')}${subDisplay ? ' > ' + escapeHtml(subDisplay) : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
+                        ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
                     </div>
                 `;
+
+                const rightPart = document.createElement('div');
+                rightPart.className = 'flex gap-2';
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold px-3 py-1.5 rounded-lg transition';
+                editBtn.innerHTML = '<i class="fas fa-edit mr-1"></i> Edit';
+                editBtn.onclick = function() {
+                    openEditModalForProduct(p);
+                };
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.type = 'button';
+                deleteBtn.className = 'bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition';
+                deleteBtn.innerText = 'Delete';
+                deleteBtn.onclick = function() {
+                    deleteProduct(p.id);
+                };
+
+                rightPart.appendChild(editBtn);
+                rightPart.appendChild(deleteBtn);
+
+                item.appendChild(leftPart);
+                item.appendChild(rightPart);
                 list.appendChild(item);
             });
         }
 
-        // OPEN EDIT POPUP MODAL (REPAIRED & BINDED TO GLOBAL)
-        window.editProductModal = function(id) {
-            const p = window.products.find(prod => String(prod.id) === String(id));
+        // OPEN EDIT POPUP MODAL FUNCTION
+        function openEditModalForProduct(p) {
             if (!p) return;
 
             document.getElementById('modalEditProductId').value = p.id;
@@ -2172,7 +2192,7 @@
             const modal = document.getElementById('editProductModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-        };
+        }
 
         function closeEditProductModal() {
             const modal = document.getElementById('editProductModal');
