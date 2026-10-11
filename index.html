@@ -170,7 +170,8 @@
                 <div class="p-6 bg-purple-50/50 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-purple-100">
                     <div class="w-full flex-1 flex flex-col justify-center items-center">
                         <div class="w-full aspect-square bg-white rounded-2xl overflow-hidden shadow-sm mb-4 relative border border-purple-100">
-                            <img id="detailMainImage" src="" alt="Product" class="w-full h-full object-contain bg-white">
+                            <img id="detailMainImage" src="" alt="Product" onclick="openCustomerImageZoom(this.src)" title="Tap to zoom" class="w-full h-full object-contain bg-white cursor-zoom-in">
+                            <span class="absolute bottom-2 right-2 bg-black/65 text-white text-xs px-2.5 py-1.5 rounded-full pointer-events-none"><i class="fas fa-search-plus mr-1"></i> Tap to zoom</span>
                             <div id="detailStockOverlay" class="hidden absolute inset-0 flex items-center justify-center pointer-events-none"><span class="bg-black/45 text-white font-black text-2xl sm:text-3xl px-5 py-3 rounded-xl -rotate-12 border-2 border-white/70">STOCK OUT</span></div>
                         </div>
                         <!-- Thumbnails list -->
@@ -198,7 +199,8 @@
                             <p class="text-sm font-semibold text-gray-800 mb-3">Price জানতে আমাদের সাথে যোগাযোগ করুন</p>
                             <div id="detailPriceSocialLinks" class="flex flex-wrap gap-2"></div>
                         </div>
-                        <p id="detailDescription" class="text-sm text-gray-600 mb-6 leading-relaxed bg-gray-50 p-4 rounded-xl border border-gray-100"></p>
+                        <div id="detailDescription" class="text-sm text-gray-700 mb-4 leading-relaxed bg-gradient-to-br from-purple-50 via-white to-pink-50 p-4 rounded-2xl border border-purple-100 shadow-sm"></div>
+                        <div id="detailVariantOptions" class="hidden mb-6 space-y-4"></div>
                         
                         <!-- Quantity Selector -->
                         <div class="mb-6">
@@ -223,6 +225,20 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- CUSTOMER IMAGE ZOOM / FULLSCREEN VIEW -->
+    <div id="customerImageZoom" class="fixed inset-0 z-[100] bg-black/95 hidden items-center justify-center" onclick="if(event.target===this) closeCustomerImageZoom()">
+        <button type="button" onclick="closeCustomerImageZoom()" aria-label="Close image zoom" class="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl">&times;</button>
+        <div class="absolute top-4 left-4 z-20 flex gap-2">
+            <button type="button" onclick="changeCustomerImageZoom(-0.5)" aria-label="Zoom out" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-xl font-bold">−</button>
+            <button type="button" onclick="changeCustomerImageZoom(0.5)" aria-label="Zoom in" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-xl font-bold">+</button>
+            <button type="button" onclick="resetCustomerImageZoom()" class="px-3 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-sm font-semibold">Reset</button>
+        </div>
+        <div class="w-full h-full overflow-auto flex items-center justify-center p-3 sm:p-8" id="customerImageZoomViewport">
+            <img id="customerImageZoomTarget" src="" alt="Zoomed product image" class="max-w-full max-h-full object-contain select-none" style="transform:scale(1);transform-origin:center center;transition:transform .15s ease;" draggable="false">
+        </div>
+        <p class="absolute bottom-4 left-0 right-0 text-center text-white/75 text-xs pointer-events-none">Use + / − to zoom • Tap outside or × to close</p>
     </div>
 
     <!-- DIRECT CHECKOUT MODAL -->
@@ -780,6 +796,17 @@
                                         <div id="prodSubCategoriesContainer" class="p-3 border rounded-xl bg-purple-50/40 max-h-36 overflow-y-auto custom-scrollbar space-y-1.5"></div>
                                     </div>
 
+                                    <!-- PRODUCT VARIANTS -->
+                                    <div class="p-3 border-2 border-purple-200 rounded-2xl bg-purple-50/50 space-y-3">
+                                        <label class="flex items-center gap-2 font-bold text-purple-900 cursor-pointer">
+                                            <input type="checkbox" id="prodVariantsEnabled" onchange="toggleAdminVariants()" class="w-4 h-4 rounded text-purple-700">
+                                            Enable Product Variants (Color / Size / Style)
+                                        </label>
+                                        <p class="text-[11px] text-gray-600">যেমন: Color → Blue, Pink; Size → Small, Large। প্রতিটি option-এর জন্য আলাদা ছবি দিতে পারবে। Variant বন্ধ থাকলে customer কোনো option দেখবে না।</p>
+                                        <div id="adminVariantsEditor" class="hidden space-y-3"></div>
+                                        <button type="button" id="addVariantGroupBtn" onclick="addAdminVariantGroup()" class="hidden w-full border border-purple-300 bg-white text-purple-800 font-bold rounded-xl px-3 py-2">+ Add Variant Group (Color / Size)</button>
+                                    </div>
+
                                     <!-- VIDEO LINK CONTROL FOR PRODUCT -->
                                     <div class="p-3 border rounded-xl bg-purple-50/50 border-purple-100 space-y-2">
                                         <label class="block font-bold text-purple-900">Product Video Link (Instagram, Facebook, YouTube, TikTok)</label>
@@ -805,9 +832,22 @@
                                         </details>
                                     </div>
 
-                                    <div>
-                                        <label class="block font-bold mb-1">Description</label>
-                                        <textarea id="prodDesc" rows="3" placeholder="Product details, fabric, dimensions..." class="w-full border rounded-xl p-2.5"></textarea>
+                                    <div class="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-4 space-y-3">
+                                        <div>
+                                            <label class="block font-bold text-purple-950 mb-1">Product Description Builder</label>
+                                            <p class="text-xs text-gray-600">নিজের মতো row/column যোগ করে specification table বানাও। যেমন: Product Size | Material | Weight।</p>
+                                        </div>
+                                        <label class="flex items-center gap-2 rounded-lg border border-purple-200 bg-white p-2 text-xs font-bold text-purple-900">
+                                            <input type="checkbox" id="prodShowDescriptionTable" checked class="rounded text-purple-600">
+                                            Show specification table to customers (uncheck to hide)
+                                        </label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" onclick="addDescriptionRow('base')" class="rounded-lg bg-purple-700 text-white px-3 py-2 text-xs font-bold">+ Add Row</button>
+                                            <button type="button" onclick="addDescriptionColumn('base')" class="rounded-lg bg-white border border-purple-300 text-purple-800 px-3 py-2 text-xs font-bold">+ Add Column</button>
+                                        </div>
+                                        <div id="baseDescriptionTableEditor" class="overflow-x-auto"></div>
+                                        <label class="block font-bold text-gray-700 pt-2">Extra plain-text description (optional)</label>
+                                        <textarea id="prodDesc" rows="2" placeholder="Any extra details not in the table..." class="w-full border rounded-xl p-2.5 bg-white"></textarea>
                                     </div>
 
                                     <div class="flex flex-col gap-3 pt-2">
@@ -909,12 +949,16 @@
 
             onSnapshot(collection(db, "orders"), (snapshot) => {
                 const list = [];
-                snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
+                snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
                 list.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
                 window.orders = list;
                 if (!document.getElementById('adminModal').classList.contains('hidden')) {
                     window.renderOrdersTable();
                 }
+            }, (error) => {
+                console.error('Direct Orders listener failed:', error);
+                const tbody = document.getElementById('ordersTableBody');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-red-600">অর্ডার লোড হয়নি: ${String(error?.message || error).replace(/[<>]/g, '')}</td></tr>`;
             });
 
             onSnapshot(doc(db, "settings", "shipping"), (snapshot) => {
@@ -1126,7 +1170,7 @@
                         </div>
                         
                         <div class="space-y-2">
-                            ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="openDirectCheckout('${product.id}')" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : 'Direct Order'}</button>`}
+                            ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `openDirectCheckout('${product.id}')`}" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : (product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Options' : 'Direct Order')}</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + (product.title || ''))}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
                         </div>
                     </div>
@@ -1420,6 +1464,9 @@
 
         let selectedDetailProd = null;
         let detailQtyVal = 1;
+        let selectedVariantChoices = {};
+        let currentCheckoutVariants = {};
+        let currentCheckoutUnitPrice = 0;
 
         // Detect platform & icon for Video Links
         function getVideoPlatformInfo(url) {
@@ -1436,6 +1483,49 @@
             return { platform: 'Video', icon: 'fas fa-play-circle', bg: 'bg-purple-700 hover:bg-purple-800 text-white' };
         }
 
+        let customerImageZoomScale = 1;
+        function openCustomerImageZoom(src) {
+            if (!src) return;
+            const modal = document.getElementById('customerImageZoom');
+            const img = document.getElementById('customerImageZoomTarget');
+            if (!modal || !img) return;
+            img.src = src;
+            customerImageZoomScale = 1;
+            img.style.transform = 'scale(1)';
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+        function changeCustomerImageZoom(delta) {
+            const img = document.getElementById('customerImageZoomTarget');
+            if (!img) return;
+            customerImageZoomScale = Math.max(1, Math.min(4, customerImageZoomScale + delta));
+            img.style.maxWidth = customerImageZoomScale > 1 ? 'none' : '100%';
+            img.style.maxHeight = customerImageZoomScale > 1 ? 'none' : '100%';
+            img.style.transform = `scale(${customerImageZoomScale})`;
+        }
+        function resetCustomerImageZoom() {
+            customerImageZoomScale = 1;
+            const img = document.getElementById('customerImageZoomTarget');
+            if (img) { img.style.transform = 'scale(1)'; img.style.maxWidth = '100%'; img.style.maxHeight = '100%'; }
+            const viewport = document.getElementById('customerImageZoomViewport');
+            if (viewport) { viewport.scrollTop = 0; viewport.scrollLeft = 0; }
+        }
+        function closeCustomerImageZoom() {
+            const modal = document.getElementById('customerImageZoom');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', function(event) {
+            const modal = document.getElementById('customerImageZoom');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (event.key === 'Escape') closeCustomerImageZoom();
+            if (event.key === '+' || event.key === '=') changeCustomerImageZoom(0.5);
+            if (event.key === '-') changeCustomerImageZoom(-0.5);
+        });
+
         function openProductDetail(prodId) {
             selectedDetailProd = products.find(p => p.id === prodId);
             if (!selectedDetailProd) return;
@@ -1449,7 +1539,9 @@
             const priceContact = document.getElementById('detailPriceContact');
             priceContact.classList.toggle('hidden', !!selectedDetailProd.showPrice);
             document.getElementById('detailPriceSocialLinks').innerHTML = getPriceContactLinksHTML(selectedDetailProd.title);
-            document.getElementById('detailDescription').innerText = selectedDetailProd.description || 'No additional details provided.';
+            selectedVariantChoices = {};
+            selectedVariantMeta = {};
+            renderCustomerDescription(selectedDetailProd, null);
 
             // Render Video Button Option
             const vContainer = document.getElementById('detailVideoContainer');
@@ -1504,8 +1596,11 @@
                 });
             }
 
+            renderCustomerVariantOptions(selectedDetailProd);
+
             const waBtn = document.getElementById('detailWhatsappBtn');
             waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + selectedDetailProd.title)}`;
+            updateDetailWhatsappVariantLink();
             waBtn.classList.toggle('hidden', isStockOut);
             waBtn.setAttribute('aria-disabled', isStockOut ? 'true' : 'false');
             waBtn.onclick = isStockOut ? (event) => event.preventDefault() : null;
@@ -1533,18 +1628,31 @@
 
         function startCheckoutFromDetail() {
             if (!selectedDetailProd || selectedDetailProd.stockOut) return;
+            if (selectedDetailProd.directOrderEnabled === false) return;
             const pId = selectedDetailProd.id;
             const qty = detailQtyVal;
-            closeProductDetail();
-            openDirectCheckout(pId, qty);
+            const choices = { ...(selectedVariantChoices || {}) };
+            const meta = { ...(selectedVariantMeta || {}) };
+            // Hide product details without calling history.back(). Calling history.back()
+            // here fires popstate and closeAllModalsSilently(), which can immediately
+            // hide the checkout modal opened next. Keep checkout as the active modal.
+            const detailModal = document.getElementById('productDetailModal');
+            if (detailModal) {
+                detailModal.classList.add('hidden');
+                detailModal.classList.remove('flex');
+            }
+            openDirectCheckout(pId, qty, choices, meta);
         }
 
-        function openDirectCheckout(prodId, qty = 1) {
+        function openDirectCheckout(prodId, qty = 1, variantChoices = {}, variantMeta = {}) {
             const prod = products.find(p => p.id === prodId);
             if (!prod || prod.stockOut) return;
 
             currentCheckoutProduct = prod;
             currentCheckoutQty = qty;
+            currentCheckoutVariants = { ...(variantChoices || {}) };
+            const pricedVariant = Object.values(variantMeta || {}).reverse().find(o => o && o.price !== '' && o.price !== null && o.price !== undefined && Number.isFinite(Number(o.price)));
+            currentCheckoutUnitPrice = pricedVariant ? Number(pricedVariant.price) : Number(prod.price || 0);
             appliedDiscount = 0;
 
             updateShippingLabels();
@@ -1560,10 +1668,10 @@
                     </div>
                     <div>
                         <h4 class="font-bold text-sm text-gray-900">${prod.title}</h4>
-                        <p class="text-xs text-gray-500">Delofia Standard Package</p>
+                        <p class="text-xs text-gray-500">${Object.values(currentCheckoutVariants).filter(Boolean).length ? 'Selected: ' + Object.values(currentCheckoutVariants).filter(Boolean).join(' / ') : 'Delofia Standard Package'}</p>
                     </div>
                 </div>
-                <div class="font-bold text-gray-900 text-sm">৳${(prod.price * currentCheckoutQty).toFixed(2)}</div>
+                <div class="font-bold text-gray-900 text-sm">৳${(currentCheckoutUnitPrice * currentCheckoutQty).toFixed(2)}</div>
             `;
 
             appliedDiscount = 0; appliedCouponCode = ''; paymentScreenshotData = null;
@@ -1600,7 +1708,7 @@
         function recalculateTotals() {
             if (!currentCheckoutProduct) return;
 
-            const subtotal = currentCheckoutProduct.price * currentCheckoutQty;
+            const subtotal = currentCheckoutUnitPrice * currentCheckoutQty;
             document.getElementById('checkoutSubtotal').innerText = subtotal.toFixed(2);
 
             const selectedRadio = document.querySelector('input[name="shippingMethod"]:checked').value;
@@ -1779,7 +1887,7 @@
                 shipAreaName = "Outside Dhaka";
             }
 
-            const subtotal = currentCheckoutProduct.price * currentCheckoutQty;
+            const subtotal = currentCheckoutUnitPrice * currentCheckoutQty;
             const discount = Math.max(0, Number(appliedDiscount) || 0);
             const total = Math.max(0, subtotal + Number(shipFee) - discount);
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
@@ -1798,8 +1906,10 @@
                 phone: phone,
                 address: `${address}, ${city} ${postal}`.trim(),
                 productTitle: currentCheckoutProduct.title,
+                variantSelection: Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '),
                 quantity: currentCheckoutQty,
-                unitPrice: Number(currentCheckoutProduct.price) || 0,
+                unitPrice: Number(currentCheckoutUnitPrice) || 0,
+                variantUnitPrice: Number(currentCheckoutUnitPrice) || 0,
                 subtotal: subtotal,
                 discount: discount,
                 couponCode: appliedCouponCode || '',
@@ -1842,7 +1952,7 @@
                 const money = value => '৳' + Number(value || 0).toFixed(2);
                 memoPreview.innerHTML = `<p class="font-black text-purple-900 tracking-widest text-center mb-2">DELOFIA ORDER MEMO</p>
                     <p><strong>Order ID:</strong> ${orderObj.orderId}</p><p><strong>Date:</strong> ${orderObj.date}</p>
-                    <p><strong>Product:</strong> ${String(orderObj.productTitle).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))} × ${orderObj.quantity}</p>
+                    <p><strong>Product:</strong> ${String(orderObj.productTitle).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))} × ${orderObj.quantity}</p>${orderObj.variantSelection ? `<p><strong>Variant:</strong> ${String(orderObj.variantSelection).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}</p>` : ''}
                     <p><strong>Subtotal:</strong> ${money(orderObj.subtotal)}</p><p><strong>Delivery:</strong> ${money(orderObj.shippingFee)} (${orderObj.shippingArea})</p>
                     ${Number(orderObj.discount) > 0 ? `<p><strong>Discount${orderObj.couponCode ? ' (' + orderObj.couponCode + ')' : ''}:</strong> -${money(orderObj.discount)}</p>` : ''}
                     <p><strong>Payment:</strong> ${orderObj.paymentMethod === 'advance' ? 'Advance payment · ' + orderObj.paymentProvider : 'Cash on Delivery'}</p>
@@ -2149,16 +2259,16 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
         }
 
         function renderOrdersTable() {
-            document.getElementById('ordersCount').innerText = orders.length;
+            document.getElementById('ordersCount').innerText = (window.orders || []).length;
             const tbody = document.getElementById('ordersTableBody');
             tbody.innerHTML = '';
 
-            if (orders.length === 0) {
+            if ((window.orders || []).length === 0) {
                 tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No direct orders placed yet.</td></tr>`;
                 return;
             }
 
-            orders.forEach((o) => {
+            (window.orders || []).forEach((o) => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-purple-50/50 transition';
                 tr.innerHTML = `
@@ -2173,6 +2283,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     </td>
                     <td class="p-3">
                         <span class="font-bold text-gray-800">${o.productTitle}</span>
+                        ${o.variantSelection ? `<span class="text-[11px] text-blue-700 block font-semibold">${o.variantSelection}</span>` : ''}
                         <span class="text-xs text-purple-700 block font-semibold">Qty: ${o.quantity}</span>
                     </td>
                     <td class="p-3">
@@ -2222,8 +2333,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 
         async function clearAllOrders() {
             if (confirm('Delete ALL order histories?')) {
-                if (window.db && orders.length > 0) {
-                    for (const o of orders) {
+                if (window.db && (window.orders || []).length > 0) {
+                    for (const o of (window.orders || [])) {
                         await window.fsDeleteDoc(window.fsDoc(window.db, "orders", o.id));
                     }
                 }
@@ -2273,14 +2384,15 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     const img = new Image();
                     img.onerror = () => reject(new Error('This image could not be opened.'));
                     img.onload = () => {
-                        const maxSide = 1100;
+                        // Firestore documents have a hard 1 MiB limit. Keep embedded photos small.
+                        const maxSide = 520;
                         const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
                         const canvas = document.createElement('canvas');
                         canvas.width = Math.max(1, Math.round(img.width * scale));
                         canvas.height = Math.max(1, Math.round(img.height * scale));
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.78));
+                        resolve(canvas.toDataURL('image/jpeg', 0.42));
                     };
                     img.src = reader.result;
                 };
@@ -2357,51 +2469,317 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             });
         }
 
+        let adminVariantGroups = [];
+        let adminBaseDescriptionTable = { columns: 2, rows: [['Product Size', ''], ['Material', '']] };
+        let selectedVariantMeta = {};
+
+        function normalizeDescriptionTable(table) {
+            const columns = Math.max(1, Math.min(8, Number(table?.columns) || 2));
+            let rows = Array.isArray(table?.rows) ? table.rows.map(r => { const cells = Array.isArray(r) ? r : (Array.isArray(r?.cells) ? r.cells : []); return Array.from({ length: columns }, (_, i) => String(cells[i] ?? '')); }) : [];
+            if (!rows.length) rows = [Array.from({ length: columns }, () => '')];
+            return { columns, rows };
+        }
+        function firestoreSafeDescriptionTable(table) {
+            const normalized = normalizeDescriptionTable(table);
+            // Firestore rejects arrays nested inside arrays. Store each row as an object containing its cells array.
+            return { columns: normalized.columns, rows: normalized.rows.map(cells => ({ cells })) };
+        }
+        function renderDescriptionTableEditor(targetId, table, scope, gi = -1, oi = -1) {
+            const target = document.getElementById(targetId); if (!target) return;
+            table = normalizeDescriptionTable(table);
+            target.innerHTML = '';
+            const wrapper = document.createElement('div'); wrapper.className = 'min-w-full';
+            const tbl = document.createElement('table'); tbl.className = 'w-full border-collapse text-xs bg-white rounded-lg overflow-hidden';
+            const tbody = document.createElement('tbody');
+            table.rows.forEach((row, ri) => {
+                const tr = document.createElement('tr');
+                row.forEach((value, ci) => {
+                    const td = document.createElement('td'); td.className = 'border border-purple-100 p-1 min-w-[125px]';
+                    const input = document.createElement('input'); input.type = 'text'; input.value = value; input.placeholder = ci === 0 ? 'Label / heading' : 'Write details'; input.className = 'w-full min-w-[115px] rounded-md border border-gray-200 p-2 focus:border-purple-400 outline-none';
+                    input.oninput = () => { const t = getDescriptionTable(scope, gi, oi); t.rows[ri][ci] = input.value; };
+                    td.appendChild(input); tr.appendChild(td);
+                });
+                const action = document.createElement('td'); action.className = 'border border-purple-100 p-1 text-center';
+                const del = document.createElement('button'); del.type = 'button'; del.textContent = '×'; del.title = 'Remove row'; del.className = 'text-red-600 font-black px-2 py-1'; del.onclick = () => { const t = getDescriptionTable(scope, gi, oi); if (t.rows.length > 1) t.rows.splice(ri, 1); renderAllDescriptionEditors(); };
+                action.appendChild(del); tr.appendChild(action); tbody.appendChild(tr);
+            });
+            tbl.appendChild(tbody); wrapper.appendChild(tbl); target.appendChild(wrapper);
+            const note = document.createElement('p'); note.className = 'text-[10px] text-gray-500 mt-1'; note.textContent = 'প্রতি ঘরে আলাদা লেখা দাও। × চাপলে row মুছবে।'; target.appendChild(note);
+        }
+        function getDescriptionTable(scope, gi = -1, oi = -1) {
+            if (scope === 'base') return adminBaseDescriptionTable;
+            return adminVariantGroups?.[gi]?.options?.[oi]?.descriptionTable || (adminVariantGroups[gi].options[oi].descriptionTable = { columns: 2, rows: [['Product Size', ''], ['Material', '']] });
+        }
+        function addDescriptionRow(scope, gi = -1, oi = -1) {
+            const t = getDescriptionTable(scope, gi, oi); t.rows.push(Array.from({ length: t.columns || 2 }, () => '')); renderAllDescriptionEditors();
+        }
+        function addDescriptionColumn(scope, gi = -1, oi = -1) {
+            const t = getDescriptionTable(scope, gi, oi); if ((t.columns || 2) >= 8) return alert('সর্বোচ্চ ৮টি column রাখা যাবে।');
+            t.columns = (t.columns || 2) + 1; t.rows = t.rows.map(r => [...r, '']); renderAllDescriptionEditors();
+        }
+        function renderAllDescriptionEditors() {
+            renderDescriptionTableEditor('baseDescriptionTableEditor', adminBaseDescriptionTable, 'base');
+            renderAdminVariantEditor();
+        }
+        function copyVariantDescriptionTo(groupIndex, optionIndex, source) {
+            const target = adminVariantGroups?.[groupIndex]?.options?.[optionIndex]; if (!target) return;
+            if (source === 'base') target.descriptionTable = JSON.parse(JSON.stringify(normalizeDescriptionTable(adminBaseDescriptionTable)));
+            else {
+                const [sgi, soi] = String(source).split(':').map(Number);
+                const from = adminVariantGroups?.[sgi]?.options?.[soi];
+                if (!from) return alert('যে variant থেকে copy করতে চাও সেটি পাওয়া যায়নি।');
+                target.descriptionTable = JSON.parse(JSON.stringify(normalizeDescriptionTable(from.descriptionTable || adminBaseDescriptionTable)));
+            }
+            renderAdminVariantEditor();
+        }
+        function escapeDescriptionHTML(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+        function renderCustomerDescription(product, option) {
+            const host = document.getElementById('detailDescription'); if (!host) return;
+            const optionTable = normalizeDescriptionTable(option?.descriptionTable || { columns: 2, rows: [] });
+            const optionHasDetails = optionTable.rows.some(row => row.some(cell => String(cell || '').trim()));
+            const table = normalizeDescriptionTable(optionHasDetails ? optionTable : (product?.descriptionTable || { columns: 2, rows: [] }));
+            const usefulRows = table.rows.filter(row => row.some(cell => String(cell || '').trim()));
+            // If the selected option has its own table, use that option's visibility toggle; otherwise use the base table toggle.
+            const shouldShowTable = optionHasDetails ? option?.showDescriptionTable !== false : product?.showDescriptionTable !== false;
+            let html = (shouldShowTable && usefulRows.length) ? '<div class="font-bold text-purple-950 text-sm mb-3">Product Details</div><div class="overflow-x-auto"><table class="w-full text-xs sm:text-sm border-collapse">' : '';
+            if (shouldShowTable) usefulRows.forEach(row => { html += '<tr>' + row.map((cell, i) => `<td class="border border-purple-100 px-3 py-2 ${i === 0 ? 'font-semibold bg-purple-50 text-gray-800' : 'bg-white text-gray-700'}">${escapeDescriptionHTML(cell)}</td>`).join('') + '</tr>'; });
+            if (shouldShowTable && usefulRows.length) html += '</table></div>'; 
+            const extra = option?.description || product?.description || '';
+            if (extra) html += `<p class="mt-3 whitespace-pre-line">${escapeDescriptionHTML(extra)}</p>`;
+            host.innerHTML = html || '<span class="text-gray-500">No additional details provided.</span>';
+        }
+
+        function toggleAdminVariants() {
+            const enabled = document.getElementById('prodVariantsEnabled')?.checked;
+            document.getElementById('adminVariantsEditor')?.classList.toggle('hidden', !enabled);
+            document.getElementById('addVariantGroupBtn')?.classList.toggle('hidden', !enabled);
+            if (enabled && !adminVariantGroups.length) {
+                adminVariantGroups = [{ name: 'Color', options: [{ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] }];
+                renderAdminVariantEditor();
+            }
+        }
+
+        function addAdminVariantGroup() {
+            adminVariantGroups.push({ name: '', options: [{ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] });
+            renderAdminVariantEditor();
+        }
+
+        function addAdminVariantOption(groupIndex) {
+            if (!adminVariantGroups[groupIndex]) return;
+            adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
+            renderAdminVariantEditor();
+        }
+
+        function removeAdminVariantGroup(groupIndex) {
+            adminVariantGroups.splice(groupIndex, 1);
+            renderAdminVariantEditor();
+        }
+
+        function removeAdminVariantOption(groupIndex, optionIndex) {
+            if (!adminVariantGroups[groupIndex]) return;
+            adminVariantGroups[groupIndex].options.splice(optionIndex, 1);
+            if (!adminVariantGroups[groupIndex].options.length) adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
+            renderAdminVariantEditor();
+        }
+
+        function updateAdminVariantGroupName(groupIndex, value) {
+            if (adminVariantGroups[groupIndex]) adminVariantGroups[groupIndex].name = value;
+        }
+
+        function updateAdminVariantOptionName(groupIndex, optionIndex, value) {
+            if (adminVariantGroups[groupIndex]?.options[optionIndex]) adminVariantGroups[groupIndex].options[optionIndex].name = value;
+        }
+
+        async function handleVariantImageUpload(event, groupIndex, optionIndex) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+                const data = await resizeProductPhoto(file);
+                if (adminVariantGroups[groupIndex]?.options[optionIndex]) {
+                    adminVariantGroups[groupIndex].options[optionIndex].image = data;
+                    renderAdminVariantEditor();
+                }
+            } catch (err) { alert('Variant image upload failed. Please choose another image.'); }
+        }
+
+        function renderAdminVariantEditor() {
+            const editor = document.getElementById('adminVariantsEditor');
+            if (!editor) return;
+            editor.innerHTML = '';
+            adminVariantGroups.forEach((group, gi) => {
+                const section = document.createElement('div');
+                section.className = 'rounded-xl border border-purple-200 bg-white p-3 space-y-3';
+                const header = document.createElement('div');
+                header.className = 'flex gap-2 items-center';
+                const name = document.createElement('input');
+                name.value = group.name || '';
+                name.placeholder = 'Group name (Color, Size, Style)';
+                name.className = 'min-w-0 flex-1 border rounded-lg p-2 text-xs';
+                name.oninput = () => updateAdminVariantGroupName(gi, name.value);
+                const removeGroup = document.createElement('button');
+                removeGroup.type = 'button'; removeGroup.className = 'text-red-600 font-bold px-2 py-1'; removeGroup.textContent = 'Remove group';
+                removeGroup.onclick = () => removeAdminVariantGroup(gi);
+                header.append(name, removeGroup); section.appendChild(header);
+                group.options.forEach((option, oi) => {
+                    const row = document.createElement('div');
+                    row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 border-t pt-3';
+                    const left = document.createElement('div'); left.className = 'space-y-2';
+                    const optName = document.createElement('input'); optName.value = option.name || ''; optName.placeholder = 'Option name (Blue / Pink / Small / Large)'; optName.className = 'w-full border rounded-lg p-2 text-xs'; optName.oninput = () => updateAdminVariantOptionName(gi, oi, optName.value);
+                    const upload = document.createElement('input'); upload.type = 'file'; upload.accept = 'image/*'; upload.className = 'block w-full text-[11px]'; upload.onchange = ev => handleVariantImageUpload(ev, gi, oi);
+                    const hint = document.createElement('p'); hint.className = 'text-[10px] text-gray-500'; hint.textContent = option.image ? 'Image added ✓ (choose again to replace)' : 'Optional: upload this option’s photo';
+                    const priceLabel = document.createElement('label'); priceLabel.className = 'block text-[11px] font-bold text-gray-700'; priceLabel.textContent = 'Variant price (৳; blank = use main price)';
+                    const priceInput = document.createElement('input'); priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = option.price ?? ''; priceInput.placeholder = 'e.g. 599'; priceInput.className = 'w-full border rounded-lg p-2 text-xs'; priceInput.oninput = () => { option.price = priceInput.value; };
+                    const descHead = document.createElement('div'); descHead.className = 'font-bold text-xs text-purple-900 pt-2'; descHead.textContent = 'This variant’s description table';
+                    const showDescLabel = document.createElement('label'); showDescLabel.className = 'flex items-center gap-2 rounded border border-purple-200 bg-purple-50 p-2 text-[11px] font-bold text-purple-900';
+                    const showDescCheck = document.createElement('input'); showDescCheck.type = 'checkbox'; showDescCheck.checked = option.showDescriptionTable !== false; showDescCheck.onchange = () => { option.showDescriptionTable = showDescCheck.checked; };
+                    const showDescText = document.createElement('span'); showDescText.textContent = 'Show this variant’s details to customers'; showDescLabel.append(showDescCheck, showDescText);
+                    const descControls = document.createElement('div'); descControls.className = 'flex flex-wrap gap-1';
+                    const addRowBtn = document.createElement('button'); addRowBtn.type = 'button'; addRowBtn.className = 'rounded bg-purple-700 text-white px-2 py-1 text-[10px] font-bold'; addRowBtn.textContent = '+ Row'; addRowBtn.onclick = () => addDescriptionRow('variant', gi, oi);
+                    const addColBtn = document.createElement('button'); addColBtn.type = 'button'; addColBtn.className = 'rounded border border-purple-300 bg-white text-purple-800 px-2 py-1 text-[10px] font-bold'; addColBtn.textContent = '+ Column'; addColBtn.onclick = () => addDescriptionColumn('variant', gi, oi);
+                    const copyBaseBtn = document.createElement('button'); copyBaseBtn.type = 'button'; copyBaseBtn.className = 'rounded border border-emerald-300 bg-emerald-50 text-emerald-800 px-2 py-1 text-[10px] font-bold'; copyBaseBtn.textContent = 'Copy base description'; copyBaseBtn.onclick = () => copyVariantDescriptionTo(gi, oi, 'base');
+                    const copySelect = document.createElement('select'); copySelect.className = 'max-w-full border rounded p-1 text-[10px]'; copySelect.innerHTML = '<option value="">Copy from another variant…</option>';
+                    adminVariantGroups.forEach((g2, g2i) => g2.options.forEach((o2, o2i) => { if (g2i === gi && o2i === oi) return; const op = document.createElement('option'); op.value = `${g2i}:${o2i}`; op.textContent = `${g2.name || 'Group'}: ${o2.name || 'Option'}`; copySelect.appendChild(op); }));
+                    copySelect.onchange = () => { if (copySelect.value) copyVariantDescriptionTo(gi, oi, copySelect.value); };
+                    descControls.append(addRowBtn, addColBtn, copyBaseBtn, copySelect);
+                    const descEditor = document.createElement('div'); descEditor.id = `variantDescTable-${gi}-${oi}`; descEditor.className = 'overflow-x-auto';
+                    left.append(optName, upload, hint, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor); row.appendChild(left);
+                    setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
+                    if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
+                    const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-red-600 text-[11px] font-bold'; remove.textContent = 'Remove option'; remove.onclick = () => removeAdminVariantOption(gi, oi); row.appendChild(remove);
+                    section.appendChild(row);
+                });
+                const add = document.createElement('button'); add.type = 'button'; add.className = 'w-full rounded-lg bg-purple-50 text-purple-800 font-bold py-2'; add.textContent = '+ Add option'; add.onclick = () => addAdminVariantOption(gi); section.appendChild(add);
+                editor.appendChild(section);
+            });
+        }
+
+        function updateDetailWhatsappVariantLink() {
+            const waBtn = document.getElementById('detailWhatsappBtn');
+            if (!waBtn || !selectedDetailProd) return;
+            const choices = Object.entries(selectedVariantChoices || {}).filter(([k, v]) => v).map(([k, v]) => k + ': ' + v).join(', ');
+            const text = 'Hi Delofia, I want to order ' + selectedDetailProd.title + (choices ? ' (' + choices + ')' : '');
+            waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent(text)}`;
+        }
+
+        function updateDetailPriceFromVariants() {
+            if (!selectedDetailProd) return;
+            const selected = Object.values(selectedVariantMeta || {}).reverse().find(o => o && o.price !== '' && o.price !== null && o.price !== undefined && Number.isFinite(Number(o.price)));
+            const price = selected ? Number(selected.price) : Number(selectedDetailProd.price || 0);
+            const el = document.getElementById('detailPrice');
+            if (el) { el.innerText = selectedDetailProd.showPrice ? `৳${price.toFixed(2)}` : ''; el.classList.toggle('hidden', !selectedDetailProd.showPrice); }
+        }
+
+        function renderCustomerVariantOptions(product) {
+            const container = document.getElementById('detailVariantOptions');
+            if (!container) return;
+            const groups = product?.variantEnabled && Array.isArray(product.variantGroups)
+                ? product.variantGroups.map(g => ({ ...g, options: (g.options || []).filter(o => o && String(o.name || '').trim()) })).filter(g => String(g.name || '').trim() && g.options.length)
+                : [];
+            container.innerHTML = '';
+            container.classList.toggle('hidden', !groups.length);
+            if (!groups.length) return;
+            const mainImg = document.getElementById('detailMainImage');
+            groups.forEach((group, gi) => {
+                const wrapper = document.createElement('div');
+                const title = document.createElement('p'); title.className = 'text-xs font-bold text-gray-800 mb-2'; title.textContent = group.name;
+                const options = document.createElement('div'); options.className = 'flex flex-wrap gap-2';
+                group.options.forEach((option, oi) => {
+                    const button = document.createElement('button'); button.type = 'button';
+                    const isFirst = oi === 0;
+                    if (isFirst) { selectedVariantChoices[group.name] = option.name; selectedVariantMeta[group.name] = option; }
+                    button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition ' + (isFirst ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
+                    button.textContent = option.name;
+                    button.onclick = () => {
+                        selectedVariantChoices[group.name] = option.name;
+                        selectedVariantMeta[group.name] = option;
+                        Array.from(options.children).forEach(child => { child.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition border-gray-300 bg-white text-gray-700'; });
+                        button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition border-purple-700 bg-purple-100 text-purple-900';
+                        if (option.image) mainImg.src = option.image;
+                        updateDetailPriceFromVariants();
+                        renderCustomerDescription(selectedDetailProd, option);
+                        updateDetailWhatsappVariantLink();
+                    };
+                    options.appendChild(button);
+                });
+                if (gi === 0 && group.options[0]?.image) mainImg.src = group.options[0].image;
+                if (gi === 0 && group.options[0]) renderCustomerDescription(product, group.options[0]);
+                wrapper.append(title, options); container.appendChild(wrapper);
+            });
+            updateDetailPriceFromVariants();
+        }
+
         async function handleProductSubmit(e) {
             e.preventDefault();
-            const editId = document.getElementById('editProductId').value;
-            const title = document.getElementById('prodTitle').value.trim();
-            const price = parseFloat(document.getElementById('prodPrice').value) || 0;
-            const imagesStr = document.getElementById('prodImages').value.trim();
-            const desc = document.getElementById('prodDesc').value.trim();
-            const showPrice = document.getElementById('prodShowPrice').checked;
-            const directOrderEnabled = document.getElementById('prodDirectOrderEnabled').checked;
-            const category = document.getElementById('prodCategory').value || 'Other';
-            
-            const videoUrl = document.getElementById('prodVideoUrl').value.trim();
-            const videoApproved = document.getElementById('prodVideoApproved').checked;
+            const form = document.getElementById('productForm');
+            const saveButton = form ? form.querySelector('button[type="submit"]') : null;
+            const originalButtonText = saveButton ? saveButton.innerHTML : 'Save Product';
+            if (saveButton) { saveButton.disabled = true; saveButton.innerHTML = 'Saving…'; }
 
-            const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
-            const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
+            try {
+                if (!window.db || !window.fsSetDoc || !window.fsDoc) {
+                    throw new Error('Firebase database is not ready. Please refresh the page and try again.');
+                }
 
-            const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
-            const existing = editId ? products.find(p => p.id === editId) : null;
-            const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
-            const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
+                const editId = document.getElementById('editProductId').value;
+                const title = document.getElementById('prodTitle').value.trim();
+                if (!title) throw new Error('Please enter a product name.');
+                const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+                const imagesStr = document.getElementById('prodImages').value.trim();
+                const desc = document.getElementById('prodDesc').value.trim();
+                const showPrice = document.getElementById('prodShowPrice').checked;
+                const directOrderEnabled = document.getElementById('prodDirectOrderEnabled').checked;
+                const category = document.getElementById('prodCategory').value || 'Other';
+                const videoUrl = document.getElementById('prodVideoUrl').value.trim();
+                const videoApproved = document.getElementById('prodVideoApproved').checked;
+                const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
+                const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
+                const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean);
+                const existing = editId ? products.find(p => p.id === editId) : null;
+                const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
+                const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
+                const prodId = editId || ('p-' + Date.now());
 
-            const prodId = editId || ('p-' + Date.now());
-            const productDoc = {
-                id: prodId,
-                title,
-                price,
-                images: finalImages,
-                description: desc,
-                showPrice,
-                directOrderEnabled,
-                category,
-                subCategory: subCategories,
-                videoUrl: videoUrl,
-                videoApproved: videoApproved,
-                stockOut: document.getElementById('prodStockOut').checked,
-                displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
-            };
+                const productDoc = {
+                    id: prodId,
+                    title,
+                    price,
+                    images: finalImages,
+                    description: desc,
+                    descriptionTable: firestoreSafeDescriptionTable(adminBaseDescriptionTable),
+                    showDescriptionTable: document.getElementById('prodShowDescriptionTable')?.checked !== false,
+                    showPrice,
+                    directOrderEnabled,
+                    category,
+                    subCategory: subCategories,
+                    videoUrl,
+                    videoApproved,
+                    variantEnabled: document.getElementById('prodVariantsEnabled').checked,
+                    variantGroups: document.getElementById('prodVariantsEnabled').checked ? adminVariantGroups.map(g => ({
+                        name: String(g.name || '').trim(),
+                        options: (g.options || []).map(o => ({
+                            name: String(o.name || '').trim(),
+                            image: o.image || '',
+                            price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
+                            descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
+                            showDescriptionTable: o.showDescriptionTable !== false
+                        })).filter(o => o.name)
+                    })).filter(g => g.name && g.options.length) : [],
+                    stockOut: document.getElementById('prodStockOut').checked,
+                    displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
+                };
 
-            if (window.db) {
-                await window.fsSetDoc(window.fsDoc(window.db, "products", prodId), productDoc);
+                const serializedSize = new Blob([JSON.stringify(productDoc)]).size;
+                if (serializedSize > 900000) throw new Error('Product data is still too large (' + Math.round(serializedSize/1024) + ' KB). Please reduce the number of photos/variants or use image URLs. Firestore limit is 1 MiB.');
+                await window.fsSetDoc(window.fsDoc(window.db, 'products', prodId), productDoc);
+                resetProductForm();
+                alert('✅ Product saved successfully!');
+            } catch (error) {
+                console.error('Product save failed:', error);
+                const detail = error?.code ? `${error.code}: ` : '';
+                alert('❌ Product save হয়নি। তোমার লেখা রাখা হয়েছে—কিছু মুছো না.\n\nকারণ: ' + detail + (error?.message || 'Unknown error') + '\n\nFirebase Firestore Rules বা ছবির size সমস্যা হলে এই তথ্যটি আমাকে পাঠাও।');
+            } finally {
+                if (saveButton) { saveButton.disabled = false; saveButton.innerHTML = originalButtonText; }
             }
-
-            resetProductForm();
-            alert('✅ Product saved with Video Control options!');
         }
 
         function renderAdminProductsList() {
@@ -2466,6 +2844,12 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             const existingSubs = Array.isArray(p.subCategory) ? p.subCategory : (p.subCategory ? [p.subCategory] : []);
             onAdminCategorySelectChange(existingSubs);
 
+            document.getElementById('prodVariantsEnabled').checked = !!p.variantEnabled;
+            const showDescTable = document.getElementById('prodShowDescriptionTable'); if (showDescTable) showDescTable.checked = p.showDescriptionTable !== false;
+            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false })) })) : [];
+            adminBaseDescriptionTable = normalizeDescriptionTable(p.descriptionTable || { columns: 2, rows: [['Product Size', ''], ['Material', '']] });
+            toggleAdminVariants();
+            renderAdminVariantEditor();
             document.getElementById('prodVideoUrl').value = p.videoUrl || '';
             document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
 
@@ -2473,6 +2857,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
             renderProductPhotoPreview();
             document.getElementById('prodDesc').value = p.description || '';
+            renderDescriptionTableEditor('baseDescriptionTableEditor', adminBaseDescriptionTable, 'base');
             document.getElementById('prodShowPrice').checked = p.showPrice;
             document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
             document.getElementById('prodStockOut').checked = !!p.stockOut;
@@ -2488,6 +2873,12 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             closeProductEditModal();
             document.getElementById('productForm').reset();
             selectedProductPhotoData = [];
+            adminVariantGroups = [];
+            adminBaseDescriptionTable = { columns: 2, rows: [['Product Size', ''], ['Material', '']] };
+            renderDescriptionTableEditor('baseDescriptionTableEditor', adminBaseDescriptionTable, 'base');
+            const variantsToggle = document.getElementById('prodVariantsEnabled'); if (variantsToggle) variantsToggle.checked = false;
+            toggleAdminVariants();
+            renderAdminVariantEditor();
             renderProductPhotoPreview();
             onAdminCategorySelectChange([]);
         }
