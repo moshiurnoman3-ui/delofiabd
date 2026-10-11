@@ -241,8 +241,8 @@
                                 <h3 class="text-xl font-bold text-gray-900 mb-4">Delivery</h3>
                                 <div class="space-y-3.5">
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-500 mb-1">Country/Region</label>
-                                        <select class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" disabled>
+                                        <label class="block text-xs font-bold text-gray-900 mb-1">Country/Region</label>
+                                        <select class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm" disabled>
                                             <option>Bangladesh</option>
                                         </select>
                                     </div>
@@ -255,13 +255,89 @@
                                     <input type="text" id="custAddress" required placeholder="Address (House number, Street, Area) *" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
 
                                     <div class="grid grid-cols-2 gap-3">
-                                        <input type="text" id="custCity" required placeholder="City *" class="bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
-                                        <input type="text" id="custPostalCode" placeholder="Postal code (optional)" class="bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                                        <div>
+                                            <label for="custCity" class="block text-xs font-semibold text-gray-700 mb-1">Zila *</label>
+                                            <input type="text" id="custCity" list="bdDistricts" required autocomplete="off" placeholder="Search / select Zila *" oninput="lockDistrictIfValid(this)" class="w-full min-w-0 bg-white border border-gray-300 rounded-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                                            <button type="button" id="changeDistrictBtn" onclick="changeDistrictSelection()" class="hidden mt-1 text-xs font-semibold text-purple-700 underline">Change Zila / জেলা পরিবর্তন</button>
+                                            <datalist id="bdDistricts">
+                                            <option value="Bagerhat"></option>
+                                            <option value="Bandarban"></option>
+                                            <option value="Barguna"></option>
+                                            <option value="Barishal"></option>
+                                            <option value="Bhola"></option>
+                                            <option value="Bogura"></option>
+                                            <option value="Brahmanbaria"></option>
+                                            <option value="Chandpur"></option>
+                                            <option value="Chapainawabganj"></option>
+                                            <option value="Chattogram"></option>
+                                            <option value="Chuadanga"></option>
+                                            <option value="Cox&#39;s Bazar"></option>
+                                            <option value="Cumilla"></option>
+                                            <option value="Dhaka"></option>
+                                            <option value="Dinajpur"></option>
+                                            <option value="Faridpur"></option>
+                                            <option value="Feni"></option>
+                                            <option value="Gaibandha"></option>
+                                            <option value="Gazipur"></option>
+                                            <option value="Gopalganj"></option>
+                                            <option value="Habiganj"></option>
+                                            <option value="Jamalpur"></option>
+                                            <option value="Jashore"></option>
+                                            <option value="Jhalokathi"></option>
+                                            <option value="Jhenaidah"></option>
+                                            <option value="Joypurhat"></option>
+                                            <option value="Khagrachhari"></option>
+                                            <option value="Khulna"></option>
+                                            <option value="Kishoreganj"></option>
+                                            <option value="Kurigram"></option>
+                                            <option value="Kushtia"></option>
+                                            <option value="Lakshmipur"></option>
+                                            <option value="Lalmonirhat"></option>
+                                            <option value="Madaripur"></option>
+                                            <option value="Magura"></option>
+                                            <option value="Manikganj"></option>
+                                            <option value="Meherpur"></option>
+                                            <option value="Moulvibazar"></option>
+                                            <option value="Munshiganj"></option>
+                                            <option value="Mymensingh"></option>
+                                            <option value="Naogaon"></option>
+                                            <option value="Narail"></option>
+                                            <option value="Narayanganj"></option>
+                                            <option value="Narsingdi"></option>
+                                            <option value="Natore"></option>
+                                            <option value="Netrokona"></option>
+                                            <option value="Nilphamari"></option>
+                                            <option value="Noakhali"></option>
+                                            <option value="Pabna"></option>
+                                            <option value="Panchagarh"></option>
+                                            <option value="Patuakhali"></option>
+                                            <option value="Pirojpur"></option>
+                                            <option value="Rajbari"></option>
+                                            <option value="Rajshahi"></option>
+                                            <option value="Rangamati"></option>
+                                            <option value="Rangpur"></option>
+                                            <option value="Satkhira"></option>
+                                            <option value="Shariatpur"></option>
+                                            <option value="Sherpur"></option>
+                                            <option value="Sirajganj"></option>
+                                            <option value="Sunamganj"></option>
+                                            <option value="Sylhet"></option>
+                                            <option value="Tangail"></option>
+                                            <option value="Thakurgaon"></option>
+                                            </datalist>
+                                        </div>
+                                        <div class="self-end">
+                                            <input type="text" id="custPostalCode" placeholder="Postal code (optional)" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                                        </div>
                                     </div>
 
-                                    <div class="relative">
-                                        <input type="tel" id="custPhone" required placeholder="Phone (e.g. 01712345678) *" class="w-full bg-white border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
-                                        <i class="fas fa-question-circle absolute right-4 top-3.5 text-gray-400"></i>
+                                    <div>
+                                        <label for="custPhone" class="block text-xs font-semibold text-gray-700 mb-1">Phone number *</label>
+                                        <div class="flex">
+                                            <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-gray-300 bg-gray-100 text-gray-900 text-sm font-bold">+880</span>
+                                            <input type="tel" id="custPhone" required inputmode="numeric" autocomplete="tel-national" placeholder="1XXXXXXXXX or 01XXXXXXXXX" class="min-w-0 flex-1 bg-white border border-gray-300 rounded-r-xl px-3 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">+880-এর পর ১০টি সংখ্যা লিখুন, অথবা 01 দিয়ে শুরু করে ১১টি সংখ্যা লিখুন।</p>
                                     </div>
 
                                     <label class="flex items-center gap-2 mt-2 text-xs text-gray-600 cursor-pointer">
@@ -897,6 +973,30 @@
     </script>
 
     <script>
+        // Lock the district field as soon as a valid district name is entered/selected.
+        // This prevents adding fake text such as "Dhaka dd kk" after choosing a district.
+        function lockDistrictIfValid(input) {
+            const options = Array.from(document.querySelectorAll('#bdDistricts option'));
+            const matched = options.find(option => option.value.toLowerCase() === input.value.trim().toLowerCase());
+            if (!matched) return;
+            input.value = matched.value;
+            input.readOnly = true;
+            input.classList.add('bg-gray-100');
+            const changeBtn = document.getElementById('changeDistrictBtn');
+            if (changeBtn) changeBtn.classList.remove('hidden');
+        }
+
+        function changeDistrictSelection() {
+            const input = document.getElementById('custCity');
+            const changeBtn = document.getElementById('changeDistrictBtn');
+            if (!input) return;
+            input.readOnly = false;
+            input.value = '';
+            input.classList.remove('bg-gray-100');
+            if (changeBtn) changeBtn.classList.add('hidden');
+            input.focus();
+        }
+
         window.addEventListener('popstate', function(event) {
             closeAllModalsSilently();
         });
@@ -1643,7 +1743,24 @@
             const address = document.getElementById('custAddress').value.trim();
             const city = document.getElementById('custCity').value.trim();
             const postal = document.getElementById('custPostalCode').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
+            const phoneInput = document.getElementById('custPhone').value.trim();
+            const digitsOnly = phoneInput.replace(/\D/g, '');
+            let phone = '';
+            if (/^01[3-9]\d{8}$/.test(digitsOnly)) {
+                phone = digitsOnly;
+            } else if (/^1[3-9]\d{8}$/.test(digitsOnly)) {
+                phone = '0' + digitsOnly;
+            } else {
+                alert('সঠিক বাংলাদেশি মোবাইল নম্বর দিন: +880-এর পর ১০টি সংখ্যা অথবা 01 দিয়ে শুরু ১১টি সংখ্যা।');
+                document.getElementById('custPhone').focus();
+                return;
+            }
+            const validDistricts = Array.from(document.querySelectorAll('#bdDistricts option')).map(o => o.value.toLowerCase());
+            if (!validDistricts.includes(city.toLowerCase())) {
+                alert('অনুগ্রহ করে তালিকা থেকে বাংলাদেশের একটি জেলা নির্বাচন করুন।');
+                document.getElementById('custCity').focus();
+                return;
+            }
 
             const selectedRadio = document.querySelector('input[name="shippingMethod"]:checked').value;
             let shipFee = shippingSettings.inside;
@@ -1730,8 +1847,13 @@
             }
 
             const successModal = document.getElementById('orderSuccessModal');
-            successModal.classList.remove('hidden');
-            successModal.classList.add('flex');
+            if (successModal) {
+                successModal.classList.remove('hidden');
+                successModal.classList.add('flex');
+                successModal.style.display = 'flex';
+            }
+            // Keep a recoverable copy of the latest memo in this browser session.
+            try { sessionStorage.setItem('delofiaLastOrderMemo', JSON.stringify(orderObj)); } catch (_) {}
 
             document.getElementById('checkoutForm').reset();
             appliedDiscount = 0; appliedCouponCode = ''; paymentScreenshotData = null;
@@ -1740,9 +1862,12 @@
         }
 
         function downloadOrderMemo() {
-            const o = lastCompletedOrderMemo;
+            let o = lastCompletedOrderMemo;
             if (!o) {
-                alert('Order memo is not available. Please place the order again or contact us.');
+                try { o = JSON.parse(sessionStorage.getItem('delofiaLastOrderMemo') || 'null'); } catch (_) {}
+            }
+            if (!o) {
+                alert('Order memo is not available in this session. Please contact Delofia with your Order ID.');
                 return;
             }
             const money = value => '৳' + Number(value || 0).toFixed(2);
@@ -1785,7 +1910,12 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 const link = document.createElement('a');
                 link.href = url;
                 link.download = `DELOFIA-${String(o.orderId || 'Order').replace(/[^a-zA-Z0-9_-]/g, '')}-Memo.html`;
-                document.body.appendChild(link); link.click(); link.remove();
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                // If the browser ignores the download attribute, open the printable memo.
+                setTimeout(() => { try { window.open(url, '_blank', 'noopener'); } catch (_) {} }, 250);
+                link.remove();
                 setTimeout(() => URL.revokeObjectURL(url), 30000);
             } catch (error) {
                 console.error('Memo download failed:', error);
@@ -1795,8 +1925,21 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 
         function closeSuccessModal() {
             const modal = document.getElementById('orderSuccessModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                // Inline display:flex overrides the .hidden class, so clear it too.
+                modal.style.display = 'none';
+            }
+
+            // Return the customer to the product page, not the checkout overlay.
+            const checkoutModal = document.getElementById('checkoutModal');
+            if (checkoutModal) {
+                checkoutModal.classList.add('hidden');
+                checkoutModal.classList.remove('flex');
+                checkoutModal.style.display = 'none';
+            }
+            document.body.classList.remove('overflow-hidden');
         }
 
         function openAdminModal() {
