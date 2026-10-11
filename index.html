@@ -38,6 +38,9 @@
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #c084fc; border-radius: 4px; }
         body.admin-only-mode > *:not(#adminModal) { display: none !important; }
         body.admin-only-mode #adminModal { position: static !important; display: flex !important; min-height: 100vh; background: #f8f7fb !important; padding: 0 !important; }
+        #productEditBackdrop { display:none; position:fixed; inset:0; z-index:70; background:rgba(17,24,39,.65); backdrop-filter:blur(3px); }
+        #productFormCard.product-edit-active { position:fixed !important; z-index:71; top:3vh; left:50%; transform:translateX(-50%); width:min(94vw,680px); max-height:94vh; overflow-y:auto; box-shadow:0 25px 80px rgba(0,0,0,.3); }
+        @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh; max-height:98vh; width:96vw; padding:1rem; } }
         body.admin-only-mode #adminModal > div { width: 100%; max-width: none; min-height: 100vh; border-radius: 0; }
     </style>
 </head>
@@ -370,6 +373,8 @@
         </div>
     </div>
 
+    <div id="productEditBackdrop" onclick="closeProductEditModal()"></div>
+
     <!-- ADMIN PANEL MODAL -->
     <div id="adminModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
@@ -401,7 +406,7 @@
                 <div class="bg-purple-900 text-white px-6 py-4 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <span class="font-black text-lg">DELOFIA ADMIN</span>
-                        <span class="bg-purple-700 text-purple-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">v2.5 Firestore Connected</span>
+                        <span class="bg-purple-700 text-purple-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">v2.6 Session & Product Ordering</span>
                     </div>
                     <button onclick="logoutAdmin()" class="text-xs bg-purple-800 hover:bg-purple-700 text-purple-200 px-3 py-1.5 rounded-xl transition">
                         <i class="fas fa-sign-out-alt"></i> Logout
@@ -424,6 +429,9 @@
                     </button>
                     <button onclick="switchAdminTab('password')" id="tabBtnPassword" class="py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-key mr-1"></i> Change Password
+                    </button>
+                    <button onclick="switchAdminTab('sessions')" id="tabBtnSessions" class="py-3 text-gray-500 hover:text-purple-800">
+                        <i class="fas fa-shield-alt mr-1"></i> Sessions & Timeout
                     </button>
                 </div>
 
@@ -569,11 +577,25 @@
                         </form>
                     </div>
 
+                    <!-- SESSION SETTINGS -->
+                    <div id="adminTabSessions" class="hidden max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-purple-100">
+                        <h4 class="text-lg font-bold text-purple-900 mb-1">Admin Session & Auto Logout</h4>
+                        <p class="text-xs text-gray-500 mb-5">Refresh করলে login থাকবে। নির্ধারিত সময় শেষ হলে আবার password দিতে হবে।</p>
+                        <form onsubmit="saveSessionSettings(event)" class="flex flex-col sm:flex-row gap-3 items-end border-b border-purple-100 pb-6 mb-6">
+                            <div class="flex-1 w-full"><label for="adminSessionDuration" class="block text-xs font-bold text-gray-700 mb-2">Auto logout after</label>
+                                <select id="adminSessionDuration" class="w-full border rounded-xl p-3 text-sm"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option><option value="180">3 hours</option><option value="360">6 hours</option><option value="720">12 hours</option><option value="1440">24 hours</option></select>
+                            </div><button class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-3 rounded-xl text-sm" type="submit">Save Duration</button>
+                        </form>
+                        <div class="flex items-center justify-between gap-3 mb-3"><h5 class="font-bold text-gray-900">Active sessions in this browser</h5><button type="button" onclick="renderAdminSessions()" class="text-xs font-bold text-purple-700 underline">Refresh list</button></div>
+                        <p class="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">Note: এই session list একই browser/profile-এর tab গুলো track করে। অন্য device থেকে secure logout/revocation করতে Firebase Authentication ও server-side validation লাগবে।</p>
+                        <div id="adminSessionsList" class="space-y-2"></div>
+                    </div>
+
                     <!-- TAB 3: PRODUCT MANAGEMENT -->
                     <div id="adminTabProducts" class="hidden">
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <!-- Add/Edit Form -->
-                            <div class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                            <div id="productFormCard" class="lg:col-span-5 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                 <div class="flex items-center justify-between mb-4">
                                     <h4 id="productFormTitle" class="font-bold text-gray-900">Add New Product</h4>
                                     <button type="button" onclick="resetProductForm()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-sm flex items-center gap-1">
@@ -591,6 +613,10 @@
                                     <div>
                                         <label class="block font-bold mb-1">Price (BDT ৳)</label>
                                         <input type="number" id="prodPrice" required placeholder="480" class="w-full border rounded-xl p-2.5">
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold mb-1">Storefront Display Position (small number = top)</label>
+                                        <input type="number" id="prodDisplayOrder" min="1" step="1" placeholder="Leave blank for default order" class="w-full border rounded-xl p-2.5">
                                     </div>
                                     
                                     <div>
@@ -846,7 +872,11 @@
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
 
-            const filtered = (products || []).filter(p => {
+            const filtered = (products || []).slice().sort((a, b) => {
+                const ao = Number.isFinite(Number(a.displayOrder)) && a.displayOrder !== undefined && a.displayOrder !== null ? Number(a.displayOrder) : Number.MAX_SAFE_INTEGER;
+                const bo = Number.isFinite(Number(b.displayOrder)) && b.displayOrder !== undefined && b.displayOrder !== null ? Number(b.displayOrder) : Number.MAX_SAFE_INTEGER;
+                return ao - bo;
+            }).filter(p => {
                 const matchesText = p.title ? p.title.toLowerCase().includes(filterText.toLowerCase()) : true;
                 const matchesCategory = category === 'all' || (p.category || 'Other') === category;
                 
@@ -1484,23 +1514,95 @@
             modal.classList.remove('flex');
         }
 
+        const ADMIN_SESSION_KEY = 'delofia_admin_session_v1';
+        const ADMIN_SESSIONS_KEY = 'delofia_admin_sessions_v1';
+        const ADMIN_DURATION_KEY = 'delofia_admin_session_duration_minutes';
+        let adminSessionHeartbeat = null;
+        let thisAdminSessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+
+        function getAdminDurationMinutes() { return Math.max(1, Number(localStorage.getItem(ADMIN_DURATION_KEY) || 60)); }
+        function getAdminSessions() { try { return JSON.parse(localStorage.getItem(ADMIN_SESSIONS_KEY) || '{}') || {}; } catch (_) { return {}; } }
+        function saveAdminSessions(sessions) { localStorage.setItem(ADMIN_SESSIONS_KEY, JSON.stringify(sessions)); }
+        function writeCurrentAdminSession() {
+            const session = { id: thisAdminSessionId, createdAt: Date.now(), expiresAt: Date.now() + getAdminDurationMinutes() * 60000, lastSeen: Date.now(), revoked: false };
+            sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+            const sessions = getAdminSessions(); sessions[thisAdminSessionId] = session; saveAdminSessions(sessions);
+            startAdminSessionHeartbeat();
+        }
+        function startAdminSessionHeartbeat() {
+            if (adminSessionHeartbeat) clearInterval(adminSessionHeartbeat);
+            adminSessionHeartbeat = setInterval(() => {
+                const current = getCurrentAdminSession();
+                const registered = current ? getAdminSessions()[current.id] : null;
+                if (!current || current.expiresAt <= Date.now() || current.revoked || registered?.revoked) { logoutAdmin(true); return; }
+                current.lastSeen = Date.now();
+                sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(current));
+                const sessions = getAdminSessions(); sessions[thisAdminSessionId] = current; saveAdminSessions(sessions);
+                if (!document.getElementById('adminDashboardView').classList.contains('hidden')) renderAdminSessions();
+            }, 10000);
+        }
+        function getCurrentAdminSession() { try { return JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY) || 'null'); } catch (_) { return null; } }
+        function restoreAdminSession() {
+            const session = getCurrentAdminSession();
+            if (!session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) { if (session) sessionStorage.removeItem(ADMIN_SESSION_KEY); return false; }
+            thisAdminSessionId = session.id;
+            document.getElementById('adminLoginView').classList.add('hidden');
+            document.getElementById('adminDashboardView').classList.remove('hidden');
+            loadAdminData(); startAdminSessionHeartbeat(); return true;
+        }
         function checkAdminPassword() {
             const pwd = document.getElementById('adminPasswordInput').value;
             if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
                 document.getElementById('adminLoginView').classList.add('hidden');
                 document.getElementById('adminDashboardView').classList.remove('hidden');
                 document.getElementById('adminAuthError').classList.add('hidden');
-                loadAdminData();
-            } else {
-                document.getElementById('adminAuthError').classList.remove('hidden');
-            }
+                writeCurrentAdminSession(); loadAdminData();
+            } else { document.getElementById('adminAuthError').classList.remove('hidden'); }
         }
-
-        function logoutAdmin() {
+        function logoutAdmin(expired = false) {
+            if (adminSessionHeartbeat) { clearInterval(adminSessionHeartbeat); adminSessionHeartbeat = null; }
+            const current = getCurrentAdminSession();
+            if (current) { current.revoked = true; const sessions = getAdminSessions(); sessions[current.id] = current; saveAdminSessions(sessions); }
+            sessionStorage.removeItem(ADMIN_SESSION_KEY);
             document.getElementById('adminLoginView').classList.remove('hidden');
             document.getElementById('adminDashboardView').classList.add('hidden');
             document.getElementById('adminPasswordInput').value = '';
+            if (expired) { const err = document.getElementById('adminAuthError'); err.textContent = 'Session expired or revoked. Please log in again.'; err.classList.remove('hidden'); }
         }
+        function saveSessionSettings(e) {
+            e.preventDefault();
+            const mins = Number(document.getElementById('adminSessionDuration').value || 60);
+            localStorage.setItem(ADMIN_DURATION_KEY, String(mins));
+            const current = getCurrentAdminSession();
+            if (current) { current.expiresAt = Date.now() + mins * 60000; current.lastSeen = Date.now(); sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(current)); const sessions = getAdminSessions(); sessions[current.id] = current; saveAdminSessions(sessions); }
+            alert('Session duration saved. This setting applies to the current browser.'); renderAdminSessions();
+        }
+        function renderAdminSessions() {
+            const box = document.getElementById('adminSessionsList'); if (!box) return;
+            const now = Date.now(), sessions = getAdminSessions();
+            Object.keys(sessions).forEach(id => { if (sessions[id].expiresAt <= now || sessions[id].revoked || now - (sessions[id].lastSeen || 0) > 45000) delete sessions[id]; });
+            saveAdminSessions(sessions); box.innerHTML = '';
+            const active = Object.values(sessions);
+            if (!active.length) { box.innerHTML = '<p class="text-sm text-gray-500 p-4 bg-gray-50 rounded-xl">No active sessions detected in this browser.</p>'; return; }
+            active.forEach(session => {
+                const row = document.createElement('div'); row.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-xl bg-gray-50';
+                const details = document.createElement('div'); details.className = 'text-xs';
+                details.innerHTML = `<strong class="block text-gray-800">${session.id === thisAdminSessionId ? 'This session' : 'Another browser tab'}</strong><span class="text-gray-500">Last active: ${new Date(session.lastSeen).toLocaleTimeString()} · Expires: ${new Date(session.expiresAt).toLocaleTimeString()}</span>`;
+                const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs px-3 py-2 rounded-lg'; btn.textContent = session.id === thisAdminSessionId ? 'Logout this session' : 'Force logout';
+                btn.onclick = () => { const pwd = prompt('Confirm admin password to revoke this session:'); if (pwd !== (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) { alert('Incorrect password.'); return; } session.revoked = true; sessions[session.id] = session; saveAdminSessions(sessions); if (session.id === thisAdminSessionId) logoutAdmin(true); else { localStorage.setItem('delofia_admin_revoke_notice', String(Date.now())); renderAdminSessions(); } };
+                row.append(details, btn); box.appendChild(row);
+            });
+        }
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'delofia_admin_revoke_notice' || event.key === ADMIN_SESSIONS_KEY) {
+                const current = getCurrentAdminSession(); const sessions = getAdminSessions();
+                if (current && (current.revoked || sessions[current.id]?.revoked)) logoutAdmin(true);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes());
+            if (new URLSearchParams(window.location.search).get('admin') === '1') restoreAdminSession();
+        });
 
         function changeAdminPassword(e) {
             e.preventDefault();
@@ -1533,7 +1635,7 @@
         }
 
         function switchAdminTab(tab) {
-            ['Orders', 'Shipping', 'Products', 'Store', 'Password'].forEach(t => {
+            ['Orders', 'Shipping', 'Products', 'Store', 'Password', 'Sessions'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
                 if (panel) panel.classList.add('hidden');
@@ -1545,6 +1647,7 @@
             const currentButton = document.getElementById(`tabBtn${currentTabName}`);
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
+            if (tab === 'sessions') { const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes()); renderAdminSessions(); }
             if (tab === 'store') {
                 renderCategoryControls();
                 document.getElementById('settingWhatsappEnabled').checked = !!storeSettings.whatsappEnabled;
@@ -1759,7 +1862,8 @@
                 subCategory: subCategories,
                 videoUrl: videoUrl,
                 videoApproved: videoApproved,
-                stockOut: document.getElementById('prodStockOut').checked
+                stockOut: document.getElementById('prodStockOut').checked,
+                displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
             };
 
             if (window.db) {
@@ -1792,13 +1896,29 @@
                             ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
                         </div>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="text-[10px] text-gray-500">Position <input type="number" min="1" step="1" id="order-${p.id}" value="${p.displayOrder ?? ''}" placeholder="Auto" class="w-16 border rounded-md px-1.5 py-1 text-xs"></label>
+                        <button onclick="saveProductOrder('${p.id}')" class="bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-lg">Save order</button>
                         <button onclick="editProduct('${p.id}')" class="bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-lg">Edit</button>
                         <button onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-lg">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);
             });
+        }
+
+        async function saveProductOrder(id) {
+            const input = document.getElementById('order-' + id); if (!input) return;
+            const p = products.find(item => item.id === id); if (!p) return;
+            const value = input.value.trim();
+            const updated = { ...p, displayOrder: value === '' ? null : Math.max(1, parseInt(value, 10) || 1) };
+            if (window.db) await window.fsSetDoc(window.fsDoc(window.db, 'products', id), updated);
+            alert('Product display order saved.');
+        }
+
+        function closeProductEditModal() {
+            const card = document.getElementById('productFormCard'); if (card) card.classList.remove('product-edit-active');
+            const backdrop = document.getElementById('productEditBackdrop'); if (backdrop) backdrop.style.display = 'none';
         }
 
         function editProduct(id) {
@@ -1809,6 +1929,7 @@
             document.getElementById('editProductId').value = p.id;
             document.getElementById('prodTitle').value = p.title;
             document.getElementById('prodPrice').value = p.price;
+            document.getElementById('prodDisplayOrder').value = p.displayOrder ?? '';
             renderCategoryControls();
             document.getElementById('prodCategory').value = p.category || 'Other';
             
@@ -1825,11 +1946,16 @@
             document.getElementById('prodShowPrice').checked = p.showPrice;
             document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
             document.getElementById('prodStockOut').checked = !!p.stockOut;
+            document.getElementById('productFormCard').classList.add('product-edit-active');
+            document.getElementById('productEditBackdrop').style.display = 'block';
+            document.getElementById('productFormCard').scrollTop = 0;
         }
 
         function resetProductForm() {
             document.getElementById('productFormTitle').innerText = 'Add New Product';
             document.getElementById('editProductId').value = '';
+            document.getElementById('prodDisplayOrder').value = '';
+            closeProductEditModal();
             document.getElementById('productForm').reset();
             selectedProductPhotoData = [];
             renderProductPhotoPreview();
