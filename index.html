@@ -4155,6 +4155,129 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 }
 </style>
 
+
+<style id="delofia-final-mobile-header-v33">
+@media (max-width: 640px) {
+  /* Keep the entire header on one row; each action owns its own non-overlapping space. */
+  header > div.max-w-7xl {
+    height: 62px !important;
+    min-height: 62px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    overflow: visible !important;
+  }
+  #delofiaMenuButton {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 24px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    font-size: 18px !important;
+  }
+  #brandLogo {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    gap: 5px !important;
+    overflow: visible !important;
+  }
+  #brandLogoMark {
+    display: flex !important;
+    flex: 0 0 28px !important;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    font-size: 15px !important;
+    border-radius: 8px !important;
+  }
+  #brandLogo > div:last-child {
+    display: block !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  #brandLogo > div:last-child span:first-child {
+    display: block !important;
+    font-size: 13px !important;
+    line-height: 1 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+  #brandLogo > div:last-child span:last-child { display: none !important; }
+  header #delofiaHeaderActions {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  header #customerAccountHeaderBtn,
+  header #headerWishlistButton,
+  header #headerCartButton,
+  header #delofiaHeaderActions > a[href*="wa.me"] {
+    position: relative !important;
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 27px !important;
+    max-width: none !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    gap: 3px !important;
+    margin: 0 !important;
+    padding: 0 6px !important;
+    border-radius: 8px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+  header #customerAccountHeaderBtn { min-width: 53px !important; padding: 0 5px !important; font-size: 10px !important; }
+  header #customerAccountHeaderBtn i { display: inline-block !important; font-size: 11px !important; }
+  header #customerAccountHeaderLabel { display: inline !important; font-size: 10px !important; }
+  header #headerWishlistButton,
+  header #headerCartButton,
+  header #delofiaHeaderActions > a[href*="wa.me"] { width: 28px !important; min-width: 28px !important; padding: 0 !important; }
+  header #headerWishlistButton .hidden.sm\:inline,
+  header #headerCartButton .hidden.sm\:inline,
+  header #headerWishlistButton #wishlistCountBadge,
+  header #headerCartButton #cartCountBadge,
+  header #headerCartButton #cartValueLabel { display: none !important; }
+  header #headerWishlistButton i,
+  header #headerCartButton i,
+  header #delofiaHeaderActions > a[href*="wa.me"] i { display: inline-block !important; font-size: 14px !important; line-height: 1 !important; }
+  /* Keep the floating round WhatsApp shortcut on the storefront, but not over product details. */
+  #delofiaFloatingWhatsapp { display: flex !important; }
+  body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !important; }
+}
+@media (max-width: 360px) {
+  header > div.max-w-7xl { gap: 4px !important; padding-left: 6px !important; padding-right: 6px !important; }
+  #brandLogo { gap: 3px !important; }
+  #brandLogoMark { flex-basis: 25px !important; width: 25px !important; min-width: 25px !important; height: 25px !important; }
+  #brandLogo > div:last-child span:first-child { font-size: 12px !important; }
+  header #delofiaHeaderActions { gap: 3px !important; }
+  header #customerAccountHeaderBtn { min-width: 49px !important; padding: 0 4px !important; }
+  header #headerWishlistButton, header #headerCartButton, header #delofiaHeaderActions > a[href*="wa.me"] { width: 25px !important; min-width: 25px !important; }
+}
+</style>
+
 </body></html>`;
             try {
                 const blob = new Blob([memoHtml], { type: 'text/html;charset=utf-8' });
