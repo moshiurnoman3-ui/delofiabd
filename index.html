@@ -6924,3 +6924,72 @@ html, body { max-width:100%; overflow-x:clip; }
 /* Intentionally keep #mobileProductSearchBar in its original row below the header.
    Moving it into #delofiaHeaderActions caused the search, logo and cart to overlap. */
 </script>
+
+
+<style id="delofia-header-cart-popup-stability-v68">
+/* Stabilize header controls: cart totals/counts can change, but must not make the row jump. */
+html { scrollbar-gutter: stable; }
+header.sticky { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+header #delofiaHeaderActions {
+  flex-shrink: 0 !important;
+  align-items: center !important;
+  transform: none !important;
+  animation: none !important;
+}
+header #customerAccountHeaderBtn,
+header #headerWishlistButton,
+header #headerCartButton,
+header #delofiaHeaderActions > a[href*="wa.me"] {
+  align-self: center !important;
+  transform: none !important;
+  animation: none !important;
+  transition: none !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+header #wishlistCountBadge, header #cartCountBadge {
+  flex: 0 0 20px !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  font-variant-numeric: tabular-nums !important;
+}
+header #cartValueLabel {
+  display: inline-block !important;
+  min-width: 78px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+  flex: 0 0 auto !important;
+}
+/* Stop the cart and wishlist panels from animating/appearing to bounce when opened. */
+#cartModal, #wishlistModal {
+  scroll-behavior: auto !important;
+  animation: none !important;
+  transition: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+#cartModal > div, #cartModal > div > div,
+#wishlistModal > div, #wishlistModal > div > div {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+#cartModal #cartItemsList, #wishlistModal #wishlistItemsList {
+  overflow-anchor: none !important;
+}
+@media (max-width: 640px) {
+  header #cartValueLabel { min-width: 0 !important; }
+  header #headerWishlistButton, header #headerCartButton,
+  header #customerAccountHeaderBtn { transform: none !important; transition: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+</style>
