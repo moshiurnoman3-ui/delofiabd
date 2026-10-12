@@ -528,7 +528,9 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 
             <!-- Header Actions -->
             <div class="flex items-center gap-2 sm:gap-4">
-                <button type="button" onclick="openCartModal()" class="relative flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-900 px-3 py-2 rounded-full text-xs sm:text-sm font-bold transition" aria-label="Open shopping cart"><i class="fas fa-shopping-cart"></i><span class="hidden sm:inline">Cart</span><span id="cartCountBadge" class="min-w-5 h-5 px-1 rounded-full bg-purple-700 text-white text-[10px] flex items-center justify-center">0</span></button>
+                <button type="button" id="customerAccountHeaderBtn" onclick="openCustomerAccount()" class="relative flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 px-3 py-2 rounded-full text-xs sm:text-sm font-bold transition" aria-label="Customer account"><i class="fas fa-user"></i><span id="customerAccountHeaderLabel">Login</span></button>
+                <button type="button" onclick="openWishlistModal()" class="relative flex items-center gap-2 bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 px-3 py-2 rounded-full text-xs sm:text-sm font-bold transition" aria-label="Open wishlist"><i class="fas fa-heart"></i><span class="hidden sm:inline">Wishlist</span><span id="wishlistCountBadge" class="min-w-5 h-5 px-1 rounded-full bg-pink-600 text-white text-[10px] flex items-center justify-center">0</span></button>
+                <button type="button" onclick="openCartModal()" class="relative flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-900 px-3 py-2 rounded-full text-xs sm:text-sm font-bold transition" aria-label="Open shopping cart"><i class="fas fa-shopping-cart"></i><span class="hidden sm:inline">Cart</span><span id="cartCountBadge" class="min-w-5 h-5 px-1 rounded-full bg-purple-700 text-white text-[10px] flex items-center justify-center">0</span><span id="cartValueLabel" class="font-extrabold whitespace-nowrap">৳0.00</span></button>
                 <a href="https://wa.me/8801410947236" target="_blank" class="hidden sm:flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-full text-xs font-semibold shadow-sm transition">
                     <i class="fab fa-whatsapp text-base"></i> WhatsApp
                 </a>
@@ -731,6 +733,17 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
       </div></div>
     </div>
 
+    <!-- WISHLIST MODAL -->
+    <div id="wishlistModal" class="fixed inset-0 z-[75] bg-black/60 backdrop-blur-sm hidden overflow-y-auto" onclick="if(event.target===this) closeWishlistModal()">
+      <div class="min-h-screen flex items-center justify-center p-3"><div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-4 sm:p-6 relative">
+        <button type="button" onclick="closeWishlistModal()" class="absolute right-3 top-3 w-9 h-9 rounded-full bg-gray-100 text-gray-700 text-xl" aria-label="Close wishlist">×</button>
+        <h2 class="text-xl font-extrabold text-pink-700 mb-1"><i class="fas fa-heart mr-2"></i>My Wishlist</h2>
+        <p class="text-sm text-gray-500 mb-4">পছন্দের পণ্যগুলো এখানে সেভ থাকবে।</p>
+        <div id="wishlistItemsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        <div class="mt-4 text-right"><button type="button" onclick="closeWishlistModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 px-5 py-3 font-bold text-sm">Continue Shopping</button></div>
+      </div></div>
+    </div>
+
     <!-- CUSTOMER IMAGE ZOOM / FULLSCREEN VIEW -->
     <div id="customerImageZoom" class="fixed inset-0 z-[100] bg-black/95 hidden items-center justify-center" onclick="if(event.target===this) closeCustomerImageZoom()">
         <button type="button" onclick="closeCustomerImageZoom()" aria-label="Close image zoom" class="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl">&times;</button>
@@ -743,6 +756,43 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             <img id="customerImageZoomTarget" src="" alt="Zoomed product image" class="max-w-full max-h-full object-contain select-none" style="transform:scale(1);transform-origin:center center;transition:transform .15s ease;" draggable="false">
         </div>
         <p class="absolute bottom-4 left-0 right-0 text-center text-white/75 text-xs pointer-events-none">Use + / − to zoom • Tap outside or × to close</p>
+    </div>
+
+    <!-- CUSTOMER ACCOUNT MODAL -->
+    <div id="customerAccountModal" class="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm hidden overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="customerAccountTitle">
+      <div class="min-h-screen flex items-center justify-center p-3">
+        <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-purple-100">
+          <div class="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-5 flex items-center justify-between">
+            <div><h2 id="customerAccountTitle" class="text-xl font-black">My Delofia Account</h2><p class="text-xs text-purple-100 mt-1">Login with phone number and password — no OTP</p></div>
+            <button type="button" onclick="closeCustomerAccount()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25" aria-label="Close"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="p-5 sm:p-6">
+            <div id="customerAccountLoggedIn" class="hidden">
+              <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4 mb-4"><p class="text-sm text-gray-500">Logged in as</p><p id="customerAccountSummaryName" class="font-black text-lg text-purple-900"></p><p id="customerAccountSummaryPhone" class="text-sm text-gray-600"></p></div>
+              <button type="button" onclick="editCustomerAccountProfile()" class="w-full rounded-xl border border-purple-200 py-3 font-bold text-purple-800 hover:bg-purple-50 mb-2">Edit Profile</button>
+              <button type="button" onclick="customerAccountLogout()" class="w-full rounded-xl bg-gray-100 py-3 font-bold text-gray-700 hover:bg-gray-200">Log Out</button>
+            </div>
+            <div id="customerAccountAuthArea">
+              <div class="grid grid-cols-2 gap-2 mb-5"><button id="customerRegisterTab" type="button" onclick="setCustomerAccountMode('register')" class="rounded-xl bg-purple-700 text-white py-2.5 font-bold">Create Account</button><button id="customerLoginTab" type="button" onclick="setCustomerAccountMode('login')" class="rounded-xl bg-gray-100 text-gray-700 py-2.5 font-bold">Login</button></div>
+              <form id="customerAccountForm" onsubmit="submitCustomerAccount(event)" class="space-y-3">
+                <div id="customerRegisterFields" class="space-y-3">
+                  <input id="customerProfileName" type="text" autocomplete="name" placeholder="Full name *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                  <input id="customerProfileAddress" type="text" autocomplete="street-address" placeholder="Full address *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                  <div class="grid grid-cols-2 gap-3"><input id="customerProfileDistrict" type="text" list="bdDistricts" autocomplete="off" placeholder="District / Zila * (type to search)" required class="min-w-0 rounded-xl border border-gray-300 px-3 py-3 text-sm text-gray-900"><input id="customerProfilePostal" type="text" placeholder="Postal code (optional)" class="min-w-0 rounded-xl border border-gray-300 px-3 py-3 text-sm text-gray-900"></div>
+                  <input id="customerProfileEmail" type="email" autocomplete="email" placeholder="Email address (required for password reset) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                </div>
+                <input id="customerProfilePhone" type="tel" autocomplete="tel" inputmode="numeric" maxlength="11" minlength="11" pattern="01[3-9][0-9]{8}" placeholder="Phone number (11 digits, e.g. 017XXXXXXXX) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                <input id="customerProfilePassword" type="password" autocomplete="current-password" minlength="6" placeholder="Password (at least 6 characters) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                <button id="customerForgotPasswordBtn" type="button" onclick="customerForgotPassword()" class="hidden text-sm font-bold text-purple-700 hover:underline">Forgot Password? Send reset link to email</button>
+                <p id="customerAccountHelp" class="text-xs text-gray-500">Account খুলতে email দিতে হবে। Login হবে ফোন নম্বর ও password দিয়ে। Password ভুলে গেলে email-এ reset link যাবে।</p>
+                <div id="customerAccountError" class="hidden rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm p-3"></div>
+                <button id="customerAccountSubmitBtn" type="submit" class="w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3.5 font-black">Create Account</button>
+              </form>
+              <p class="text-[11px] text-gray-400 mt-4">Your password is handled by Firebase Authentication and is not saved as plain text in your profile.</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- DIRECT CHECKOUT MODAL -->
@@ -1057,6 +1107,9 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                     <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="flex-shrink-0 py-3 text-purple-800 border-b-2 border-purple-700">
                         <i class="fas fa-shopping-cart mr-1"></i> Direct Orders (<span id="ordersCount">0</span>)
                     </button>
+                    <button onclick="switchAdminTab('customers')" id="tabBtnCustomers" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
+                        <i class="fas fa-users mr-1"></i> Customers & Discounts
+                    </button>
                     <button onclick="switchAdminTab('shipping')" id="tabBtnShipping" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-truck mr-1"></i> Delivery Charges Settings
                     </button>
@@ -1110,6 +1163,28 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                             </div>
                         </div>
                     </div>
+
+                    <!-- CUSTOMER ACCOUNTS & INDIVIDUAL DISCOUNTS -->
+                    <div id="adminTabCustomers" class="hidden max-w-6xl mx-auto space-y-5">
+                      <section class="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border border-purple-200 sticky top-0 z-20">
+                        <div class="flex flex-wrap items-center justify-between gap-1 mb-2"><h4 class="text-base font-black text-purple-900">🎁 Customer Discount Center</h4><span id="selectedAdminCustomerCount" class="text-[11px] font-bold rounded-full bg-purple-100 text-purple-800 px-2 py-1">0 selected</span></div>
+                        <form onsubmit="saveIndividualCustomerDiscount(event)" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 items-end">
+                          <div><label class="block text-[11px] font-bold mb-1">Discount type</label><select id="individualDiscountType" class="w-full border rounded-lg p-2 text-xs"><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (৳)</option></select></div>
+                          <div><label class="block text-[11px] font-bold mb-1">Discount value</label><input id="individualDiscountValue" type="number" min="1" step="0.01" required placeholder="15 or 200" class="w-full border rounded-lg p-2 text-xs"></div>
+                          <div><label class="block text-[11px] font-bold mb-1">Minimum order (৳)</label><input id="individualDiscountMinimum" type="number" min="0" step="1" value="0" class="w-full border rounded-lg p-2 text-xs"></div>
+                          <div><label class="block text-[11px] font-bold mb-1">Expiry (optional)</label><input id="individualDiscountExpiry" type="datetime-local" class="w-full min-w-0 border rounded-lg p-2 text-xs"></div>
+                          <div class="flex items-center gap-1 min-h-9"><input id="individualDiscountActive" type="checkbox" checked class="w-4 h-4"><label for="individualDiscountActive" class="text-[11px] font-bold">Active</label></div>
+                          <div><button type="submit" class="w-full rounded-lg bg-purple-700 hover:bg-purple-800 text-white p-2 text-xs font-bold">Apply Discount</button></div>
+                          <div><button type="button" onclick="removeIndividualCustomerDiscount()" class="w-full rounded-lg bg-red-100 text-red-700 p-2 text-xs font-bold">Remove Discount</button></div>
+                        </form>
+                      </section>
+
+                      <section class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-purple-100">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><div><h4 class="text-lg font-black text-purple-900">Registered Customers</h4><p class="text-xs text-gray-500 mt-1">Customer account information from Firestore. Select one or more customers below to assign a personal offer.</p></div><button type="button" onclick="renderAdminCustomers()" class="rounded-xl bg-purple-100 text-purple-800 px-4 py-2 font-bold text-sm">Refresh List</button></div>
+                        <div class="mb-3"><label for="adminCustomerSearch" class="block text-xs font-bold text-gray-700 mb-1">Search customer by name, phone, or email</label><input id="adminCustomerSearch" type="search" oninput="filterAdminCustomers()" placeholder="নাম / ফোন নম্বর / ইমেইল লিখে খুঁজুন…" class="w-full sm:max-w-md rounded-xl border border-purple-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"><p class="text-[11px] text-gray-500 mt-1">Address ও district দিয়েও search করা যাবে।</p></div><div id="adminCustomersStatus" class="text-sm text-gray-500 mb-3">Loading customers…</div>
+                        <div class="overflow-auto max-h-[55vh] border rounded-xl"><table class="w-full text-left text-xs text-gray-700"><thead class="bg-gray-100"><tr><th class="p-3"><input type="checkbox" id="selectAllAdminCustomers" onchange="toggleAllAdminCustomers(this.checked)"></th><th class="p-3">Customer</th><th class="p-3">Phone</th><th class="p-3">Address / District</th><th class="p-3">Email</th><th class="p-3">Personal Discount</th><th class="p-3">Action</th></tr></thead><tbody id="adminCustomersTableBody"><tr><td colspan="7" class="p-4 text-gray-500">Loading…</td></tr></tbody></table></div>
+                      </section>
+                                          </div>
 
                     <!-- TAB 2: DELIVERY CHARGES SETTINGS -->
                     <div id="adminTabShipping" class="hidden max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-purple-100">
@@ -1474,26 +1549,47 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 
     <footer class="bg-purple-950 text-purple-200 mt-auto border-t border-purple-900">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div>
                     <span id="storefrontFooterBrand" class="text-xl font-black text-white tracking-widest block mb-2">DELOFIA</span>
                     <p id="storefrontFooterDescription" class="text-xs text-purple-300 leading-relaxed">Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.</p>
+                    <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="mt-4 inline-flex items-center gap-2 rounded-full bg-purple-800 hover:bg-purple-700 text-white px-4 py-2 text-xs font-bold transition"><i class="fas fa-store"></i> Our Store</button>
+                </div>
+                <div>
+                    <h5 class="text-sm font-bold text-white mb-3">Quick Links</h5>
+                    <ul class="space-y-2 text-xs text-purple-300">
+                        <li><button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hover:text-white transition"><i class="fas fa-home mr-2"></i>Home / Our Store</button></li>
+                        <li><button type="button" onclick="openCartModal()" class="hover:text-white transition"><i class="fas fa-shopping-cart mr-2"></i>My Cart</button></li>
+                        <li><a href="https://www.facebook.com/profile.php?id=61580349052376" target="_blank" rel="noopener" class="hover:text-white transition"><i class="fab fa-facebook mr-2"></i>Facebook</a></li>
+                    </ul>
                 </div>
                 <div>
                     <h5 id="storefrontFooterContactHeading" class="text-sm font-bold text-white mb-3">Quick Contact</h5>
-                    <p class="text-xs text-purple-300 mb-1"><i class="fab fa-whatsapp text-emerald-400 mr-2"></i> WhatsApp: 01410947236</p>
+                    <p class="text-xs text-purple-300 mb-2"><i class="fab fa-whatsapp text-emerald-400 mr-2"></i> WhatsApp: 01410947236</p>
                     <p class="text-xs text-purple-300"><i class="fas fa-phone text-purple-400 mr-2"></i> Phone: 01410947236</p>
-                </div>
-                <div>
-                    <h5 id="storefrontFooterDeliveryHeading" class="text-sm font-bold text-white mb-3">Delivery Information</h5>
+                    <h5 id="storefrontFooterDeliveryHeading" class="text-sm font-bold text-white mt-5 mb-3">Delivery Information</h5>
                     <p id="storefrontFooterInsideDelivery" class="text-xs text-purple-300 mb-1">Inside Dhaka: Fast Delivery</p>
                     <p id="storefrontFooterOutsideDelivery" class="text-xs text-purple-300">Outside Dhaka: Cash on delivery nationwide</p>
+                </div>
+                <div>
+                    <h5 class="text-sm font-bold text-white mb-3">Payment Methods</h5>
+                    <p class="text-[11px] text-purple-300 mb-3">Available payment options may depend on the method selected at checkout.</p>
+                    <div class="flex flex-wrap gap-2 items-center" aria-label="Payment method logos">
+                        <span title="Visa card logo; card payment requires a connected payment gateway" class="rounded-md bg-white text-blue-800 px-3 py-2 font-black italic text-sm shadow-sm">VISA</span>
+                        <span title="Mastercard logo; card payment requires a connected payment gateway" class="rounded-md bg-white text-gray-800 px-2 py-2 font-extrabold text-[11px] shadow-sm"><span class="text-red-600">●</span><span class="text-orange-500 -ml-1">●</span> Mastercard</span>
+                        <span title="bKash" class="rounded-md bg-[#e2136e] text-white px-3 py-2 font-extrabold text-xs shadow-sm">bKash</span>
+                        <span title="Nagad" class="rounded-md bg-[#f7941d] text-white px-3 py-2 font-extrabold text-xs shadow-sm">Nagad</span>
+                        <span title="Rocket" class="rounded-md bg-[#8b2f89] text-white px-3 py-2 font-extrabold text-xs shadow-sm">Rocket</span>
+                        <span title="Cash on Delivery" class="rounded-md bg-white text-gray-800 px-3 py-2 font-bold text-[10px] shadow-sm">CASH ON DELIVERY</span>
+                    </div>
+                    <p class="text-[10px] text-purple-400 leading-relaxed mt-3">Visa/Mastercard badges are informational only. Online card payments work only after a card payment gateway is connected.</p>
                     <h5 id="storefrontFooterFollowHeading" class="text-sm font-bold text-white mt-5 mb-3">Follow Delofia</h5>
                     <div id="socialMediaLinks" class="flex items-center gap-3 flex-wrap"></div>
                 </div>
             </div>
-            <div class="mt-8 pt-6 border-t border-purple-900/60 text-center text-[11px] text-purple-400">
+            <div class="mt-8 pt-6 border-t border-purple-900/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-center text-[11px] text-purple-400">
                 <span id="storefrontFooterCopyright">&copy; 2026 Delofia E-Commerce Store. All rights reserved.</span>
+                <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" class="hover:text-white transition">Our Store <i class="fas fa-arrow-up ml-1"></i></button>
             </div>
         </div>
     </footer>
@@ -1501,7 +1597,8 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
     <!-- FIREBASE SDK INTEGRATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBzKio6DyX5kyaxYZvNGGcfXmVsQD4H2o4",
@@ -1515,6 +1612,214 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        window.customerAuth = auth;
+        let customerAccountMode = 'register';
+        let customerProfileCache = null;
+        let customerProfileEditMode = false;
+
+        function normalizedCustomerPhone(value) {
+            let digits = String(value || '').replace(/\D/g, '');
+            if (digits.startsWith('880')) digits = '0' + digits.slice(3);
+            if (digits.length === 10 && digits.startsWith('1')) digits = '0' + digits;
+            return digits;
+        }
+        function customerAuthEmail(phone) { return normalizedCustomerPhone(phone) + '@accounts.delofia.com'; }
+        function setCustomerAccountError(message) {
+            const el = document.getElementById('customerAccountError');
+            if (!el) return;
+            el.textContent = message || '';
+            el.classList.toggle('hidden', !message);
+        }
+        function fillCheckoutFromCustomerProfile(profile) {
+            if (!profile) return;
+            const nameParts = String(profile.name || '').trim().split(/\s+/).filter(Boolean);
+            const fields = {
+                custFirstName: nameParts.slice(0, -1).join(' '),
+                custLastName: nameParts.slice(-1).join(''),
+                custAddress: profile.address || '',
+                custCity: profile.district || '',
+                custPostalCode: profile.postalCode || '',
+                custPhone: normalizedCustomerPhone(profile.phone || '')
+            };
+            Object.entries(fields).forEach(([id, value]) => { const el = document.getElementById(id); if (el && value) el.value = value; });
+            if (typeof window.recalculateTotals === 'function') window.recalculateTotals();
+        }
+        async function loadCustomerProfile(user) {
+            if (!user) { customerProfileCache = null; return; }
+            try {
+                const snap = await getDoc(doc(db, 'customerProfiles', user.uid));
+                customerProfileCache = snap.exists() ? { ...snap.data(), uid: user.uid } : { uid: user.uid };
+                const label = document.getElementById('customerAccountHeaderLabel');
+                if (label) label.textContent = customerProfileCache.name ? customerProfileCache.name.split(/\s+/)[0] : 'Account';
+                fillCheckoutFromCustomerProfile(customerProfileCache);
+                renderCustomerAccountState();
+            } catch (error) {
+                console.error('Customer profile could not be loaded:', error);
+                customerProfileCache = { uid: user.uid, phone: normalizedCustomerPhone(user.email?.split('@')[0] || '') };
+                renderCustomerAccountState();
+            }
+        }
+        function renderCustomerAccountState() {
+            const loggedIn = !!auth.currentUser;
+            const loggedPanel = document.getElementById('customerAccountLoggedIn');
+            const authArea = document.getElementById('customerAccountAuthArea');
+            if (loggedPanel) loggedPanel.classList.toggle('hidden', !loggedIn);
+            if (authArea) authArea.classList.toggle('hidden', loggedIn);
+            const label = document.getElementById('customerAccountHeaderLabel');
+            if (label) label.textContent = loggedIn ? ((customerProfileCache?.name || 'Account').split(/\s+/)[0]) : 'Login';
+            const name = document.getElementById('customerAccountSummaryName');
+            const phone = document.getElementById('customerAccountSummaryPhone');
+            if (name) name.textContent = customerProfileCache?.name || 'Delofia Customer';
+            if (phone) phone.textContent = customerProfileCache?.phone || '';
+        }
+        window.openCustomerAccount = function() {
+            const modal = document.getElementById('customerAccountModal');
+            if (modal) modal.classList.remove('hidden');
+            setCustomerAccountError('');
+            renderCustomerAccountState();
+        };
+        window.closeCustomerAccount = function() { document.getElementById('customerAccountModal')?.classList.add('hidden'); };
+        window.setCustomerAccountMode = function(mode) {
+            customerAccountMode = mode === 'login' ? 'login' : 'register';
+            customerProfileEditMode = false;
+            const fields = document.getElementById('customerRegisterFields');
+            const register = document.getElementById('customerRegisterTab');
+            const login = document.getElementById('customerLoginTab');
+            const submit = document.getElementById('customerAccountSubmitBtn');
+            const password = document.getElementById('customerProfilePassword');
+            const forgot = document.getElementById('customerForgotPasswordBtn');
+            if (forgot) forgot.classList.toggle('hidden', customerAccountMode !== 'login' || customerProfileEditMode);
+            if (fields) fields.classList.toggle('hidden', customerAccountMode === 'login');
+            ['customerProfileName','customerProfileAddress','customerProfileDistrict'].forEach(id => { const el = document.getElementById(id); if (el) el.required = customerAccountMode === 'register'; });
+            if (register) register.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'register' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
+            if (login) login.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'login' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
+            if (submit) submit.textContent = customerAccountMode === 'login' ? 'Login' : 'Create Account';
+            if (password) { password.autocomplete = customerAccountMode === 'login' ? 'current-password' : 'new-password'; password.minLength = 6; }
+            setCustomerAccountError('');
+        };
+        window.customerForgotPassword = async function() {
+            setCustomerAccountError('');
+            const phone = normalizedCustomerPhone(document.getElementById('customerProfilePhone').value);
+            if (!/^01[3-9]\d{8}$/.test(phone)) { setCustomerAccountError('আগে তোমার account-এর ১১ সংখ্যার ফোন নম্বরটি দাও।'); return; }
+            const btn = document.getElementById('customerForgotPasswordBtn');
+            if (btn) { btn.disabled = true; btn.textContent = 'Sending reset link…'; }
+            try {
+                const matches = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
+                if (matches.empty) throw new Error('এই ফোন নম্বরের customer profile পাওয়া যায়নি। নম্বরটি ঠিক আছে কি না দেখো।');
+                const profile = matches.docs[0].data() || {};
+                const email = String(profile.email || '').trim().toLowerCase();
+                if (!email) throw new Error('এই account-এ email সংরক্ষিত নেই। Admin-এর সাহায্য নাও।');
+                // Explicit continue URL helps Firebase build a reset email for the current storefront.
+                const actionCodeSettings = { url: window.location.origin, handleCodeInApp: false };
+                await sendPasswordResetEmail(auth, email, actionCodeSettings);
+                setCustomerAccountError('');
+                alert('Password reset email পাঠানোর request সফল হয়েছে: ' + email + '\n\nInbox, Spam/Junk এবং Promotions folder দেখো। ৫ মিনিট অপেক্ষা করো।');
+            } catch (error) {
+                console.error('Password reset error:', error);
+                const code = error?.code || '';
+                const friendly = {
+                    'auth/user-not-found': 'এই ইমেইলটি Firebase Authentication-এর login account-এর সঙ্গে মেলেনি। আগের পুরোনো account হলে Admin-এর সাহায্যে account migration করতে হবে।',
+                    'auth/invalid-email': 'Account-এর email ঠিক নেই। Admin-এর সাহায্য নাও।',
+                    'auth/operation-not-allowed': 'Firebase Console → Authentication → Sign-in method থেকে Email/Password চালু করতে হবে।',
+                    'auth/invalid-continue-uri': 'Firebase reset link-এর URL গ্রহণ করেনি। Firebase Console → Authentication → Settings → Authorized domains-এ তোমার website domain যোগ করো।',
+                    'auth/unauthorized-continue-uri': 'Website domain Firebase-এ authorized নয়। Firebase Console → Authentication → Settings → Authorized domains-এ domain যোগ করো।',
+                    'auth/too-many-requests': 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করো।',
+                    'auth/network-request-failed': 'Internet connection পরীক্ষা করে আবার চেষ্টা করো।',
+                    'permission-denied': 'Customer profile পড়ার permission নেই। Firestore Rules যাচাই করতে হবে।'
+                };
+                setCustomerAccountError(friendly[code] || (error?.message && error.message.startsWith('এই ') ? error.message : 'Reset email পাঠানো যায়নি। Firebase Console-এ Authentication → Templates থেকে Password reset email template, Authorized domains এবং Spam/Junk folder পরীক্ষা করো। Error: ' + (code || error?.message || 'Unknown error')));
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Forgot Password? Send reset link to email'; }
+            }
+        };
+
+        window.editCustomerAccountProfile = function() {
+            customerProfileEditMode = true;
+            document.getElementById('customerAccountLoggedIn')?.classList.add('hidden');
+            document.getElementById('customerAccountAuthArea')?.classList.remove('hidden');
+            window.setCustomerAccountMode('register');
+            const p = customerProfileCache || {};
+            document.getElementById('customerProfileName').value = p.name || '';
+            document.getElementById('customerProfileAddress').value = p.address || '';
+            document.getElementById('customerProfileDistrict').value = p.district || '';
+            document.getElementById('customerProfilePostal').value = p.postalCode || '';
+            document.getElementById('customerProfileEmail').value = p.email || '';
+            document.getElementById('customerProfilePhone').value = p.phone || '';
+            document.getElementById('customerProfilePhone').readOnly = true;
+            document.getElementById('customerProfilePassword').required = false;
+            document.getElementById('customerProfilePassword').placeholder = 'Leave blank to keep current password';
+            document.getElementById('customerAccountSubmitBtn').textContent = 'Save Profile';
+            document.getElementById('customerAccountTitle').textContent = 'Edit My Profile';
+        };
+        window.customerAccountLogout = async function() {
+            try { await signOut(auth); customerProfileCache = null; window.closeCustomerAccount(); }
+            catch (error) { alert('Logout failed. Please try again.'); }
+        };
+        window.submitCustomerAccount = async function(event) {
+            event.preventDefault(); setCustomerAccountError('');
+            const phone = normalizedCustomerPhone(document.getElementById('customerProfilePhone').value);
+            if (!/^01[3-9]\d{8}$/.test(phone) || phone.length !== 11) { setCustomerAccountError('বাংলাদেশের সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন (যেমন 017XXXXXXXX)।'); return; }
+            const districtValue = document.getElementById('customerProfileDistrict').value.trim();
+            const validDistricts = Array.from(document.querySelectorAll('#bdDistricts option')).map(o => o.value.toLowerCase());
+            if (customerAccountMode === 'register' && !customerProfileEditMode && !validDistricts.includes(districtValue.toLowerCase())) { setCustomerAccountError('তালিকা থেকে বাংলাদেশের ৬৪টি জেলার একটি নির্বাচন করো।'); return; }
+            const passwordEl = document.getElementById('customerProfilePassword');
+            const password = passwordEl.value;
+            const name = document.getElementById('customerProfileName').value.trim();
+            const email = document.getElementById('customerProfileEmail').value.trim().toLowerCase();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setCustomerAccountError('সঠিক email address দিতে হবে। Password reset link এই email-এ যাবে।'); return; }
+            if (customerProfileEditMode && customerProfileCache?.email && email !== String(customerProfileCache.email).toLowerCase()) { setCustomerAccountError('Account-এর email বদলাতে হলে নিরাপদ verification প্রয়োজন। আপাতত আগের email-টাই রাখো।'); return; }
+            const profile = { name, phone, address: document.getElementById('customerProfileAddress').value.trim(), district: document.getElementById('customerProfileDistrict').value.trim(), postalCode: document.getElementById('customerProfilePostal').value.trim(), email, updatedAt: new Date().toISOString() };
+            const submit = document.getElementById('customerAccountSubmitBtn');
+            if (submit) { submit.disabled = true; submit.textContent = 'Please wait…'; }
+            try {
+                if (customerProfileEditMode && auth.currentUser) {
+                    if (password) { setCustomerAccountError('Password change can be added separately. Leave the password field blank to keep your current password.'); return; }
+                    await setDoc(doc(db, 'customerProfiles', auth.currentUser.uid), { ...profile, createdAt: customerProfileCache?.createdAt || new Date().toISOString() }, { merge: true });
+                    customerProfileCache = { ...profile, uid: auth.currentUser.uid };
+                    document.getElementById('customerProfilePhone').readOnly = false;
+                    passwordEl.required = true; passwordEl.placeholder = 'Password (at least 6 characters) *'; passwordEl.value = '';
+                    document.getElementById('customerAccountTitle').textContent = 'My Delofia Account';
+                    renderCustomerAccountState(); fillCheckoutFromCustomerProfile(customerProfileCache);
+                    return;
+                }
+                let credential;
+                if (customerAccountMode === 'register') {
+                    if (!password || password.length < 6) { setCustomerAccountError('Password কমপক্ষে ৬ অক্ষরের হতে হবে।'); return; }
+                    credential = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, 'customerProfiles', credential.user.uid), { ...profile, createdAt: new Date().toISOString() });
+                    customerProfileCache = { ...profile, uid: credential.user.uid };
+                } else {
+                    // New accounts authenticate using the real email, while the customer can still type their phone number.
+                    const matches = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
+                    let loginEmail = '';
+                    if (!matches.empty) loginEmail = String(matches.docs[0].data().email || '').trim().toLowerCase();
+                    // Legacy fallback for accounts created by the previous phone-alias login implementation.
+                    loginEmail = loginEmail || customerAuthEmail(phone);
+                    credential = await signInWithEmailAndPassword(auth, loginEmail, password);
+                    const snap = await getDoc(doc(db, 'customerProfiles', credential.user.uid));
+                    customerProfileCache = snap.exists() ? { ...snap.data(), uid: credential.user.uid } : { ...profile, uid: credential.user.uid };
+                    if (!snap.exists()) setCustomerAccountError('Login হয়েছে, কিন্তু profile পাওয়া যায়নি। Admin-কে জানাও।');
+                }
+                document.getElementById('customerProfilePhone').readOnly = false;
+                passwordEl.required = true; passwordEl.value = '';
+                renderCustomerAccountState(); fillCheckoutFromCustomerProfile(customerProfileCache);
+            } catch (error) {
+                console.error('Customer account error:', error);
+                const code = error?.code || '';
+                const messages = {
+                    'auth/email-already-in-use': 'এই নম্বর দিয়ে account আগে থেকেই আছে। Login অপশন ব্যবহার করো।',
+                    'auth/invalid-credential': 'ফোন নম্বর বা পাসওয়ার্ড সঠিক নয়।',
+                    'auth/weak-password': 'আরও শক্তিশালী পাসওয়ার্ড দাও (কমপক্ষে ৬ অক্ষর)।',
+                    'auth/operation-not-allowed': 'Firebase Console-এ Email/Password sign-in চালু করতে হবে।',
+                    'auth/network-request-failed': 'ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করো.'
+                };
+                setCustomerAccountError(messages[code] || ('সমস্যা হয়েছে: ' + (error?.message || 'আবার চেষ্টা করো।')));
+            } finally {
+                if (submit) { submit.disabled = false; submit.textContent = customerProfileEditMode ? 'Save Profile' : (customerAccountMode === 'login' ? 'Login' : 'Create Account'); }
+            }
+        };
+        onAuthStateChanged(auth, user => { if (user) loadCustomerProfile(user); else { customerProfileCache = null; renderCustomerAccountState(); } });
 
         window.db = db;
         window.fsDoc = doc;
@@ -1757,6 +2062,41 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             return links.join('');
         }
 
+        // Wishlist: saved on this browser/device using localStorage.
+        let delofiaWishlist = [];
+        try { delofiaWishlist = JSON.parse(localStorage.getItem('delofiaWishlist') || '[]').map(String); if (!Array.isArray(delofiaWishlist)) delofiaWishlist = []; } catch (_) { delofiaWishlist = []; }
+        function saveDelofiaWishlist() { try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {} }
+        function isInWishlist(productId) { return delofiaWishlist.includes(String(productId)); }
+        function updateWishlistBadge() { const el = document.getElementById('wishlistCountBadge'); if (el) el.textContent = String(delofiaWishlist.length); }
+        function toggleWishlist(productId) {
+            const id = String(productId);
+            if (isInWishlist(id)) { delofiaWishlist = delofiaWishlist.filter(x => x !== id); }
+            else { delofiaWishlist.push(id); }
+            saveDelofiaWishlist(); updateWishlistBadge();
+            if (typeof renderProducts === 'function') renderProducts(document.getElementById('searchInput')?.value || '');
+            const modal = document.getElementById('wishlistModal'); if (modal && !modal.classList.contains('hidden')) renderWishlistItems();
+        }
+        function renderWishlistItems() {
+            const box = document.getElementById('wishlistItemsList'); if (!box) return;
+            const saved = delofiaWishlist.map(id => (products || []).find(p => String(p.id) === id)).filter(Boolean);
+            if (!saved.length) { box.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="far fa-heart text-4xl text-pink-300 mb-3"></i><p class="font-semibold">Your wishlist is empty.</p><p class="text-sm mt-1">প্রোডাক্টের ❤️ চিহ্নে চাপ দিয়ে এখানে সেভ করুন।</p></div>'; updateWishlistBadge(); return; }
+            box.innerHTML = saved.map(product => {
+                const image = (Array.isArray(product.images) ? product.images[0] : '') || '';
+                const price = product.showPrice ? `<p class="text-purple-700 font-extrabold mt-1">৳${Number(product.price || 0).toFixed(2)}</p>` : '<p class="text-xs text-gray-500 mt-1">Price জানতে যোগাযোগ করুন</p>';
+                const pid = String(product.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<div class="border border-pink-100 rounded-xl p-3 flex gap-3 items-center"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="w-20 h-20 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.title || 'Product')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="font-bold text-sm text-gray-900 text-left hover:text-purple-700 cursor-pointer">${escapeHtml(product.title || 'Product')} · View Details</button>${price}<div class="flex flex-wrap gap-2 mt-3"><button type="button" onclick="addProductToCart('${pid}')" class="rounded-lg bg-purple-700 hover:bg-purple-800 text-white px-3 py-2 text-xs font-bold" ${product.stockOut ? 'disabled' : ''}>Add to Cart</button><button type="button" onclick="toggleWishlist('${pid}')" class="rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 px-3 py-2 text-xs font-bold">Remove ❤️</button></div></div></div>`;
+            }).join('');
+            updateWishlistBadge();
+        }
+        function openWishlistProductDetail(productId) {
+            const product = (products || []).find(p => String(p.id) === String(productId));
+            if (!product) { alert('এই প্রোডাক্টটি আর পাওয়া যাচ্ছে না।'); return; }
+            closeWishlistModal();
+            openProductDetail(product.id);
+        }
+        function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); }
+        function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); }
+
         function renderProducts(filterText = '') {
             const grid = document.getElementById('productsGrid');
             if(!grid) return;
@@ -1808,6 +2148,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                         <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
+                        <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
@@ -1827,6 +2168,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 grid.appendChild(card);
             });
             startMainPageProductPhotoAnimation();
+            updateWishlistBadge();
         }
 
         let mainPagePhotoAnimationTimer = null;
@@ -2514,7 +2856,9 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         }
         function updateCartBadge() {
             const count = shoppingCart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+            const total = shoppingCart.reduce((sum, item) => sum + (Number(item.unitPrice) || 0) * (Number(item.qty) || 0), 0);
             const badge = document.getElementById('cartCountBadge'); if (badge) badge.textContent = String(count);
+            const valueLabel = document.getElementById('cartValueLabel'); if (valueLabel) valueLabel.textContent = '৳' + total.toFixed(2);
         }
         function addProductToCart(productId) {
             const prod = products.find(p => p.id === productId);
@@ -2552,10 +2896,18 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         function renderCartItems() {
             const box = document.getElementById('cartItemsList'); if (!box) return;
             if (!shoppingCart.length) { box.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty.</p>'; }
-            else box.innerHTML = shoppingCart.map((item, index) => `<div class="flex gap-3 border border-purple-100 rounded-xl p-3 items-center"><div class="w-16 h-16 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0"><img src="${escapeHtml(item.image || '')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></div><div class="min-w-0 flex-1"><p class="font-bold text-sm">${escapeHtml(item.title)}</p><p class="text-xs text-gray-500">${escapeHtml(Object.values(item.variants || {}).filter(Boolean).join(' / ') || 'Standard')}</p><p class="text-sm font-bold text-purple-800">৳${(Number(item.unitPrice)||0).toFixed(2)} each · ৳${((Number(item.unitPrice)||0)*(Number(item.qty)||0)).toFixed(2)}</p><div class="flex items-center gap-2 mt-2"><button onclick="changeCartQty(${index},-1)" class="w-7 h-7 rounded bg-purple-100 font-bold">−</button><span class="text-sm font-bold">${item.qty}</span><button onclick="changeCartQty(${index},1)" class="w-7 h-7 rounded bg-purple-100 font-bold">+</button><button onclick="removeCartItem(${index})" class="ml-auto text-red-600 text-xs font-bold">Remove</button></div></div></div>`).join('');
+            else box.innerHTML = shoppingCart.map((item, index) => `<div class="flex gap-3 border border-purple-100 rounded-xl p-3 items-center"><button type="button" onclick="openCartProductDetail(${index})" class="w-16 h-16 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(item.image || '')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openCartProductDetail(${index})" class="font-bold text-sm text-left hover:text-purple-700 cursor-pointer">${escapeHtml(item.title)} · View Details</button><p class="text-xs text-gray-500">${escapeHtml(Object.values(item.variants || {}).filter(Boolean).join(' / ') || 'Standard')}</p><p class="text-sm font-bold text-purple-800">৳${(Number(item.unitPrice)||0).toFixed(2)} each · ৳${((Number(item.unitPrice)||0)*(Number(item.qty)||0)).toFixed(2)}</p><div class="flex items-center gap-2 mt-2"><button onclick="changeCartQty(${index},-1)" class="w-7 h-7 rounded bg-purple-100 font-bold">−</button><span class="text-sm font-bold">${item.qty}</span><button onclick="changeCartQty(${index},1)" class="w-7 h-7 rounded bg-purple-100 font-bold">+</button><button onclick="removeCartItem(${index})" class="ml-auto text-red-600 text-xs font-bold">Remove</button></div></div></div>`).join('');
             const subtotal = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
             const label = document.getElementById('cartSubtotalLabel'); if (label) label.textContent = '৳' + subtotal.toFixed(2);
             updateCartBadge();
+        }
+        function openCartProductDetail(index) {
+            const item = shoppingCart[index];
+            if (!item) return;
+            const product = (products || []).find(p => String(p.id) === String(item.productId));
+            if (!product) { alert('এই প্রোডাক্টটি আর পাওয়া যাচ্ছে না।'); return; }
+            closeCartModal();
+            openProductDetail(product.id);
         }
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => p.id === item.productId); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; renderCartItems(); }
         function removeCartItem(index) { shoppingCart.splice(index,1); renderCartItems(); }
@@ -2612,6 +2964,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         }
 
         function checkoutCart() {
+            if (window.customerAuth?.currentUser && customerProfileCache) fillCheckoutFromCustomerProfile(customerProfileCache);
             if (!shoppingCart.length) { alert('Your cart is empty.'); return; }
             const first = shoppingCart[0], prod = products.find(p => p.id === first.productId);
             if (!prod) { alert('A product in your cart is no longer available. Please remove it and try again.'); return; }
@@ -2628,6 +2981,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             const shot = document.getElementById('advanceScreenshot'); if (shot) shot.value = '';
             updatePaymentUI(); applyDistrictShippingRule(); recalculateTotals();
             const modal = document.getElementById('checkoutModal'); modal.classList.remove('hidden'); pushModalState('checkout');
+            if (window.customerAuth?.currentUser && customerProfileCache) fillCheckoutFromCustomerProfile(customerProfileCache);
         }
 
         function updateDetailQty(delta) {
@@ -2841,6 +3195,15 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             recalculateTotals();
         }
 
+        function getPersonalCustomerDiscount(subtotal) {
+            const d = customerProfileCache?.discount;
+            if (!d || d.active !== true) return 0;
+            if (d.expiresAt && new Date(d.expiresAt).getTime() <= Date.now()) return 0;
+            if (subtotal < Math.max(0, Number(d.minimum) || 0)) return 0;
+            const value = Math.max(0, Number(d.value) || 0);
+            const amount = d.type === 'percent' ? subtotal * Math.min(100, value) / 100 : value;
+            return Math.min(subtotal, amount);
+        }
         function recalculateTotals() {
             if (!currentCheckoutProduct) return;
 
@@ -2863,7 +3226,12 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 
             document.getElementById('checkoutShipping').innerText = Number(shippingFee).toFixed(2);
 
-            const grandTotal = subtotal + Number(shippingFee) - appliedDiscount;
+            const personalDiscount = getPersonalCustomerDiscount(subtotal);
+            const combinedDiscount = Math.min(subtotal, Math.max(0, Number(appliedDiscount) || 0) + personalDiscount);
+            const grandTotal = subtotal + Number(shippingFee) - combinedDiscount;
+            const discountRow = document.getElementById('discountRow');
+            const discountAmount = document.getElementById('discountAmount');
+            if (discountRow && discountAmount && combinedDiscount > 0) { discountRow.classList.remove('hidden'); discountAmount.innerText = combinedDiscount.toFixed(2); }
             document.getElementById('checkoutGrandTotal').innerText = Math.max(0, grandTotal).toFixed(2);
         }
 
@@ -3045,7 +3413,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 if (requested.quantity > available) { alert(checkoutStockMessage(requested.product, requested.quantity, available, requested.variants)); return; }
             }
             const subtotal = cartCheckoutMode ? shoppingCart.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.qty || 0), 0) : currentCheckoutUnitPrice * currentCheckoutQty;
-            const discount = Math.max(0, Number(appliedDiscount) || 0);
+            const discount = Math.min(subtotal, Math.max(0, Number(appliedDiscount) || 0) + getPersonalCustomerDiscount(subtotal));
             const total = Math.max(0, subtotal + Number(shipFee) - discount);
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
             const paymentProvider = paymentMethod === 'advance' ? (document.getElementById('advancePaymentProvider')?.value || '') : '';
@@ -3493,8 +3861,108 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             logoutAdmin();
         }
 
+        let adminCustomerRowsCache = [];
+        function adminSafeText(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+        window.updateSelectedAdminCustomerCount = function() {
+            const count = document.querySelectorAll('.admin-customer-select:checked').length;
+            const el = document.getElementById('selectedAdminCustomerCount');
+            if (el) el.textContent = `${count} selected`;
+        };
+        window.toggleAllAdminCustomers = function(checked) {
+            document.querySelectorAll('.admin-customer-select').forEach(el => { el.checked = !!checked; });
+            window.updateSelectedAdminCustomerCount();
+        };
+        window.filterAdminCustomers = function() {
+            const input = document.getElementById('adminCustomerSearch');
+            const queryText = String(input?.value || '').trim().toLowerCase();
+            const rows = document.querySelectorAll('#adminCustomersTableBody tr');
+            let visible = 0;
+            rows.forEach(row => {
+                const matches = !queryText || String(row.innerText || row.textContent || '').toLowerCase().includes(queryText);
+                row.classList.toggle('hidden', !matches);
+                if (matches && !row.querySelector('td[colspan]')) visible++;
+            });
+            const status = document.getElementById('adminCustomersStatus');
+            if (status) status.textContent = queryText ? `${visible} matching customer(s) · ${adminCustomerRowsCache.length} total` : `${adminCustomerRowsCache.length} customer account(s) found.`;
+        };
+        window.renderAdminCustomers = async function() {
+            const status = document.getElementById('adminCustomersStatus');
+            const body = document.getElementById('adminCustomersTableBody');
+            if (!body) return;
+            if (status) status.textContent = 'Loading registered customers…';
+            body.innerHTML = '<tr><td colspan="6" class="p-4 text-gray-500">Loading…</td></tr>';
+            try {
+                if (!window.fsGetDocs || !window.fsCollection) throw new Error('Firebase Firestore helper not ready. Reload the page and try again.');
+                const snap = await window.fsGetDocs(window.fsCollection(window.db, 'customerProfiles'));
+                adminCustomerRowsCache = snap.docs.map(d => ({ uid:d.id, ...d.data() })).sort((a,b) => String(a.name||'').localeCompare(String(b.name||'')));
+                if (!adminCustomerRowsCache.length) {
+                    body.innerHTML = '<tr><td colspan="7" class="p-4 text-gray-500">No registered customers found yet.</td></tr>';
+                } else {
+                    body.innerHTML = adminCustomerRowsCache.map(c => {
+                        const d = c.discount || {};
+                        let offer = 'None';
+                        if (d.active) offer = (d.type === 'percent' ? `${Number(d.value)||0}%` : `৳${Number(d.value)||0}`) + (Number(d.minimum||0) ? ` · min ৳${Number(d.minimum)}` : '') + (d.expiresAt ? ` · until ${adminSafeText(new Date(d.expiresAt).toLocaleString())}` : '');
+                        return `<tr class="border-t"><td class="p-3"><input type="checkbox" class="admin-customer-select" value="${adminSafeText(c.uid)}" onchange="updateSelectedAdminCustomerCount()" aria-label="Select ${adminSafeText(c.name||c.phone||'customer')}"></td><td class="p-3 font-bold">${adminSafeText(c.name||'—')}<div class="text-[10px] text-gray-400">Joined: ${adminSafeText(c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '—')}</div></td><td class="p-3 whitespace-nowrap">${adminSafeText(c.phone||'—')}</td><td class="p-3 min-w-48">${adminSafeText(c.address||'—')}<div class="text-gray-500">${adminSafeText(c.district||'')}</div></td><td class="p-3">${adminSafeText(c.email||'—')}</td><td class="p-3 min-w-36">${adminSafeText(offer)}</td><td class="p-3"><button type="button" onclick="deleteAdminCustomerProfile('${adminSafeText(c.uid)}')" class="rounded-lg bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 font-bold whitespace-nowrap">Delete Profile</button></td></tr>`;
+                    }).join('');
+                }
+                if (status) status.textContent = `${adminCustomerRowsCache.length} customer account(s) found.`;
+                window.filterAdminCustomers();
+            } catch (error) {
+                console.error('Admin customer list error:', error);
+                body.innerHTML = '<tr><td colspan="7" class="p-4 text-red-600">Could not load customers. Firestore Security Rules must allow authenticated admins to read customerProfiles. Check Firebase Rules and reload.</td></tr>';
+                if (status) status.textContent = 'Customer list could not be loaded.';
+            }
+        };
+        window.deleteAdminCustomerProfile = async function(uid) {
+            if (!uid) return;
+            const confirmed = confirm(`Delete this customer profile data?\n\nThis removes their Firestore customer profile and discount details. Firebase Authentication login credentials are NOT deleted by this browser-only action. For full account deletion, a secure Firebase Admin SDK/Cloud Function is required. Continue?`);
+            if (!confirmed) return;
+            try {
+                await window.fsDeleteDoc(window.fsDoc(window.db, 'customerProfiles', uid));
+                adminCustomerRowsCache = adminCustomerRowsCache.filter(c => String(c.uid) !== String(uid));
+                await window.renderAdminCustomers();
+                alert('Customer profile data deleted. Note: Firebase Authentication account still exists until securely deleted server-side.');
+            } catch (error) {
+                console.error('Customer profile delete failed:', error);
+                alert('Profile delete failed. Check Firestore permissions and try again. ' + (error?.message || ''));
+            }
+        };
+        function selectedAdminCustomerIds() { return Array.from(document.querySelectorAll('.admin-customer-select:checked')).map(el => el.value).filter(Boolean); }
+        window.saveIndividualCustomerDiscount = async function(event) {
+            event.preventDefault();
+            const ids = selectedAdminCustomerIds();
+            if (!ids.length) { alert('আগে customer list থেকে অন্তত একজন customer select করো।'); return; }
+            const type = document.getElementById('individualDiscountType').value;
+            const value = Number(document.getElementById('individualDiscountValue').value);
+            const minimum = Math.max(0, Number(document.getElementById('individualDiscountMinimum').value)||0);
+            const expiryRaw = document.getElementById('individualDiscountExpiry').value;
+            const expiresAt = expiryRaw ? new Date(expiryRaw).toISOString() : '';
+            const active = document.getElementById('individualDiscountActive').checked;
+            if (!Number.isFinite(value) || value <= 0 || (type === 'percent' && value > 100)) { alert('Valid discount value দাও। Percentage 1–100 হতে হবে।'); return; }
+            if (expiresAt && new Date(expiresAt).getTime() <= Date.now()) { alert('Expiry date/time ভবিষ্যতের হতে হবে।'); return; }
+            const discount = { type, value, minimum, expiresAt, active, updatedAt: new Date().toISOString() };
+            try {
+                for (const uid of ids) await window.fsSetDoc(window.fsDoc(window.db, 'customerProfiles', uid), { discount }, { merge: true });
+                alert(`${ids.length} জন customer-এর জন্য discount ${active ? 'apply' : 'inactive'} করা হয়েছে।`);
+                await window.renderAdminCustomers();
+            } catch (error) {
+                console.error('Save customer discount failed:', error);
+                alert('Discount save হয়নি। Firestore Security Rules-এ admin write permission যাচাই করতে হবে.');
+            }
+        };
+        window.removeIndividualCustomerDiscount = async function() {
+            const ids = selectedAdminCustomerIds();
+            if (!ids.length) { alert('আগে customer select করো।'); return; }
+            if (!confirm(`Selected ${ids.length} customer-এর discount remove করবে?`)) return;
+            try {
+                for (const uid of ids) await window.fsSetDoc(window.fsDoc(window.db, 'customerProfiles', uid), { discount: { active:false, type:'fixed', value:0, minimum:0, expiresAt:'', updatedAt:new Date().toISOString() } }, { merge:true });
+                alert('Selected customer-দের discount বন্ধ করা হয়েছে.');
+                await window.renderAdminCustomers();
+            } catch (error) { console.error(error); alert('Discount remove হয়নি। Firestore Rules permission যাচাই করো।'); }
+        };
+
         function switchAdminTab(tab) {
-            ['Orders', 'Shipping', 'Payment', 'Products', 'Reviews', 'Store', 'Password', 'Sessions'].forEach(t => {
+            ['Orders', 'Customers', 'Shipping', 'Payment', 'Products', 'Reviews', 'Store', 'Password', 'Sessions'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
                 if (panel) panel.classList.add('hidden');
@@ -3507,6 +3975,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
             if (tab === 'payment') { populatePaymentAdminSettings(); renderCouponsAdmin(); }
+            if (tab === 'customers') { renderAdminCustomers(); }
             if (tab === 'reviews') { renderAdminReviews(); }
             if (tab === 'shipping') { populateDistrictRateSelect(); renderDistrictRateOverrides(); }
             if (tab === 'sessions') { const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes()); renderAdminSessions(); }
