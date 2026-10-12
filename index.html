@@ -6454,3 +6454,112 @@ html, body { max-width:100%; overflow-x:clip; }
   header #headerCartButton #cartValueLabel { font-size: 8px !important; }
 }
 </style>
+
+<style id="delofia-mobile-header-responsive-v61">
+/* Mobile-only compact header. Desktop header/search layout is untouched. */
+@media (max-width: 640px) {
+  header { position: relative !important; }
+  header > div.max-w-7xl {
+    position: relative !important;
+    display: flex !important; flex-flow: row nowrap !important;
+    align-items: center !important; justify-content: space-between !important;
+    gap: 5px !important; width: 100% !important; max-width: 100% !important;
+    height: 58px !important; min-height: 58px !important;
+    padding: 5px 7px !important; box-sizing: border-box !important; overflow: visible !important;
+  }
+  header #delofiaMenuButton {
+    order: 1 !important; flex: 0 0 25px !important; width: 25px !important;
+    min-width: 25px !important; height: 30px !important; margin: 0 !important;
+  }
+  header #brandLogo {
+    order: 2 !important; position: absolute !important; left: 50% !important;
+    top: 50% !important; transform: translate(-50%,-50%) !important;
+    display: flex !important; flex: none !important; width: auto !important;
+    min-width: 0 !important; max-width: 94px !important; margin: 0 !important;
+    gap: 4px !important; overflow: hidden !important; z-index: 2 !important;
+  }
+  header #brandLogoMark { display: flex !important; flex: 0 0 22px !important; width: 22px !important; height: 22px !important; font-size: 12px !important; }
+  header #brandLogo > div { min-width: 0 !important; }
+  header #brandLogo span:first-child { font-size: clamp(11px, 3.3vw, 14px) !important; letter-spacing: 0 !important; white-space: nowrap !important; }
+  header #brandLogo span:last-child { display: none !important; }
+  header #delofiaHeaderActions {
+    order: 3 !important; display: flex !important; flex-flow: row nowrap !important;
+    align-items: center !important; justify-content: flex-end !important;
+    gap: 3px !important; flex: 0 0 auto !important; width: auto !important;
+    min-width: 0 !important; max-width: none !important; margin-left: auto !important;
+    overflow: visible !important;
+  }
+  header #delofiaHeaderActions #mobileProductSearchBar {
+    display: block !important; position: static !important; inset: auto !important;
+    order: -1 !important; flex: 0 1 78px !important; width: 78px !important;
+    min-width: 54px !important; max-width: 78px !important; padding: 0 !important;
+    margin: 0 2px 0 0 !important; border: 0 !important; box-shadow: none !important;
+    background: transparent !important; z-index: 5 !important;
+  }
+  #mobileProductSearchBar > div { width: 100% !important; max-width: none !important; margin: 0 !important; }
+  #mobileProductSearchBar > div > i { left: 7px !important; top: 50% !important; transform: translateY(-50%) !important; font-size: 10px !important; }
+  #mobileProductSearchBar input#mobileSearchInput {
+    width: 100% !important; height: 29px !important; min-height: 29px !important;
+    padding: 0 6px 0 21px !important; font-size: 10px !important;
+    border-radius: 999px !important; box-sizing: border-box !important;
+  }
+  #mobileProductSearchBar input#mobileSearchInput::placeholder { font-size: 9px !important; }
+  #mobileProductSearchBar button { display: none !important; }
+  header #customerAccountHeaderBtn {
+    flex: 0 0 auto !important; min-width: 25px !important; width: auto !important;
+    height: 28px !important; padding: 3px 4px !important; gap: 2px !important;
+    font-size: 9px !important; border-radius: 8px !important;
+  }
+  header #customerAccountHeaderBtn i { font-size: 11px !important; }
+  header #customerAccountHeaderLabel { display: inline !important; font-size: 9px !important; }
+  header #delofiaHeaderActions > a[href*="wa.me"] { display: none !important; }
+  header #headerWishlistButton, header #headerCartButton {
+    display: flex !important; flex: 0 0 auto !important; width: auto !important;
+    min-width: 25px !important; max-width: none !important; height: 28px !important;
+    padding: 3px 4px !important; margin: 0 !important; gap: 2px !important;
+    align-items: center !important; justify-content: center !important;
+  }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) {
+    display: inline !important; font-size: 9px !important; white-space: nowrap !important;
+  }
+  header #headerWishlistButton > i, header #headerCartButton > i { display: inline-block !important; font-size: 12px !important; margin: 0 !important; }
+  header #wishlistCountBadge, header #cartCountBadge { display: inline-flex !important; }
+  header #cartValueLabel { display: inline !important; font-size: 8px !important; white-space: nowrap !important; }
+  /* The search bar is now in the header row, so hide its old sticky-row space. */
+  body #mobileProductSearchBar { position: static !important; }
+}
+@media (max-width: 390px) {
+  header #brandLogo { max-width: 75px !important; }
+  header #brandLogoMark { display: none !important; }
+  header #brandLogo span:first-child { font-size: 11px !important; }
+  header #delofiaHeaderActions { gap: 2px !important; }
+  header #delofiaHeaderActions #mobileProductSearchBar { flex-basis: 58px !important; width: 58px !important; min-width: 48px !important; }
+  header #customerAccountHeaderLabel { display: none !important; }
+  header #customerAccountHeaderBtn { min-width: 24px !important; }
+  header #headerWishlistButton, header #headerCartButton { padding-left: 3px !important; padding-right: 3px !important; }
+}
+</style>
+<script id="delofia-mobile-search-inline-v61">
+(function(){
+  function arrangeMobileHeader(){
+    var search=document.getElementById('mobileProductSearchBar');
+    var actions=document.getElementById('delofiaHeaderActions');
+    var headerRow=document.querySelector('header > div.max-w-7xl');
+    if(!search || !actions || !headerRow) return;
+    if(window.matchMedia('(max-width: 640px)').matches){
+      if(search.parentElement !== actions) actions.insertBefore(search, actions.firstChild);
+    } else {
+      var header=document.querySelector('header');
+      if(search.parentElement === actions && header){
+        var anchor=header.querySelector('#mainHeaderSearchAnchor');
+        if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(search, anchor.nextSibling);
+        else header.insertAdjacentElement('afterend', search);
+      }
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arrangeMobileHeader);
+  else arrangeMobileHeader();
+  window.addEventListener('resize', arrangeMobileHeader);
+})();
+</script>
