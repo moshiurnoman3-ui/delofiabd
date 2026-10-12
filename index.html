@@ -4305,7 +4305,157 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 }
 </style>
 
-</body></html>`;
+
+<style id="delofia-mobile-logo-visibility-v35">
+@media (max-width: 640px) {
+  /* Explicitly restore the original D mark and DELOFIA wordmark on phones. */
+  header #brandLogo {
+    display:flex !important; visibility:visible !important; opacity:1 !important;
+    position:relative !important; left:5px !important; transform:none !important;
+    flex:1 1 0% !important; min-width:0 !important; max-width:none !important;
+    overflow:visible !important; align-items:center !important; gap:5px !important;
+  }
+  header #brandLogoMark {
+    display:flex !important; visibility:visible !important; opacity:1 !important;
+    flex:0 0 27px !important; width:27px !important; min-width:27px !important;
+    height:27px !important; font-size:15px !important; line-height:1 !important;
+    color:#fff !important; background:#7c3aed !important; border-radius:8px !important;
+  }
+  header #brandLogo > div { display:block !important; visibility:visible !important;
+    opacity:1 !important; min-width:0 !important; overflow:visible !important; }
+  header #brandLogo span:first-child { display:block !important; visibility:visible !important;
+    opacity:1 !important; color:#5b21b6 !important; font-size:clamp(12px,3.5vw,16px) !important;
+    font-weight:900 !important; letter-spacing:0 !important; white-space:nowrap !important; }
+}
+</style>
+
+</body>
+<style id="delofia-mobile-header-buttons-v36">
+@media (max-width: 640px) {
+  header > div.max-w-7xl {
+    display:flex !important;
+    gap:5px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+    min-width:0 !important;
+  }
+  header #delofiaMenuButton {
+    flex:0 0 24px !important;
+    width:24px !important;
+    min-width:24px !important;
+    padding:4px 0 !important;
+  }
+  header #brandLogo {
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    left:0 !important;
+    gap:4px !important;
+  }
+  header #brandLogoMark {
+    flex:0 0 25px !important;
+    width:25px !important;
+    min-width:25px !important;
+    height:25px !important;
+  }
+  header #brandLogo span:first-child {
+    font-size:clamp(11px, 3.2vw, 15px) !important;
+    letter-spacing:0 !important;
+  }
+  header #brandLogo span:last-child { display:none !important; }
+
+  header #delofiaHeaderActions {
+    display:flex !important;
+    flex:0 0 auto !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:4px !important;
+    min-width:0 !important;
+    margin:0 !important;
+  }
+  header #customerAccountHeaderBtn {
+    display:flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:29px !important;
+    padding:0 5px !important;
+    gap:3px !important;
+    white-space:nowrap !important;
+    font-size:9px !important;
+    line-height:1 !important;
+    border-radius:8px !important;
+  }
+  header #customerAccountHeaderBtn i { font-size:10px !important; }
+  header #customerAccountHeaderLabel { display:inline !important; }
+
+  header #headerWishlistButton,
+  header #headerCartButton {
+    display:inline-flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:29px !important;
+    padding:0 5px !important;
+    margin:0 !important;
+    gap:3px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    border-radius:8px !important;
+    font-size:9px !important;
+    line-height:1 !important;
+  }
+  header #headerWishlistButton > i,
+  header #headerCartButton > i {
+    display:inline-block !important;
+    flex:0 0 auto !important;
+    font-size:11px !important;
+    margin:0 !important;
+  }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) {
+    display:inline !important;
+    position:static !important;
+    font-size:9px !important;
+    line-height:1 !important;
+  }
+  header #headerWishlistButton #wishlistCountBadge,
+  header #headerCartButton #cartCountBadge,
+  header #headerCartButton #cartValueLabel { display:none !important; }
+
+  header #delofiaHeaderActions > a[href*="wa.me"] {
+    display:flex !important;
+    flex:0 0 27px !important;
+    width:27px !important;
+    min-width:27px !important;
+    max-width:27px !important;
+    height:29px !important;
+    padding:0 !important;
+    margin:0 !important;
+    justify-content:center !important;
+    align-items:center !important;
+    border-radius:8px !important;
+  }
+  header #delofiaHeaderActions > a[href*="wa.me"] i { font-size:15px !important; }
+
+  /* Every header action stays on one line in its own compact box. */
+  header #delofiaHeaderActions > * { position:relative !important; top:auto !important; }
+}
+@media (max-width: 360px) {
+  header > div.max-w-7xl { gap:3px !important; padding-left:6px !important; padding-right:6px !important; }
+  header #delofiaHeaderActions { gap:2px !important; }
+  header #customerAccountHeaderBtn { padding:0 4px !important; font-size:8px !important; }
+  header #headerWishlistButton, header #headerCartButton { padding:0 4px !important; gap:2px !important; font-size:8px !important; }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:8px !important; }
+}
+</style>
+
+</html>`;
             try {
                 const blob = new Blob([memoHtml], { type: 'text/html;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
@@ -5688,7 +5838,157 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 }
 </style>
 
+
+<style id="delofia-mobile-logo-visibility-v35">
+@media (max-width: 640px) {
+  /* Explicitly restore the original D mark and DELOFIA wordmark on phones. */
+  header #brandLogo {
+    display:flex !important; visibility:visible !important; opacity:1 !important;
+    position:relative !important; left:5px !important; transform:none !important;
+    flex:1 1 0% !important; min-width:0 !important; max-width:none !important;
+    overflow:visible !important; align-items:center !important; gap:5px !important;
+  }
+  header #brandLogoMark {
+    display:flex !important; visibility:visible !important; opacity:1 !important;
+    flex:0 0 27px !important; width:27px !important; min-width:27px !important;
+    height:27px !important; font-size:15px !important; line-height:1 !important;
+    color:#fff !important; background:#7c3aed !important; border-radius:8px !important;
+  }
+  header #brandLogo > div { display:block !important; visibility:visible !important;
+    opacity:1 !important; min-width:0 !important; overflow:visible !important; }
+  header #brandLogo span:first-child { display:block !important; visibility:visible !important;
+    opacity:1 !important; color:#5b21b6 !important; font-size:clamp(12px,3.5vw,16px) !important;
+    font-weight:900 !important; letter-spacing:0 !important; white-space:nowrap !important; }
+}
+</style>
+
 </body>
+
+<style id="delofia-mobile-header-buttons-v36">
+@media (max-width: 640px) {
+  header > div.max-w-7xl {
+    display:flex !important;
+    gap:5px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+    min-width:0 !important;
+  }
+  header #delofiaMenuButton {
+    flex:0 0 24px !important;
+    width:24px !important;
+    min-width:24px !important;
+    padding:4px 0 !important;
+  }
+  header #brandLogo {
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    left:0 !important;
+    gap:4px !important;
+  }
+  header #brandLogoMark {
+    flex:0 0 25px !important;
+    width:25px !important;
+    min-width:25px !important;
+    height:25px !important;
+  }
+  header #brandLogo span:first-child {
+    font-size:clamp(11px, 3.2vw, 15px) !important;
+    letter-spacing:0 !important;
+  }
+  header #brandLogo span:last-child { display:none !important; }
+
+  header #delofiaHeaderActions {
+    display:flex !important;
+    flex:0 0 auto !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    justify-content:flex-end !important;
+    gap:4px !important;
+    min-width:0 !important;
+    margin:0 !important;
+  }
+  header #customerAccountHeaderBtn {
+    display:flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    height:29px !important;
+    padding:0 5px !important;
+    gap:3px !important;
+    white-space:nowrap !important;
+    font-size:9px !important;
+    line-height:1 !important;
+    border-radius:8px !important;
+  }
+  header #customerAccountHeaderBtn i { font-size:10px !important; }
+  header #customerAccountHeaderLabel { display:inline !important; }
+
+  header #headerWishlistButton,
+  header #headerCartButton {
+    display:inline-flex !important;
+    flex:0 0 auto !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    height:29px !important;
+    padding:0 5px !important;
+    margin:0 !important;
+    gap:3px !important;
+    justify-content:center !important;
+    align-items:center !important;
+    white-space:nowrap !important;
+    overflow:visible !important;
+    border-radius:8px !important;
+    font-size:9px !important;
+    line-height:1 !important;
+  }
+  header #headerWishlistButton > i,
+  header #headerCartButton > i {
+    display:inline-block !important;
+    flex:0 0 auto !important;
+    font-size:11px !important;
+    margin:0 !important;
+  }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) {
+    display:inline !important;
+    position:static !important;
+    font-size:9px !important;
+    line-height:1 !important;
+  }
+  header #headerWishlistButton #wishlistCountBadge,
+  header #headerCartButton #cartCountBadge,
+  header #headerCartButton #cartValueLabel { display:none !important; }
+
+  header #delofiaHeaderActions > a[href*="wa.me"] {
+    display:flex !important;
+    flex:0 0 27px !important;
+    width:27px !important;
+    min-width:27px !important;
+    max-width:27px !important;
+    height:29px !important;
+    padding:0 !important;
+    margin:0 !important;
+    justify-content:center !important;
+    align-items:center !important;
+    border-radius:8px !important;
+  }
+  header #delofiaHeaderActions > a[href*="wa.me"] i { font-size:15px !important; }
+
+  /* Every header action stays on one line in its own compact box. */
+  header #delofiaHeaderActions > * { position:relative !important; top:auto !important; }
+}
+@media (max-width: 360px) {
+  header > div.max-w-7xl { gap:3px !important; padding-left:6px !important; padding-right:6px !important; }
+  header #delofiaHeaderActions { gap:2px !important; }
+  header #customerAccountHeaderBtn { padding:0 4px !important; font-size:8px !important; }
+  header #headerWishlistButton, header #headerCartButton { padding:0 4px !important; gap:2px !important; font-size:8px !important; }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:8px !important; }
+}
+</style>
+
 </html>
 <style id="delofia-reset-visibility-fix">
 /* Keep the storefront Reset filter button readable in both themes. */
