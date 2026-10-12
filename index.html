@@ -2736,12 +2736,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         window.loadDelofiaAccountWishlist = function(accountWishlist, cloudExists = true) {
             if (cloudExists) {
-                delofiaWishlist = Array.isArray(accountWishlist) ? accountWishlist.map(String) : [];
+                const next = Array.isArray(accountWishlist) ? accountWishlist.map(String) : [];
+                const currentSig = JSON.stringify([...delofiaWishlist].sort());
+                const nextSig = JSON.stringify([...next].sort());
+                if (currentSig === nextSig) return; // Ignore identical snapshots to prevent UI flicker.
                 window.__delofiaApplyingRemoteState = true;
-                try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {}
-                updateWishlistBadge(); updateDetailWishlistButton();
-                const modal = document.getElementById('wishlistModal'); if (modal && !modal.classList.contains('hidden')) renderWishlistItems();
-                window.__delofiaApplyingRemoteState = false;
+                try {
+                    delofiaWishlist = next;
+                    try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {}
+                    updateWishlistBadge(); updateDetailWishlistButton();
+                    const modal = document.getElementById('wishlistModal'); if (modal && !modal.classList.contains('hidden')) renderWishlistItems();
+                } finally { window.__delofiaApplyingRemoteState = false; }
             } else {
                 saveDelofiaWishlist();
             }
@@ -3449,6 +3454,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         let shoppingCart = loadPersistedShoppingCart();
         // Restore the account's cart. Existing cloud cart is authoritative; local guest cart is
         // migrated only when the account has never saved a cart before.
+        function delofiaCartSignature(items) {
+            return JSON.stringify((Array.isArray(items) ? items : []).map(item => ({
+                key: String(item.key || cartItemKey(item.productId, item.variants || {})),
+                productId: String(item.productId ?? ''), qty: Number(item.qty || 0),
+                unitPrice: Number(item.unitPrice || 0), title: String(item.title || ''),
+                image: String(item.image || ''), variants: item.variants || {}
+            })).sort((a,b) => a.key.localeCompare(b.key)));
+        }
         window.loadDelofiaAccountCart = function(accountCart, cloudExists = true) {
             const remote = Array.isArray(accountCart) ? accountCart : [];
             const normalized = remote.filter(item => item && item.productId != null && Number(item.qty) > 0).map(item => ({
@@ -3457,17 +3470,23 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 key: item.key || cartItemKey(item.productId, item.variants || {})
             }));
             if (cloudExists) {
-                shoppingCart = normalized;
+                // Firestore emits snapshots for our own writes too. Do not rebuild the modal or
+                // write back to Firestore when the received cart is identical; that caused flicker
+                // and totals jumping (e.g. ৳650 ↔ ৳1300).
+                const changed = delofiaCartSignature(shoppingCart) !== delofiaCartSignature(normalized);
+                if (!changed) return;
                 window.__delofiaApplyingRemoteState = true;
-                try { localStorage.setItem(DELOFIA_CART_STORAGE_KEY, JSON.stringify(shoppingCart)); } catch (_) {}
-                updateCartBadge();
-                window.__delofiaApplyingRemoteState = false;
+                try {
+                    shoppingCart = normalized;
+                    try { localStorage.setItem(DELOFIA_CART_STORAGE_KEY, JSON.stringify(shoppingCart)); } catch (_) {}
+                    updateCartBadge();
+                    if (typeof renderCartItems === 'function') renderCartItems();
+                } finally { window.__delofiaApplyingRemoteState = false; }
             } else {
                 // No cloud cart field yet: keep this device's cart and upload it as initial account data.
                 updateCartBadge();
                 if (window.customerAuth?.currentUser) window.__delofiaCloudCartSync?.(shoppingCart).catch(error => console.warn('Initial cart migration failed:', error));
             }
-            if (typeof renderCartItems === 'function') renderCartItems();
         };
         let cartCheckoutMode = false;
 
