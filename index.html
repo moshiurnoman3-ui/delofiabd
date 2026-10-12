@@ -3520,7 +3520,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 
         function openDirectCheckout(prodId, qty = 1, variantChoices = {}, variantMeta = {}) {
             // Optional store-wide login gate. Preserve the exact item/quantity/variants so checkout resumes after auth.
-            if (window.storeSettings?.requireLoginToOrder === true && !auth.currentUser) {
+            if (window.storeSettings?.requireLoginToOrder === true && !(window.customerAuth && window.customerAuth.currentUser)) {
                 pendingLoginCheckout = { prodId, qty, variantChoices: { ...(variantChoices || {}) }, variantMeta: { ...(variantMeta || {}) } };
                 window.openCustomerAccount?.();
                 window.setCustomerAccountMode?.('register');
