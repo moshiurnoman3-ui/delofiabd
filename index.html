@@ -2528,7 +2528,17 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             if (box && input && !box.contains(event.target) && event.target !== input) box.classList.add('hidden');
         });
 
+        // Remember the product that opened the cart so closing/back returns to it.
+        window.__cartReturnProductId = null;
         window.addEventListener('popstate', function(event) {
+            const cart = document.getElementById('cartModal');
+            const cartWasOpen = cart && !cart.classList.contains('hidden');
+            if (cartWasOpen) {
+                cart.classList.add('hidden');
+                const returnId = window.__cartReturnProductId;
+                window.__cartReturnProductId = null;
+                if (returnId != null) { openProductDetail(returnId); return; }
+            }
             closeAllModalsSilently();
         });
 
@@ -3553,6 +3563,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             const colorMeta = colorGroup && meta[colorGroup.name];
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
+            window.__cartReturnProductId = prod.id;
             const requestedQty = (old ? Number(old.qty || 0) : 0) + detailQtyVal;
             if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
@@ -3577,7 +3588,13 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => p.id === item.productId); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; renderCartItems(); }
         function removeCartItem(index) { shoppingCart.splice(index,1); renderCartItems(); }
         function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); }
-        function closeCartModal() { const m = document.getElementById('cartModal'); if (m) m.classList.add('hidden'); }
+        function closeCartModal() {
+            const m = document.getElementById('cartModal');
+            if (m) m.classList.add('hidden');
+            const returnId = window.__cartReturnProductId;
+            window.__cartReturnProductId = null;
+            if (returnId != null) openProductDetail(returnId);
+        }
         function checkoutStockMessage(product, requested, available, variants = {}) {
             const productName = product?.title || 'এই পণ্য / this product';
             const variantText = Object.values(variants || {}).filter(Boolean).join(' / ');
