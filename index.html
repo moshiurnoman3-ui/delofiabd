@@ -960,6 +960,59 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 }
 </style>
 
+
+<style id="delofia-header-overlap-repair-v63">
+/* Final header repair: preserve the existing brand and actions, prevent overlap. */
+header > div.max-w-7xl {
+  box-sizing:border-box !important; width:100% !important; max-width:80rem !important;
+  min-width:0 !important; display:flex !important; flex-flow:row nowrap !important;
+  align-items:center !important; justify-content:space-between !important; gap:12px !important;
+  overflow:visible !important;
+}
+header #brandLogo { position:static !important; transform:none !important; flex:0 1 auto !important; min-width:0 !important; max-width:none !important; }
+header #delofiaHeaderActions { position:static !important; transform:none !important; flex:0 0 auto !important; min-width:0 !important; width:auto !important; max-width:none !important; }
+#mobileProductSearchBar { position:sticky !important; top:0 !important; z-index:30 !important; width:100% !important; box-sizing:border-box !important; }
+@media (max-width: 767px) {
+  header > div.max-w-7xl {
+    height:auto !important; min-height:58px !important; padding:8px 10px !important;
+    gap:8px !important; justify-content:flex-start !important;
+  }
+  header #delofiaMenuButton { flex:0 0 36px !important; width:36px !important; height:36px !important; }
+  header #brandLogo { flex:0 1 auto !important; width:auto !important; min-width:0 !important; max-width:none !important; overflow:hidden !important; }
+  header #brandLogoMark { display:flex !important; flex:0 0 28px !important; width:28px !important; height:28px !important; font-size:15px !important; }
+  header #brandLogo > div { min-width:0 !important; }
+  header #brandLogo span:first-child { display:block !important; font-size:clamp(13px, 3.7vw, 18px) !important; letter-spacing:0 !important; white-space:nowrap !important; }
+  header #brandLogo span:last-child { display:none !important; }
+  header #delofiaHeaderActions {
+    display:flex !important; flex:0 0 auto !important; width:auto !important; min-width:0 !important;
+    max-width:none !important; margin-left:auto !important; gap:5px !important;
+    flex-flow:row nowrap !important; align-items:center !important; justify-content:flex-end !important;
+  }
+  header #customerAccountHeaderBtn { min-width:30px !important; width:auto !important; padding:6px 7px !important; height:32px !important; font-size:11px !important; }
+  header #customerAccountHeaderLabel { display:none !important; }
+  header #headerWishlistButton, header #headerCartButton {
+    display:flex !important; flex:0 0 34px !important; width:34px !important; min-width:34px !important;
+    max-width:34px !important; height:32px !important; padding:4px !important; margin:0 !important;
+    gap:0 !important; justify-content:center !important; align-items:center !important;
+  }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge) { display:none !important; }
+  header #headerWishlistButton > i, header #headerCartButton > i { display:inline-block !important; font-size:16px !important; margin:0 !important; }
+  header #wishlistCountBadge, header #cartCountBadge { display:inline-flex !important; position:absolute !important; top:-5px !important; right:-4px !important; min-width:15px !important; width:auto !important; height:15px !important; padding:0 3px !important; font-size:9px !important; }
+  header #cartValueLabel { display:none !important; }
+  header #delofiaHeaderActions > a[href*="wa.me"] { display:none !important; }
+  #mobileProductSearchBar { display:block !important; position:sticky !important; top:0 !important; padding:8px 12px !important; }
+  #mobileProductSearchBar input { width:100% !important; box-sizing:border-box !important; }
+}
+@media (max-width: 380px) {
+  header > div.max-w-7xl { gap:5px !important; padding-left:7px !important; padding-right:7px !important; }
+  header #delofiaMenuButton { flex-basis:32px !important; width:32px !important; }
+  header #brandLogoMark { display:none !important; }
+  header #brandLogo span:first-child { font-size:12px !important; }
+  header #delofiaHeaderActions { gap:3px !important; }
+  header #headerWishlistButton, header #headerCartButton { flex-basis:30px !important; width:30px !important; min-width:30px !important; max-width:30px !important; }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
@@ -1159,11 +1212,17 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                                 <button onclick="updateDetailQty(1)" class="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 font-bold hover:bg-purple-200 transition text-lg flex items-center justify-center">+</button>
                             </div>
                         </div>
+                        <div id="multiVariantPicker" class="mb-5 rounded-xl border border-purple-100 bg-white p-3">
+                            <button type="button" onclick="addCurrentVariantLine()" class="w-full rounded-xl border border-purple-300 bg-purple-50 text-purple-800 font-bold py-2.5 px-3 text-sm"><i class="fas fa-plus-circle mr-1"></i> Add this Color / Size</button>
+                            <div id="pendingVariantLinesBox" class="mt-3 space-y-2"></div>
+                            <button type="button" id="addAllVariantsToCartBtn" onclick="addAllVariantLinesToCart()" class="hidden mt-3 w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-3 text-sm"><i class="fas fa-cart-plus mr-1"></i> Add all selected to Cart</button>
+                            <p class="mt-2 text-[11px] text-gray-500">Different colors and sizes? Add each combination with its own quantity, then add them all together.</p>
+                        </div>
                     </div>
 
                     <!-- Direct Order Action Buttons -->
                     <div class="space-y-3 pt-4 border-t border-purple-100">
-                        <button id="detailAddCartBtn" onclick="addDetailProductToCart()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                        <button id="detailAddCartBtn" onclick="addCurrentVariantLine()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                         <button type="button" id="detailBuyBtn" onclick="startCheckoutFromDetail()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-purple-200 transition flex items-center justify-center gap-2">
                             <i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)
                         </button>
@@ -3282,6 +3341,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         let selectedDetailProd = null;
         let detailQtyVal = 1;
         let selectedVariantChoices = {};
+        let pendingVariantLines = []; // multiple color/size combinations selected on one product
         let currentCheckoutVariants = {};
         let currentCheckoutUnitPrice = 0;
         // Persist cart locally so items survive page refreshes in the same browser/device.
@@ -3548,6 +3608,71 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             const btn = document.querySelector(`button[onclick="addProductToCart('${productId}')"]`);
             if (btn) { const previous = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check"></i> Added'; setTimeout(() => { if (btn.isConnected) btn.innerHTML = previous; }, 1000); }
         }
+        function getCurrentDetailVariantLine() {
+            const prod = selectedDetailProd;
+            if (!prod || prod.stockOut) return null;
+            const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
+            const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
+            if (missing) { alert('Please choose ' + missing.name + ' before adding this combination.'); return null; }
+            const colorGroup = requiredGroups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const selectedColor = colorGroup && colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]);
+            if (selectedColor && Array.isArray(selectedColor.childVariants) && selectedColor.childVariants.some(v => String(v.name || '').trim()) && !selectedVariantChoices['__size']) { alert('Please choose a size / variant for this color.'); return null; }
+            const variants = {...(selectedVariantChoices || {})};
+            const meta = {...(selectedVariantMeta || {})};
+            const priced = Object.values(meta).reverse().find(o => o && o.price !== '' && o.price != null && Number.isFinite(Number(o.price)));
+            const unitPrice = priced ? Number(priced.price) : Number(prod.price || 0);
+            const colorMeta = colorGroup && meta[colorGroup.name];
+            const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
+            return { key: cartItemKey(prod.id, variants), productId: prod.id, title: prod.title || 'Product', qty: Math.max(1, Number(detailQtyVal) || 1), variants, unitPrice, image };
+        }
+        function renderPendingVariantLines() {
+            const box = document.getElementById('pendingVariantLinesBox');
+            const btn = document.getElementById('addAllVariantsToCartBtn');
+            if (!box || !btn) return;
+            if (!pendingVariantLines.length) { box.innerHTML = ''; btn.classList.add('hidden'); return; }
+            box.innerHTML = '<p class="text-xs font-extrabold text-gray-800">Selected combinations (' + pendingVariantLines.length + ')</p>' + pendingVariantLines.map((line, i) => {
+                const optionText = Object.entries(line.variants || {}).filter(([k,v]) => v && !k.startsWith('__')).map(([k,v]) => k + ': ' + v).concat(line.variants?.__size ? ['Size: ' + line.variants.__size] : []).join(' · ') || 'Standard';
+                return '<div class="flex items-center gap-2 rounded-lg border border-purple-100 bg-purple-50/60 p-2"><div class="min-w-0 flex-1"><p class="text-xs font-bold text-gray-800">' + escapeHtml(optionText) + '</p><p class="text-[11px] text-gray-600">৳' + Number(line.unitPrice).toFixed(2) + ' × ' + line.qty + ' = ৳' + (Number(line.unitPrice)*Number(line.qty)).toFixed(2) + '</p></div><button type="button" onclick="changePendingVariantQty(' + i + ',-1)" class="w-7 h-7 rounded bg-white border border-purple-200">−</button><span class="text-xs font-bold">' + line.qty + '</span><button type="button" onclick="changePendingVariantQty(' + i + ',1)" class="w-7 h-7 rounded bg-white border border-purple-200">+</button><button type="button" onclick="removePendingVariantLine(' + i + ')" class="text-red-600 font-bold px-1" aria-label="Remove combination">×</button></div>';
+            }).join('');
+            btn.classList.remove('hidden');
+            btn.innerHTML = '<i class="fas fa-cart-plus mr-1"></i> Add all ' + pendingVariantLines.reduce((n,x)=>n+Number(x.qty||0),0) + ' items to Cart · ৳' + pendingVariantLines.reduce((n,x)=>n+Number(x.qty||0)*Number(x.unitPrice||0),0).toFixed(2);
+        }
+        function addCurrentVariantLine() {
+            const line = getCurrentDetailVariantLine(); if (!line) return;
+            const prod = products.find(p => String(p.id) === String(line.productId));
+            const existing = pendingVariantLines.find(x => x.key === line.key);
+            const newQty = Number(line.qty) + (existing ? Number(existing.qty) : 0);
+            if (prod && newQty > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
+            if (existing) existing.qty = newQty; else pendingVariantLines.push(line);
+            renderPendingVariantLines();
+            const btn = document.getElementById('detailAddCartBtn');
+            if (btn) { const old = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check mr-1"></i> Added combination'; setTimeout(()=>{ if(btn.isConnected) btn.innerHTML=old; },900); }
+        }
+        function changePendingVariantQty(index, delta) {
+            const line = pendingVariantLines[index]; if (!line) return;
+            const next = Math.max(1, Number(line.qty || 1) + delta);
+            const prod = products.find(p => String(p.id) === String(line.productId));
+            if (prod && next > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
+            line.qty = next; renderPendingVariantLines();
+        }
+        function removePendingVariantLine(index) { pendingVariantLines.splice(index,1); renderPendingVariantLines(); }
+        function addAllVariantLinesToCart() {
+            if (!pendingVariantLines.length) { alert('আগে অন্তত একটি Color / Size যোগ করো।'); return; }
+            for (const line of pendingVariantLines) {
+                const prod = products.find(p => String(p.id) === String(line.productId));
+                const existing = shoppingCart.find(x => x.key === line.key);
+                const totalQty = Number(line.qty || 0) + (existing ? Number(existing.qty || 0) : 0);
+                if (prod && totalQty > getAvailableStock(prod, line.variants || {})) { alert('Stock Out — ' + Object.values(line.variants || {}).filter(Boolean).join(' / ') + ' এর পর্যাপ্ত stock নেই।'); return; }
+            }
+            pendingVariantLines.forEach(line => {
+                const existing = shoppingCart.find(x => x.key === line.key);
+                if (existing) existing.qty = Number(existing.qty || 0) + Number(line.qty || 0);
+                else shoppingCart.push({...line, variants:{...(line.variants||{})}});
+            });
+            pendingVariantLines = [];
+            renderPendingVariantLines(); updateCartBadge(); renderCartItems(); closeProductDetail(); openCartModal();
+        }
+
         function addDetailProductToCart() {
             const prod = selectedDetailProd; if (!prod || prod.stockOut) return;
             const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
@@ -3698,6 +3823,10 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             openDirectCheckout(pId, qty, choices, meta);
         }
 
+        window.addCurrentVariantLine = addCurrentVariantLine;
+        window.addAllVariantLinesToCart = addAllVariantLinesToCart;
+        window.changePendingVariantQty = changePendingVariantQty;
+        window.removePendingVariantLine = removePendingVariantLine;
         window.startCheckoutFromDetail = startCheckoutFromDetail;
         window.openDirectCheckout = openDirectCheckout;
 
@@ -6540,26 +6669,7 @@ html, body { max-width:100%; overflow-x:clip; }
   header #headerWishlistButton, header #headerCartButton { padding-left: 3px !important; padding-right: 3px !important; }
 }
 </style>
-<script id="delofia-mobile-search-inline-v61">
-(function(){
-  function arrangeMobileHeader(){
-    var search=document.getElementById('mobileProductSearchBar');
-    var actions=document.getElementById('delofiaHeaderActions');
-    var headerRow=document.querySelector('header > div.max-w-7xl');
-    if(!search || !actions || !headerRow) return;
-    if(window.matchMedia('(max-width: 640px)').matches){
-      if(search.parentElement !== actions) actions.insertBefore(search, actions.firstChild);
-    } else {
-      var header=document.querySelector('header');
-      if(search.parentElement === actions && header){
-        var anchor=header.querySelector('#mainHeaderSearchAnchor');
-        if(anchor && anchor.parentNode) anchor.parentNode.insertBefore(search, anchor.nextSibling);
-        else header.insertAdjacentElement('afterend', search);
-      }
-    }
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arrangeMobileHeader);
-  else arrangeMobileHeader();
-  window.addEventListener('resize', arrangeMobileHeader);
-})();
+<script id="delofia-mobile-search-inline-v63">
+/* Intentionally keep #mobileProductSearchBar in its original row below the header.
+   Moving it into #delofiaHeaderActions caused the search, logo and cart to overlap. */
 </script>
