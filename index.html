@@ -2718,7 +2718,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                         </div>
                         
                         <div class="space-y-2">
-                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
+                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas ${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'fa-sliders-h' : 'fa-cart-plus'}"></i> ${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Color / Size' : 'Add to Cart'}</button>`}
                             ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `openDirectCheckout('${product.id}')`}" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : (product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Options' : 'Direct Order')}</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + (product.title || ''))}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
                         </div>
@@ -3417,6 +3417,8 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
             mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
+            const sheetImage = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
+            document.getElementById('productDetailModal').style.setProperty('--delofia-sheet-product-image', sheetImage ? `url("${String(sheetImage).replace(/"/g, '%22')}")` : 'none');
             mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
@@ -5708,8 +5710,23 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     available.forEach(option => {
                         const button = document.createElement('button'); button.type = 'button';
                         const selected = selectedVariantChoices[group.name] === option.name;
-                        button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
-                        button.textContent = option.name;
+                        button.className = 'inline-flex items-center gap-2 border rounded-xl px-2.5 py-2 text-xs font-bold transition ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900 ring-2 ring-purple-200' : 'border-gray-300 bg-white text-gray-700');
+                        button.style.minHeight = '42px';
+                        button.style.maxWidth = '100%';
+                        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+                        // Show the variant's own photo beside its name when one was uploaded in Admin.
+                        if (option.image && String(option.image).trim()) {
+                            const swatchImage = document.createElement('img');
+                            swatchImage.src = option.image;
+                            swatchImage.alt = option.name + ' photo';
+                            swatchImage.className = 'w-7 h-7 rounded-md object-cover border border-gray-200 bg-white flex-shrink-0';
+                            swatchImage.loading = 'lazy';
+                            swatchImage.onerror = () => { swatchImage.style.display = 'none'; };
+                            button.appendChild(swatchImage);
+                        }
+                        const optionLabel = document.createElement('span');
+                        optionLabel.textContent = option.name;
+                        button.appendChild(optionLabel);
                         button.onclick = () => {
                             const wasSelected = selectedVariantChoices[group.name] === option.name;
                             if (wasSelected) { delete selectedVariantChoices[group.name]; delete selectedVariantMeta[group.name]; }
@@ -6376,5 +6393,68 @@ html, body { max-width:100%; overflow-x:clip; }
   #customerAccountHeaderBtn { padding:7px 8px !important; }
   #delofiaMobileActionBar { gap:4px; padding:5px; }
   #delofiaMobileActionBar button, #delofiaMobileActionBar a { font-size:10px; }
+}
+
+/* Mobile product variant picker styled like a compact shopping-app bottom sheet. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important; background:rgba(0,0,0,.48) !important;
+    backdrop-filter:blur(1px);
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:78dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain; background:#fff !important;
+    box-shadow:0 -8px 30px rgba(0,0,0,.18) !important;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid {
+    display:grid !important; grid-template-columns:1fr !important; gap:0 !important;
+  }
+  #productDetailModal > div > .grid > div:first-child {
+    display:none !important;
+  }
+  #productDetailModal > div > .grid > div:nth-child(2) {
+    display:flex !important; flex-direction:column !important; gap:0 !important;
+    padding:12px 10px 10px !important;
+  }
+  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child {
+    min-height:98px; padding-left:102px !important; position:relative;
+  }
+  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child::before {
+    content:''; position:absolute; left:0; top:0; width:90px; height:90px;
+    background-image:var(--delofia-sheet-product-image, none); background-size:contain;
+    background-repeat:no-repeat; background-position:center; border:1px solid #eee; border-radius:8px;
+  }
+  #productDetailModal #detailTitle { font-size:14px !important; line-height:1.35 !important; margin:1px 34px 7px 0 !important; }
+  #productDetailModal .text-xs.font-bold.text-purple-600 { display:none !important; }
+  #productDetailModal #detailWishlistButton { display:none !important; }
+  #productDetailModal #detailPrice { font-size:17px !important; color:#f04b2b !important; }
+  #productDetailModal #detailStockBadge { font-size:10px !important; }
+  #productDetailModal #detailPriceContact { padding:7px !important; margin-bottom:7px !important; }
+  #productDetailModal #detailVariantOptions { margin:5px 0 8px !important; padding-top:8px; border-top:1px solid #f0f0f0; }
+  #productDetailModal #detailVariantOptions > div { margin-bottom:7px !important; }
+  #productDetailModal #detailVariantOptions h4,
+  #productDetailModal #detailVariantOptions label,
+  #productDetailModal #detailVariantOptions .font-bold { font-size:11px !important; }
+  #productDetailModal #detailVariantOptions button { min-height:32px !important; padding:4px 7px !important; font-size:11px !important; border-radius:5px !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child > .mb-4:last-child { margin-bottom:6px !important; }
+  #productDetailModal #detailQty { font-size:12px !important; }
+  #productDetailModal #detailQty { width:26px !important; }
+  #productDetailModal button[onclick="updateDetailQty(-1)"],
+  #productDetailModal button[onclick="updateDetailQty(1)"] { width:29px !important; height:29px !important; border-radius:6px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; margin:5px 0 8px !important; padding:7px 0 !important; border-top:1px solid #f0f0f0; }
+  #productDetailModal .mb-6:has(#detailQty) label { margin:0 !important; font-size:11px !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; background:#fff; padding:7px 0 0 !important;
+    border-top:1px solid #eee !important; gap:5px !important;
+  }
+  #productDetailModal #detailAddCartBtn { background:#f04b2b !important; color:#fff !important; border-radius:5px !important; padding:10px !important; font-size:12px !important; }
+  #productDetailModal #detailBuyBtn, #productDetailModal #detailWhatsappBtn { display:none !important; }
+  #productDetailModal > div > section { padding:10px !important; }
+  #productDetailModal > div > section .delofia-info-tab { padding:7px 9px !important; font-size:11px !important; }
+  #productDetailModal > div > button:first-child { top:7px !important; right:7px !important; width:27px !important; height:27px !important; background:transparent !important; box-shadow:none !important; }
+  #productDetailModal > div > button:first-child i { font-size:14px !important; }
 }
 </style>
