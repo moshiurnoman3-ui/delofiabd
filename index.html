@@ -1013,6 +1013,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
   header #headerWishlistButton, header #headerCartButton { flex-basis:30px !important; width:30px !important; min-width:30px !important; max-width:30px !important; }
 }
 </style>
+<style id="delofia-sale-price-ui-v71">
+#productDetailModal #detailOriginalPrice { white-space:nowrap; }
+#productDetailModal #detailDiscountBadge { white-space:nowrap; }
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
@@ -1193,8 +1197,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                 <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel">Add to Wishlist</span>
                             </button>
                         </div>
-                        <div class="flex items-baseline gap-3 mb-4">
+                        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
                             <span id="detailPrice" class="text-3xl font-extrabold text-purple-700"></span>
+                            <span id="detailOriginalPrice" class="hidden text-sm text-gray-400 line-through"></span>
+                            <span id="detailDiscountBadge" class="hidden text-xs font-extrabold text-white bg-pink-500 px-2.5 py-1 rounded-full"></span>
                             <span id="detailStockBadge" class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded-full">In Stock</span>
                         </div>
                         <div id="detailPriceContact" class="hidden mb-4 rounded-xl border border-purple-100 bg-purple-50 p-3">
@@ -1961,10 +1967,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                         <input type="text" id="prodTitle" required placeholder="e.g. Honey Baze Stone Brown" class="w-full border rounded-xl p-2.5">
                                     </div>
 
-                                    <div>
-                                        <label class="block font-bold mb-1">Price (BDT ৳)</label>
-                                        <input type="number" id="prodPrice" required placeholder="480" class="w-full border rounded-xl p-2.5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block font-bold mb-1">Selling Price (BDT ৳)</label>
+                                            <input type="number" id="prodPrice" required min="0" step="0.01" placeholder="e.g. 1099" class="w-full border rounded-xl p-2.5">
+                                        </div>
+                                        <div>
+                                            <label class="block font-bold mb-1">Regular Price / Before Discount (৳)</label>
+                                            <input type="number" id="prodOriginalPrice" min="0" step="0.01" placeholder="e.g. 1650 (optional)" class="w-full border rounded-xl p-2.5">
+                                        </div>
                                     </div>
+                                    <p class="text-[11px] text-gray-500">Regular price দিলে customer-কে কাটা পুরোনো দাম, বর্তমান দাম এবং স্বয়ংক্রিয় discount % দেখাবে।</p>
                                     <div>
                                         <label class="block font-bold mb-1">Storefront Display Position (small number = top)</label>
                                         <input type="number" id="prodDisplayOrder" min="1" step="1" placeholder="Leave blank for default order" class="w-full border rounded-xl p-2.5">
@@ -2056,6 +2069,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                         <label class="flex items-center gap-2 font-bold text-gray-700">
                                             <input type="checkbox" id="prodShowPrice" checked class="rounded text-purple-600">
                                             Display Price Publicly
+                                        </label>
+                                        <label class="flex items-center gap-2 rounded-xl border border-purple-200 bg-purple-50 p-3 font-bold text-purple-900">
+                                            <input type="checkbox" id="prodShowQuantitySelector" checked class="rounded text-purple-600">
+                                            Show Quantity (+ / −) selector in Product Details
                                         </label>
                                         <label class="flex items-center gap-2 font-bold text-gray-700">
                                             <input type="checkbox" id="prodDirectOrderEnabled" checked class="rounded text-purple-600">
@@ -2431,21 +2448,35 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             });
         }
 
-        // Save cart lines in the signed-in user's own profile document (merge=true preserves profile fields).
-        window.__delofiaCloudCartSync = async function(cart) {
+        // Serialize cloud writes so rapid badge/render updates cannot write an older cart after a newer one.
+        let delofiaCartWriteQueue = Promise.resolve();
+        let delofiaWishlistWriteQueue = Promise.resolve();
+        window.__delofiaCloudCartSync = function(cart) {
             const user = auth.currentUser;
-            if (!user || !Array.isArray(cart) || window.__delofiaApplyingRemoteState) return;
+            if (!user || !Array.isArray(cart) || window.__delofiaApplyingRemoteState) return Promise.resolve();
+            const uid = user.uid;
             const safeCart = cart.map(item => ({
-                key: String(item.key || ''), productId: String(item.productId ?? ''), title: String(item.title || 'Product'),
+                key: String(item.key || cartItemKey(item.productId, item.variants || {})), productId: String(item.productId ?? ''), title: String(item.title || 'Product'),
                 qty: Math.max(1, Math.floor(Number(item.qty) || 1)), variants: item.variants && typeof item.variants === 'object' ? item.variants : {},
                 unitPrice: Math.max(0, Number(item.unitPrice) || 0), image: String(item.image || '')
             }));
-            await setDoc(doc(db, 'customerProfiles', user.uid), { cart: safeCart, cartUpdatedAt: new Date().toISOString() }, { merge: true });
+            window.__delofiaCartLocalWritePending = true;
+            delofiaCartWriteQueue = delofiaCartWriteQueue.catch(()=>{}).then(async () => {
+                if (auth.currentUser?.uid !== uid) return;
+                await setDoc(doc(db, 'customerProfiles', uid), { cart: safeCart, cartUpdatedAt: new Date().toISOString() }, { merge: true });
+            }).finally(() => { if (auth.currentUser?.uid === uid) window.__delofiaCartLocalWritePending = false; });
+            return delofiaCartWriteQueue;
         };
-        window.__delofiaCloudWishlistSync = async function(wishlist) {
+        window.__delofiaCloudWishlistSync = function(wishlist) {
             const user = auth.currentUser;
-            if (!user || !Array.isArray(wishlist) || window.__delofiaApplyingRemoteState) return;
-            await setDoc(doc(db, 'customerProfiles', user.uid), { wishlist: wishlist.map(String), wishlistUpdatedAt: new Date().toISOString() }, { merge: true });
+            if (!user || !Array.isArray(wishlist) || window.__delofiaApplyingRemoteState) return Promise.resolve();
+            const uid = user.uid, safeWishlist = wishlist.map(String);
+            window.__delofiaWishlistLocalWritePending = true;
+            delofiaWishlistWriteQueue = delofiaWishlistWriteQueue.catch(()=>{}).then(async () => {
+                if (auth.currentUser?.uid !== uid) return;
+                await setDoc(doc(db, 'customerProfiles', uid), { wishlist: safeWishlist, wishlistUpdatedAt: new Date().toISOString() }, { merge: true });
+            }).finally(() => { if (auth.currentUser?.uid === uid) window.__delofiaWishlistLocalWritePending = false; });
+            return delofiaWishlistWriteQueue;
         };
         let delofiaProfileUnsubscribe = null;
         let delofiaProfileSyncUid = '';
@@ -2735,6 +2766,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         }
         window.loadDelofiaAccountWishlist = function(accountWishlist, cloudExists = true) {
+            // Ignore stale snapshots while this device is saving a newer wishlist state.
+            if (cloudExists && window.__delofiaWishlistLocalWritePending) return;
             if (cloudExists) {
                 const next = Array.isArray(accountWishlist) ? accountWishlist.map(String) : [];
                 const currentSig = JSON.stringify([...delofiaWishlist].sort());
@@ -2854,6 +2887,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
+                        ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
                         <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
@@ -2861,7 +2895,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         <div>
                             <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${subCategoryDisplay ? ' • ' + subCategoryDisplay : ''}</span>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
-                            ${product.showPrice ? `<div class="text-purple-700 font-extrabold text-lg mb-3">৳${Number(product.price || 0).toFixed(2)}</div>` : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
+                            ${product.showPrice ? (() => { const sale = Math.max(0, Number(product.price) || 0); const regular = Number(product.originalPrice) || 0; const hasDiscount = regular > sale && sale >= 0; const pct = hasDiscount ? Math.round((regular - sale) / regular * 100) : 0; return `<div class="mb-3"><div class="flex flex-wrap items-center gap-2"><span class="text-purple-700 font-extrabold text-lg">৳${sale.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>${hasDiscount ? `<span class="text-xs text-gray-400 line-through">৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>` : ''}</div>${hasDiscount ? `<span class="inline-flex mt-1 bg-pink-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">${pct}% OFF · SAVE ৳${(regular-sale).toLocaleString('en-BD', {maximumFractionDigits:2})}</span>` : ''}</div>`; })() : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
                         
                         <div class="space-y-2">
@@ -3462,7 +3496,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 image: String(item.image || ''), variants: item.variants || {}
             })).sort((a,b) => a.key.localeCompare(b.key)));
         }
+        window.__delofiaCartLocalWritePending = false;
+        window.__delofiaWishlistLocalWritePending = false;
         window.loadDelofiaAccountCart = function(accountCart, cloudExists = true) {
+            // Do not let an older Firestore snapshot overwrite a cart the shopper has just changed.
+            if (cloudExists && window.__delofiaCartLocalWritePending) return;
             const remote = Array.isArray(accountCart) ? accountCart : [];
             const normalized = remote.filter(item => item && item.productId != null && Number(item.qty) > 0).map(item => ({
                 ...item, qty: Math.max(1, Math.floor(Number(item.qty) || 1)), unitPrice: Math.max(0, Number(item.unitPrice) || 0),
@@ -3558,6 +3596,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             updateDetailWishlistButton();
             const detailPriceEl = document.getElementById('detailPrice');
             detailPriceEl.innerText = selectedDetailProd.showPrice ? `৳${Number(selectedDetailProd.price).toFixed(2)}` : '';
+            const detailOriginalPriceEl = document.getElementById('detailOriginalPrice');
+            const detailDiscountBadgeEl = document.getElementById('detailDiscountBadge');
+            const detailSalePrice = Math.max(0, Number(selectedDetailProd.price) || 0);
+            const detailRegularPrice = Number(selectedDetailProd.originalPrice) || 0;
+            const detailHasDiscount = selectedDetailProd.showPrice && detailRegularPrice > detailSalePrice;
+            if (detailOriginalPriceEl) { detailOriginalPriceEl.textContent = detailHasDiscount ? `৳${detailRegularPrice.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; detailOriginalPriceEl.classList.toggle('hidden', !detailHasDiscount); }
+            if (detailDiscountBadgeEl) { detailDiscountBadgeEl.textContent = detailHasDiscount ? `${Math.round((detailRegularPrice-detailSalePrice)/detailRegularPrice*100)}% OFF · SAVE ৳${(detailRegularPrice-detailSalePrice).toLocaleString('en-BD', {maximumFractionDigits:2})}` : ''; detailDiscountBadgeEl.classList.toggle('hidden', !detailHasDiscount); }
+            const detailQtyWrap = document.querySelector('#productDetailModal #detailQty')?.closest('.mb-6');
+            if (detailQtyWrap) detailQtyWrap.classList.toggle('hidden', selectedDetailProd.showQuantitySelector === false);
             detailPriceEl.classList.toggle('hidden', !selectedDetailProd.showPrice);
             const priceContact = document.getElementById('detailPriceContact');
             priceContact.classList.toggle('hidden', !!selectedDetailProd.showPrice);
@@ -6187,6 +6234,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const title = document.getElementById('prodTitle').value.trim();
                 if (!title) throw new Error('Please enter a product name.');
                 const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+                const originalPrice = Math.max(0, parseFloat(document.getElementById('prodOriginalPrice')?.value) || 0);
+                const showQuantitySelector = document.getElementById('prodShowQuantitySelector')?.checked !== false;
                 const imagesStr = document.getElementById('prodImages').value.trim();
                 const desc = document.getElementById('prodDesc').value.trim();
                 const showPrice = document.getElementById('prodShowPrice').checked;
@@ -6206,6 +6255,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     id: prodId,
                     title,
                     price,
+                    originalPrice: originalPrice > price ? originalPrice : 0,
+                    showQuantitySelector,
                     images: finalImages,
                     photoAutoRotate: document.getElementById('prodPhotoAutoRotate')?.checked === true,
                     photoInterval: Math.max(2, Math.min(10, Number(document.getElementById('prodPhotoInterval')?.value) || 4)),
@@ -6355,6 +6406,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('editProductId').value = p.id;
             document.getElementById('prodTitle').value = p.title;
             document.getElementById('prodPrice').value = p.price;
+            const originalPriceInput = document.getElementById('prodOriginalPrice'); if (originalPriceInput) originalPriceInput.value = p.originalPrice > p.price ? p.originalPrice : '';
+            const showQtySelectorInput = document.getElementById('prodShowQuantitySelector'); if (showQtySelectorInput) showQtySelectorInput.checked = p.showQuantitySelector !== false;
             document.getElementById('prodDisplayOrder').value = p.displayOrder ?? '';
             renderCategoryControls();
             document.getElementById('prodCategory').value = p.category || 'Other';
@@ -6409,6 +6462,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('prodDisplayOrder').value = '';
             closeProductEditModal();
             document.getElementById('productForm').reset();
+            const originalPriceInput = document.getElementById('prodOriginalPrice'); if (originalPriceInput) originalPriceInput.value = '';
+            const showQtySelectorInput = document.getElementById('prodShowQuantitySelector'); if (showQtySelectorInput) showQtySelectorInput.checked = true;
             const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = '';
             const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = '0';
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = false;
