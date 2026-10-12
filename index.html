@@ -984,8 +984,9 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             <!-- Search Bar -->
             <div class="hidden md:flex flex-1 max-w-md mx-8">
                 <div class="relative w-full">
-                    <input type="text" id="searchInput" oninput="filterProducts()" placeholder="Search products..." class="w-full bg-purple-50/50 border border-purple-200 rounded-full py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
-                    <i class="fas font-solid fa-magnifying-glass absolute left-3 top-3 text-purple-400 text-sm"></i>
+                    <input type="search" id="searchInput" oninput="filterProducts()" onkeydown="handleProductSearchKeydown(event, 'searchInput')" autocomplete="off" aria-label="Search products" aria-controls="desktopSearchSuggestions" placeholder="Search products..." class="w-full bg-purple-50/50 border border-purple-200 rounded-full py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    <i class="fas font-solid fa-magnifying-glass absolute left-3 top-3 text-purple-400 text-sm pointer-events-none"></i>
+                    <div id="desktopSearchSuggestions" class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-purple-100 rounded-xl shadow-xl overflow-hidden z-[80] max-h-72 overflow-y-auto" role="listbox"></div>
                 </div>
             </div>
 
@@ -1001,6 +1002,15 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         </div>
     </header>
 
+    <!-- Mobile product search with live autocomplete suggestions -->
+    <div id="mobileProductSearchBar" class="md:hidden sticky top-20 z-30 bg-white/95 backdrop-blur-md border-b border-purple-100 px-3 py-2 shadow-sm">
+        <div class="relative max-w-7xl mx-auto">
+            <i class="fas fa-magnifying-glass absolute left-3 top-3.5 text-purple-400 text-sm pointer-events-none"></i>
+            <input type="search" id="mobileSearchInput" oninput="filterProducts()" onkeydown="handleProductSearchKeydown(event, 'mobileSearchInput')" autocomplete="off" aria-label="Search products" aria-controls="mobileSearchSuggestions" placeholder="Search products... (e.g. D)" class="w-full bg-purple-50 border border-purple-200 rounded-full py-3 pl-10 pr-10 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+            <button type="button" onclick="clearProductSearch()" aria-label="Clear search" class="absolute right-3 top-2.5 text-purple-500 px-1 py-1" id="mobileSearchClearButton" style="display:none"><i class="fas fa-times"></i></button>
+            <div id="mobileSearchSuggestions" class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-purple-100 rounded-xl shadow-xl overflow-hidden z-[80] max-h-72 overflow-y-auto" role="listbox"></div>
+        </div>
+    </div>
 
     <div id="delofiaSidebarOverlay" onclick="if(event.target===this)toggleDelofiaSidebar(false)" aria-hidden="true">
       <aside id="delofiaSidebar" role="dialog" aria-modal="true" aria-label="Store navigation">
@@ -2363,7 +2373,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 window.__productsLoadError = "";
                 window.dispatchEvent(new Event("delofia-products-updated"));
                 if (typeof window.renderProducts === 'function') {
-                    window.renderProducts(document.getElementById('searchInput')?.value || '');
+                    window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 }
                 // Refresh the admin catalog every time Firestore emits products.
                 if (typeof window.renderAdminProductsList === 'function') {
@@ -2440,7 +2450,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                     window.applyStoreLogo();
                     window.applyStorefrontContent?.();
                     window.applyConfiguredThemes?.();
-                    window.renderProducts(document.getElementById('searchInput')?.value || '');
+                    window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 }
             });
 
@@ -2621,7 +2631,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             if (isInWishlist(id)) { delofiaWishlist = delofiaWishlist.filter(x => x !== id); }
             else { delofiaWishlist.push(id); }
             saveDelofiaWishlist(); updateWishlistBadge();
-            if (typeof renderProducts === 'function') renderProducts(document.getElementById('searchInput')?.value || '');
+            if (typeof renderProducts === 'function') renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
             updateDetailWishlistButton();
             const modal = document.getElementById('wishlistModal'); if (modal && !modal.classList.contains('hidden')) renderWishlistItems();
         }
@@ -3075,7 +3085,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 applyConfiguredThemes();
                 pendingStoreLogo = null;
                 applyStoreLogo(); updateWhatsappUI(); renderSocialLinks(); applyStorefrontContent();
-                renderProducts(document.getElementById('searchInput')?.value || '');
+                renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 alert('Store settings saved successfully!');
             } catch (err) {
                 console.error('Failed to save Delofia store settings:', err);
@@ -3181,9 +3191,83 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         }
 
         function filterProducts() {
-            const query = document.getElementById('searchInput').value;
+            const desktopInput = document.getElementById('searchInput');
+            const mobileInput = document.getElementById('mobileSearchInput');
+            const source = (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) ? mobileInput : desktopInput;
+            const query = String(source?.value ?? desktopInput?.value ?? mobileInput?.value ?? '').trimStart();
+            if (desktopInput && source !== desktopInput) desktopInput.value = query;
+            if (mobileInput && source !== mobileInput) mobileInput.value = query;
             renderProducts(query);
+            renderProductSearchSuggestions(query, source?.id || 'searchInput');
+            const clearButton = document.getElementById('mobileSearchClearButton');
+            if (clearButton) clearButton.style.display = query ? 'block' : 'none';
         }
+
+        function renderProductSearchSuggestions(query, sourceId) {
+            const targetId = sourceId === 'mobileSearchInput' ? 'mobileSearchSuggestions' : 'desktopSearchSuggestions';
+            const box = document.getElementById(targetId);
+            if (!box) return;
+            const q = String(query || '').trim().toLowerCase();
+            if (!q) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+            const matches = (window.products || []).filter(p => String(p.title || '').toLowerCase().includes(q)).slice(0, 7);
+            if (!matches.length) {
+                box.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">No matching products found</div>';
+                box.classList.remove('hidden');
+                return;
+            }
+            box.innerHTML = matches.map((p, index) => {
+                const title = escapeHtml(String(p.title || 'Product'));
+                const price = p.showPrice && Number.isFinite(Number(p.price)) ? `<span class="text-xs text-purple-700 font-bold whitespace-nowrap">৳${Number(p.price).toLocaleString('en-BD')}</span>` : '';
+                const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
+                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-purple-50 active:bg-purple-100 border-b border-gray-100 last:border-b-0" style="min-height:56px"><span class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-purple-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-gray-800 truncate">${title}</span><span class="block text-[11px] text-gray-400">View product</span></span>${price}<i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
+            }).join('');
+            box.classList.remove('hidden');
+            box.querySelectorAll('[data-search-product-id]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const productId = button.getAttribute('data-search-product-id');
+                    const product = (window.products || []).find(p => String(p.id) === String(productId));
+                    box.classList.add('hidden');
+                    if (product) {
+                        const desktopInput = document.getElementById('searchInput');
+                        const mobileInput = document.getElementById('mobileSearchInput');
+                        if (desktopInput) desktopInput.value = product.title || '';
+                        if (mobileInput) mobileInput.value = product.title || '';
+                        renderProducts(product.title || '');
+                        openProductDetail(product.id);
+                    }
+                });
+            });
+        }
+
+        function handleProductSearchKeydown(event, inputId) {
+            if (event.key === 'Escape') {
+                const box = document.getElementById(inputId === 'mobileSearchInput' ? 'mobileSearchSuggestions' : 'desktopSearchSuggestions');
+                if (box) box.classList.add('hidden');
+                return;
+            }
+            if (event.key === 'Enter') {
+                const box = document.getElementById(inputId === 'mobileSearchInput' ? 'mobileSearchSuggestions' : 'desktopSearchSuggestions');
+                const first = box?.querySelector('[data-search-product-id]');
+                if (first) { event.preventDefault(); first.click(); }
+            }
+        }
+
+        function clearProductSearch() {
+            const desktopInput = document.getElementById('searchInput');
+            const mobileInput = document.getElementById('mobileSearchInput');
+            if (desktopInput) desktopInput.value = '';
+            if (mobileInput) mobileInput.value = '';
+            const clearButton = document.getElementById('mobileSearchClearButton');
+            if (clearButton) clearButton.style.display = 'none';
+            document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
+            document.getElementById('desktopSearchSuggestions')?.classList.add('hidden');
+            renderProducts('');
+        }
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#mobileProductSearchBar')) document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
+            if (!event.target.closest('#searchInput') && !event.target.closest('#desktopSearchSuggestions')) document.getElementById('desktopSearchSuggestions')?.classList.add('hidden');
+        });
 
         let selectedDetailProd = null;
         let detailQtyVal = 1;
