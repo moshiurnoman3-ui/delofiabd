@@ -432,6 +432,66 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
 }
 </style>
 
+
+<style id="delofia-product-edit-contrast-hotfix">
+/* Keep the Edit Product popup readable even when the admin panel uses dark mode. */
+#productFormCard.product-edit-active { background:#ffffff !important; color:#272033 !important; }
+#productFormCard.product-edit-active h1,
+#productFormCard.product-edit-active h2,
+#productFormCard.product-edit-active h3,
+#productFormCard.product-edit-active h4,
+#productFormCard.product-edit-active h5,
+#productFormCard.product-edit-active p,
+#productFormCard.product-edit-active label,
+#productFormCard.product-edit-active span,
+#productFormCard.product-edit-active strong,
+#productFormCard.product-edit-active small,
+#productFormCard.product-edit-active legend,
+#productFormCard.product-edit-active .text-gray-900,
+#productFormCard.product-edit-active .text-gray-800,
+#productFormCard.product-edit-active .text-gray-700,
+#productFormCard.product-edit-active .text-gray-600,
+#productFormCard.product-edit-active .text-gray-500,
+#productFormCard.product-edit-active .text-purple-950,
+#productFormCard.product-edit-active .text-purple-900 { color:#272033 !important; }
+#productFormCard.product-edit-active input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+#productFormCard.product-edit-active textarea,
+#productFormCard.product-edit-active select { background:#ffffff !important; color:#272033 !important; border-color:#cbd5e1 !important; }
+#productFormCard.product-edit-active input::placeholder,
+#productFormCard.product-edit-active textarea::placeholder { color:#6b7280 !important; opacity:1 !important; }
+#productFormCard.product-edit-active input[type="checkbox"],
+#productFormCard.product-edit-active input[type="radio"] { accent-color:#7c3aed; }
+#productFormCard.product-edit-active #baseDescriptionTableEditor,
+#productFormCard.product-edit-active #baseDescriptionTableEditor * { color:#272033 !important; }
+#productFormCard.product-edit-active #baseDescriptionTableEditor input,
+#productFormCard.product-edit-active #baseDescriptionTableEditor textarea,
+#productFormCard.product-edit-active #baseDescriptionTableEditor select { background:#ffffff !important; color:#272033 !important; border-color:#cbd5e1 !important; }
+#productFormCard.product-edit-active button { text-shadow:none !important; }
+</style>
+
+
+<style id="delofia-order-memo-contrast-hotfix">
+/* Keep the order confirmation memo readable even when the storefront uses dark mode. */
+#successMemoPreview { background:#ffffff !important; color:#272033 !important; }
+#successMemoPreview, #successMemoPreview * { color:#272033 !important; }
+#successMemoPreview .text-purple-900, #successMemoPreview .text-purple-700 { color:#5b21b6 !important; }
+#successMemoPreview .text-gray-500, #successMemoPreview .text-gray-600 { color:#6b7280 !important; }
+#successMemoPreview [style*="color"] { color:#272033 !important; }
+</style>
+
+<style id="delofia-product-detail-quantity-readable-fix-v4">
+/* Keep the Quantity label readable on the white product detail modal, even when storefront dark mode is enabled. */
+#productDetailModal .mb-6 > label { color: #374151 !important; }
+#productDetailModal #detailQty { color: #272033 !important; background: #f9fafb !important; border: 1px solid #d1d5db !important; }
+#productDetailModal button[onclick="updateDetailQty(-1)"],
+#productDetailModal button[onclick="updateDetailQty(1)"] { color: #5b21b6 !important; background: #f3e8ff !important; border: 1px solid #ddd6fe !important; }
+</style>
+
+<style id="delofia-quantity-label-only-fix-v5">
+/* Fix ONLY the product detail Quantity label; leave the +/- controls and number unchanged. */
+#productDetailModal .mb-6 > label { color: #374151 !important; }
+body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 !important; }
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
@@ -598,7 +658,6 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                             <p class="text-sm font-semibold text-gray-800 mb-3">Price জানতে আমাদের সাথে যোগাযোগ করুন</p>
                             <div id="detailPriceSocialLinks" class="flex flex-wrap gap-2"></div>
                         </div>
-                        <div id="detailDescription" class="text-sm text-gray-700 mb-4 leading-relaxed bg-gradient-to-br from-purple-50 via-white to-pink-50 p-4 rounded-2xl border border-purple-100 shadow-sm"></div>
                         <div id="detailVariantOptions" class="hidden mb-6 space-y-4"></div>
                         
                         <!-- Quantity Selector -->
@@ -624,6 +683,35 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                     </div>
                 </div>
             </div>
+            <!-- Product information tabs, placed beneath the order controls like the reference page -->
+            <section class="border-t border-purple-100 bg-white p-4 sm:p-7">
+                <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-5" role="tablist" aria-label="Product information">
+                    <button type="button" onclick="window.delofiaReviewTab('description')" id="delofiaTabDescription" aria-expanded="false" class="delofia-info-tab px-5 py-3 text-sm sm:text-base font-extrabold rounded-xl border-2 border-purple-200 bg-purple-50 text-purple-900 shadow-sm hover:bg-purple-100 transition">Description</button>
+                    <button type="button" onclick="window.delofiaReviewTab('howto')" id="delofiaTabHowto" aria-expanded="false" class="delofia-info-tab px-5 py-3 text-sm sm:text-base font-extrabold rounded-xl border-2 border-purple-200 bg-white text-purple-900 shadow-sm hover:bg-purple-50 transition">How To Use</button>
+                    <button type="button" onclick="window.delofiaReviewTab('reviews')" id="delofiaTabReviews" aria-expanded="false" class="delofia-info-tab px-5 py-3 text-sm sm:text-base font-extrabold rounded-xl border-2 border-purple-200 bg-white text-purple-900 shadow-sm hover:bg-purple-50 transition">Reviews (<span id="delofiaReviewCountTab">0</span>)</button>
+                </div>
+                <div id="delofiaPanelDescription" class="delofia-info-panel hidden rounded-2xl border border-purple-100 bg-white p-4 sm:p-5 shadow-sm"><div id="detailDescription" class="text-sm text-gray-700 leading-relaxed"></div></div>
+                <div id="delofiaPanelHowto" class="delofia-info-panel hidden rounded-2xl border border-purple-100 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-extrabold text-purple-900 text-lg mb-3">How To Use</h3><div id="delofiaHowToUseText" class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">No usage instructions added yet.</div></div>
+                <div id="delofiaPanelReviews" class="delofia-info-panel hidden rounded-2xl border border-purple-100 bg-white p-4 sm:p-5 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+                        <div class="rounded-2xl bg-purple-50 p-5 text-center"><div class="text-xs uppercase tracking-wider font-bold text-gray-500">Customer Rating</div><div class="text-4xl font-black text-gray-900 mt-2"><span id="delofiaAverageRating">0.0</span><span class="text-base text-gray-500">/5</span></div><div id="delofiaAverageStars" class="text-2xl text-amber-400 tracking-wide" aria-label="Average rating">☆☆☆☆☆</div><div class="text-sm text-gray-600 mt-1"><span id="delofiaReviewCountSummary">0</span> Reviews</div></div>
+                        <form id="delofiaReviewForm" class="md:col-span-2 rounded-2xl border border-gray-200 p-4 sm:p-5 space-y-3">
+                            <h3 class="text-lg font-extrabold text-gray-900">Add Rating or Review</h3>
+                            <p class="text-xs text-gray-500">Share your experience with this product.</p>
+                            <label class="block text-sm font-semibold text-gray-700">Your rating</label>
+                            <div id="delofiaStarPicker" class="flex gap-1" aria-label="Choose a rating"></div>
+                            <input id="delofiaReviewName" maxlength="60" required placeholder="Your name" class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 bg-white" />
+                            <textarea id="delofiaReviewText" maxlength="1200" required rows="3" placeholder="Write your review..." class="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 bg-white"></textarea>
+                            <label class="block text-sm font-semibold text-gray-700">Add a photo (optional)</label>
+                            <input id="delofiaReviewPhoto" type="file" accept="image/*" class="block w-full text-sm text-gray-600" />
+                            <button id="delofiaSubmitReview" type="submit" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-3 text-sm">Submit Review</button>
+                            <p id="delofiaReviewFormMessage" class="text-sm" role="status"></p>
+                        </form>
+                    </div>
+                    <div class="flex items-center justify-between gap-3 mb-3"><h3 class="font-extrabold text-gray-900">Customer Reviews</h3><span class="text-xs text-gray-500">Latest first</span></div>
+                    <div id="delofiaReviewList" class="space-y-3"><p class="text-sm text-gray-500">No reviews yet. Be the first to review this product.</p></div>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -970,6 +1058,9 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                     <button onclick="switchAdminTab('products')" id="tabBtnProducts" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-boxes mr-1"></i> Product Management
                     </button>
+                    <button onclick="switchAdminTab('reviews')" id="tabBtnReviews" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
+                        <i class="fas fa-star mr-1"></i> Customer Reviews
+                    </button>
                     <button onclick="switchAdminTab('store')" id="tabBtnStore" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800">
                         <i class="fas fa-sliders-h mr-1"></i> Store Settings
                     </button>
@@ -1077,6 +1168,15 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                             </form>
                             <div id="adminCouponsList" class="space-y-2"><p class="text-xs text-gray-500">No coupons loaded yet.</p></div>
                         </section>
+                    </div>
+
+                    <!-- CUSTOMER REVIEWS ADMIN -->
+                    <div id="adminTabReviews" class="hidden max-w-5xl mx-auto bg-white p-5 sm:p-8 rounded-3xl shadow-sm border border-purple-100">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                            <div><h4 class="text-lg font-bold text-purple-900">Customer Reviews</h4><p class="text-xs text-gray-500 mt-1">Review list from all products. Remove fake, spam, or inappropriate reviews here.</p></div>
+                            <button type="button" onclick="renderAdminReviews()" class="rounded-xl bg-purple-100 text-purple-800 px-4 py-2 text-sm font-bold">Refresh Reviews</button>
+                        </div>
+                        <div id="adminReviewsList" class="space-y-3"><p class="text-sm text-gray-500">Open this tab to load reviews.</p></div>
                     </div>
 
                     <!-- TAB 4: STORE SETTINGS -->
@@ -1317,7 +1417,10 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                                         </div>
                                         <div id="baseDescriptionTableEditor" class="overflow-x-auto"></div>
                                         <label class="block font-bold text-gray-700 pt-2">Extra plain-text description (optional)</label>
-                                        <textarea id="prodDesc" rows="2" placeholder="Any extra details not in the table..." class="w-full border rounded-xl p-2.5 bg-white"></textarea>
+                                        <textarea id="prodDesc" rows="3" placeholder="যা এখানে লিখবে, customer Description-এ ক্লিক করলে দেখবে..." class="w-full border rounded-xl p-2.5 bg-white"></textarea>
+                                        <label for="prodHowToUse" class="block font-bold text-gray-700 pt-2">How To Use (this product)</label>
+                                        <textarea id="prodHowToUse" rows="4" placeholder="এই product কীভাবে ব্যবহার করতে হবে লিখো..." class="w-full border rounded-xl p-2.5 bg-white"></textarea>
+                                        <p class="text-xs text-gray-500">এখানে লেখা শুধু customer-এর “How To Use” বাটনে ক্লিক করলে দেখা যাবে। প্রতিটি product-এর জন্য আলাদা করে লিখতে পারবে।</p>
                                     </div>
 
                                     <div class="flex flex-col gap-3 pt-2">
@@ -1328,6 +1431,11 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                                         <label class="flex items-center gap-2 font-bold text-gray-700">
                                             <input type="checkbox" id="prodDirectOrderEnabled" checked class="rounded text-purple-600">
                                             Enable Direct Order / Checkout
+                                        </label>
+                                        <label class="block rounded-xl border border-emerald-200 bg-emerald-50 p-3 font-bold text-gray-700">
+                                            <span class="block text-sm mb-1">Stock quantity (for products without variants)</span>
+                                            <input type="number" min="0" step="1" id="prodStockQty" value="0" class="w-full border rounded-lg p-2 bg-white" />
+                                            <span class="block text-[11px] font-normal mt-1">0 = out of stock. For variant products, set stock separately on each variant below.</span>
                                         </label>
                                         <label class="flex items-center gap-2 p-3 rounded-xl border border-red-200 bg-red-50 font-bold text-red-700">
                                             <input type="checkbox" id="prodStockOut" class="rounded text-red-600 w-4 h-4">
@@ -1385,7 +1493,7 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
     <!-- FIREBASE SDK INTEGRATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBzKio6DyX5kyaxYZvNGGcfXmVsQD4H2o4",
@@ -1405,6 +1513,9 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
         window.fsSetDoc = setDoc;
         window.fsDeleteDoc = deleteDoc;
         window.fsCollection = collection;
+        window.fsGetDocs = getDocs;
+        window.fsOnSnapshot = onSnapshot;
+        window.fsRunTransaction = runTransaction;
 
         function setupRealtimeSync() {
             onSnapshot(collection(db, "products"), (snapshot) => {
@@ -2230,6 +2341,10 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             selectedVariantChoices = {};
             selectedVariantMeta = {};
             renderCustomerDescription(selectedDetailProd, null);
+            const howToUse = document.getElementById('delofiaHowToUseText');
+            if (howToUse) howToUse.textContent = selectedDetailProd.howToUse || 'Use according to the instructions supplied with the product. If specific instructions are unavailable, please contact Delofia before use.';
+            window.delofiaReviewTab(null);
+            delofiaWatchReviews(selectedDetailProd.id);
 
             // Render Video Button Option
             const vContainer = document.getElementById('detailVideoContainer');
@@ -2310,6 +2425,57 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             }
         }
 
+        // Inventory is kept per selected variant/size and is never shown to customers.
+        function getInventoryTarget(product, variants = {}) {
+            if (!product) return null;
+            const choices = variants || {};
+            const groups = Array.isArray(product.variantGroups) ? product.variantGroups : [];
+            const selectedColorGroup = groups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const selectedColor = selectedColorGroup && (selectedColorGroup.options || []).find(o => o.name === choices[selectedColorGroup.name]);
+            if (selectedColor && choices.__size) {
+                const child = (selectedColor.childVariants || []).find(v => v.name === choices.__size);
+                if (child) return { kind: 'child', groupName: selectedColorGroup.name, optionName: selectedColor.name, childName: child.name, stockQty: child.stockQty };
+            }
+            // Use the last selected option as the stock-bearing variant. For products with a color and nested size, nested size takes precedence.
+            const selected = [];
+            groups.forEach(g => { const o = (g.options || []).find(o => o.name === choices[g.name]); if (o) selected.push({ groupName:g.name, optionName:o.name, stockQty:o.stockQty }); });
+            if (selected.length) return { kind:'option', ...selected[selected.length - 1] };
+            return { kind:'product', stockQty: product.stockQty };
+        }
+        function getAvailableStock(product, variants = {}) {
+            const target = getInventoryTarget(product, variants);
+            // Legacy products without a stock field remain available until stock is explicitly set in Edit Product.
+            if (!target || target.stockQty === undefined || target.stockQty === null || target.stockQty === '') return Infinity;
+            const n = Number(target.stockQty); return Number.isFinite(n) ? Math.max(0, n) : Infinity;
+        }
+        function stockTargetPath(product, variants = {}) {
+            const target = getInventoryTarget(product, variants); if (!target) return null;
+            if (target.kind === 'child') return { kind:'child', groupName:target.groupName, optionName:target.optionName, childName:target.childName };
+            if (target.kind === 'option') return { kind:'option', groupName:target.groupName, optionName:target.optionName };
+            return { kind:'product' };
+        }
+        function decrementProductStockData(product, variants, quantity) {
+            const target = stockTargetPath(product, variants); if (!target) return false;
+            const qty = Math.max(1, Number(quantity) || 1);
+            if (target.kind === 'child') {
+                const g = (product.variantGroups || []).find(x => x.name === target.groupName); const o = (g?.options || []).find(x => x.name === target.optionName); const c = (o?.childVariants || []).find(x => x.name === target.childName);
+                if (!c) throw new Error('Selected variant is no longer available.');
+                if (c.stockQty === undefined || c.stockQty === null || c.stockQty === '') return false;
+                if (Number(c.stockQty) < qty) throw new Error('দুঃখিত, এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই। কম Quantity দিয়ে আবার চেষ্টা করুন।');
+                c.stockQty = Number(c.stockQty) - qty; return true;
+            }
+            if (target.kind === 'option') {
+                const g = (product.variantGroups || []).find(x => x.name === target.groupName); const o = (g?.options || []).find(x => x.name === target.optionName);
+                if (!o) throw new Error('Selected variant is no longer available.');
+                if (o.stockQty === undefined || o.stockQty === null || o.stockQty === '') return false;
+                if (Number(o.stockQty) < qty) throw new Error('দুঃখিত, এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই। কম Quantity দিয়ে আবার চেষ্টা করুন।');
+                o.stockQty = Number(o.stockQty) - qty; return true;
+            }
+            if (product.stockQty === undefined || product.stockQty === null || product.stockQty === '') return false;
+            if (Number(product.stockQty) < qty) throw new Error('দুঃখিত, পর্যাপ্ত স্টক নেই। কম Quantity দিয়ে আবার চেষ্টা করুন।');
+            product.stockQty = Number(product.stockQty) - qty; return true;
+        }
+
         function cartItemKey(productId, variants) {
             return String(productId) + '::' + Object.keys(variants || {}).sort().map(k => k + '=' + variants[k]).join('|');
         }
@@ -2323,7 +2489,9 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             if (prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.length) { openProductDetail(productId); return; }
             const variants = {}, unitPrice = Number(prod.price || 0), key = cartItemKey(productId, variants);
             const old = shoppingCart.find(i => i.key === key);
-            if (old) old.qty += 1; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
+            const requestedQty = (old ? Number(old.qty || 0) : 0) + 1;
+            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
+            if (old) old.qty = requestedQty; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
             updateCartBadge(); renderCartItems();
             const btn = document.querySelector(`button[onclick="addProductToCart('${productId}')"]`);
             if (btn) { const previous = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check"></i> Added'; setTimeout(() => { if (btn.isConnected) btn.innerHTML = previous; }, 1000); }
@@ -2343,7 +2511,9 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             const colorMeta = colorGroup && meta[colorGroup.name];
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
-            if (old) old.qty += detailQtyVal; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
+            const requestedQty = (old ? Number(old.qty || 0) : 0) + detailQtyVal;
+            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
+            if (old) old.qty = requestedQty; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
             updateCartBadge(); renderCartItems(); closeProductDetail(); openCartModal();
         }
         function renderCartItems() {
@@ -2354,7 +2524,7 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             const label = document.getElementById('cartSubtotalLabel'); if (label) label.textContent = '৳' + subtotal.toFixed(2);
             updateCartBadge();
         }
-        function changeCartQty(index, delta) { if (!shoppingCart[index]) return; shoppingCart[index].qty = Math.max(1, Number(shoppingCart[index].qty || 1) + delta); renderCartItems(); }
+        function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => p.id === item.productId); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; renderCartItems(); }
         function removeCartItem(index) { shoppingCart.splice(index,1); renderCartItems(); }
         function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); }
         function closeCartModal() { const m = document.getElementById('cartModal'); if (m) m.classList.add('hidden'); }
@@ -2836,14 +3006,46 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             };
 
             try {
-                if (window.db) {
-                    await window.fsSetDoc(window.fsDoc(window.db, "orders", orderId), orderObj);
+                if (!window.db) throw new Error('Database connection is not ready. Please try again.');
+                const orderItems = cartCheckoutMode
+                    ? shoppingCart.map(i => ({ productId:i.productId, variants:i.variants || {}, quantity:Number(i.qty)||1 }))
+                    : [{ productId:currentCheckoutProduct.id, variants:currentCheckoutVariants || {}, quantity:Number(currentCheckoutQty)||1 }];
+                // Use a Firestore transaction so stock checks and deductions are atomic across simultaneous orders.
+                if (typeof window.fsRunTransaction === 'function') {
+                    await window.fsRunTransaction(window.db, async (tx) => {
+                        const productRefs = new Map();
+                        const latestProducts = new Map();
+                        // Read each product document only once; several variants may belong to the same product.
+                        for (const item of orderItems) {
+                            if (productRefs.has(item.productId)) continue;
+                            const ref = window.fsDoc(window.db, 'products', item.productId);
+                            const snap = await tx.get(ref);
+                            if (!snap.exists()) throw new Error('একটি পণ্য আর পাওয়া যাচ্ছে না। Cart আপডেট করে আবার চেষ্টা করুন।');
+                            productRefs.set(item.productId, ref);
+                            latestProducts.set(item.productId, { ...snap.data(), id:item.productId });
+                        }
+                        const changedIds = new Set();
+                        for (const item of orderItems) {
+                            const latest = latestProducts.get(item.productId);
+                            if (!latest || latest.stockOut) throw new Error('Stock Out — একটি পণ্য এখন অর্ডার করা যাচ্ছে না।');
+                            const available = getAvailableStock(latest, item.variants);
+                            if (item.quantity > available) throw new Error('Stock Out — আপনার নির্বাচিত ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই। Cart-এ Quantity কমিয়ে আবার চেষ্টা করুন।');
+                            if (decrementProductStockData(latest, item.variants, item.quantity)) changedIds.add(item.productId);
+                        }
+                        changedIds.forEach(id => tx.set(productRefs.get(id), latestProducts.get(id)));
+                        tx.set(window.fsDoc(window.db, 'orders', orderId), orderObj);
+                    });
                 } else {
-                    throw new Error('Database connection is not ready. Please try again.');
+                    // Fallback for old Firebase setup: validate and update each product before saving the order.
+                    for (const item of orderItems) {
+                        const latest = products.find(p => p.id === item.productId);
+                        if (!latest || item.quantity > getAvailableStock(latest, item.variants)) throw new Error('Stock Out — পর্যাপ্ত স্টক নেই।');
+                    }
+                    await window.fsSetDoc(window.fsDoc(window.db, "orders", orderId), orderObj);
                 }
             } catch (error) {
                 console.error('Could not save order:', error);
-                alert('অর্ডারটি সংরক্ষণ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
+                alert(error?.message || 'অর্ডারটি সংরক্ষণ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
                 return;
             }
 
@@ -2907,6 +3109,8 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
 <title>Delofia Order Memo - ${escapeHtml(o.orderId)}</title>
 <style>
 *{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;padding:28px;color:#211b2b;background:#fff}
+body,.memo,.content,.head,.grid,.field,table,thead,tbody,tr,th,td,.total,.total div,.support,.foot,p,strong,span,small,h1,h2{color:#211b2b !important}
+h1{color:#6d28d9 !important}h2,th{color:#4c1d95 !important}.tag{color:#6d28d9 !important}.foot,small{color:#666 !important}.grand,.grand span,.grand strong{color:#6d28d9 !important}th{background:#f5f0ff !important}.field{background:#faf7ff !important}.support{background:#f5f0ff !important}
 .memo{max-width:760px;margin:0 auto;border:2px solid #6d28d9;border-radius:16px;padding:28px;position:relative;overflow:hidden}
 .watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0;transform:rotate(-28deg);font-size:76px;font-weight:900;letter-spacing:8px;color:rgba(109,40,217,.075);white-space:nowrap}
 .content{position:relative;z-index:1}.head{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid #eee;padding-bottom:18px;margin-bottom:20px}
@@ -3205,7 +3409,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         }
 
         function switchAdminTab(tab) {
-            ['Orders', 'Shipping', 'Payment', 'Products', 'Store', 'Password', 'Sessions'].forEach(t => {
+            ['Orders', 'Shipping', 'Payment', 'Products', 'Reviews', 'Store', 'Password', 'Sessions'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
                 if (panel) panel.classList.add('hidden');
@@ -3218,6 +3422,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
             if (tab === 'payment') { populatePaymentAdminSettings(); renderCouponsAdmin(); }
+            if (tab === 'reviews') { renderAdminReviews(); }
             if (tab === 'shipping') { populateDistrictRateSelect(); renderDistrictRateOverrides(); }
             if (tab === 'sessions') { const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes()); renderAdminSessions(); }
             if (tab === 'store') {
@@ -3556,24 +3761,161 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             host.innerHTML = html || '<span class="text-gray-500">No additional details provided.</span>';
         }
 
+        let delofiaChosenRating = 5;
+        let delofiaReviewsUnsubscribe = null;
+        let delofiaCurrentReviewProductId = null;
+        function delofiaEscape(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+        function delofiaSetRating(value) {
+            delofiaChosenRating = Math.max(1, Math.min(5, Number(value) || 5));
+            const picker = document.getElementById('delofiaStarPicker'); if (!picker) return;
+            picker.innerHTML = [1,2,3,4,5].map(n => `<button type="button" aria-label="${n} star${n>1?'s':''}" onclick="window.delofiaSetRating(${n})" class="text-3xl leading-none ${n <= delofiaChosenRating ? 'text-amber-400' : 'text-gray-300'}">★</button>`).join('');
+        }
+        window.delofiaSetRating = delofiaSetRating;
+        let delofiaOpenInfoTab = null;
+        window.delofiaReviewTab = function(tab) {
+            // Passing null closes all panels. Clicking the open tab closes it again.
+            const nextTab = !tab || delofiaOpenInfoTab === tab ? null : tab;
+            delofiaOpenInfoTab = nextTab;
+            ['description','howto','reviews'].forEach(name => {
+                const panel = document.getElementById('delofiaPanel' + name.charAt(0).toUpperCase() + name.slice(1));
+                const button = document.getElementById('delofiaTab' + name.charAt(0).toUpperCase() + name.slice(1));
+                const active = name === nextTab;
+                if (panel) panel.classList.toggle('hidden', !active);
+                if (button) {
+                    button.setAttribute('aria-expanded', active ? 'true' : 'false');
+                    button.classList.toggle('bg-purple-100', active);
+                    button.classList.toggle('border-purple-600', active);
+                    button.classList.toggle('bg-white', !active && name !== 'description');
+                    button.classList.toggle('bg-purple-50', !active && name === 'description');
+                }
+            });
+        };
+        function delofiaRenderReviews(rows) {
+            const count = rows.length;
+            const avg = count ? rows.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / count : 0;
+            document.getElementById('delofiaReviewCountTab').textContent = count;
+            document.getElementById('delofiaReviewCountSummary').textContent = count;
+            document.getElementById('delofiaAverageRating').textContent = avg.toFixed(1);
+            document.getElementById('delofiaAverageStars').textContent = '★★★★★'.split('').map((s,i) => i < Math.round(avg) ? '★' : '☆').join('');
+            const list = document.getElementById('delofiaReviewList');
+            if (!count) { list.innerHTML = '<p class="text-sm text-gray-500">No reviews yet. Be the first to review this product.</p>'; return; }
+            list.innerHTML = rows.slice().sort((a,b) => (Number(b.createdAt)||0)-(Number(a.createdAt)||0)).map(r => `<article class="border border-gray-200 rounded-2xl p-4"><div class="flex items-start justify-between gap-3"><div><div class="font-bold text-gray-900">${delofiaEscape(r.name || 'Customer')}</div><div class="text-amber-400 tracking-wide" aria-label="${Number(r.rating)||0} out of 5 stars">${'★'.repeat(Math.max(0,Math.min(5,Number(r.rating)||0)))}${'☆'.repeat(5-Math.max(0,Math.min(5,Number(r.rating)||0)))}</div></div><span class="text-xs text-gray-400">${r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''}</span></div><p class="text-sm text-gray-700 whitespace-pre-line mt-2">${delofiaEscape(r.text || '')}</p>${r.photo ? `<img src="${r.photo}" alt="Customer review photo" loading="lazy" class="mt-3 max-h-64 rounded-xl border border-gray-100 object-contain">` : ''}</article>`).join('');
+        }
+        window.renderAdminReviews = async function() {
+            const box = document.getElementById('adminReviewsList');
+            if (!box) return;
+            if (!window.db || !window.fsCollection || !window.fsGetDocs) {
+                box.innerHTML = '<p class="text-sm text-red-600">Firebase is not ready. Refresh and try again.</p>';
+                return;
+            }
+            box.innerHTML = '<p class="text-sm text-gray-500">Loading reviews…</p>';
+            try {
+                const snap = await window.fsGetDocs(window.fsCollection(window.db, 'reviews'));
+                const rows = [];
+                snap.forEach(item => rows.push({ id: item.id, ...item.data() }));
+                rows.sort((a,b) => (Number(b.createdAt)||0) - (Number(a.createdAt)||0));
+                if (!rows.length) { box.innerHTML = '<p class="text-sm text-gray-500">No reviews found.</p>'; return; }
+                box.innerHTML = rows.map(r => `<article class="border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 sm:items-start sm:justify-between"><div class="min-w-0 flex-1"><div class="text-xs text-purple-700 font-bold mb-1">${delofiaEscape(r.productTitle || 'Product')} · ${delofiaEscape(r.productId || '')}</div><div class="font-bold text-gray-900">${delofiaEscape(r.name || 'Customer')}</div><div class="text-amber-400">${'★'.repeat(Math.max(0,Math.min(5,Number(r.rating)||0)))}${'☆'.repeat(5-Math.max(0,Math.min(5,Number(r.rating)||0)))}</div><p class="text-sm text-gray-700 whitespace-pre-line mt-2">${delofiaEscape(r.text || '')}</p>${r.photo ? `<img src="${r.photo}" alt="Review photo" loading="lazy" class="mt-3 max-h-40 rounded-xl border object-contain">` : ''}<div class="text-xs text-gray-400 mt-2">${r.createdAt ? new Date(r.createdAt).toLocaleString() : ''} · ID: ${delofiaEscape(r.id)}</div></div><button type="button" onclick="deleteCustomerReview('${String(r.id).replace(/[^a-zA-Z0-9_-]/g,'')}')" class="shrink-0 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold px-4 py-2 text-sm">Delete Review</button></article>`).join('');
+            } catch (err) {
+                console.error('Admin review load failed', err);
+                box.innerHTML = `<p class="text-sm text-red-600">Could not load reviews: ${delofiaEscape(err?.message || 'Check Firestore permissions.')}</p>`;
+            }
+        };
+        window.deleteCustomerReview = async function(id) {
+            if (!id || !confirm('Delete this customer review permanently?')) return;
+            try {
+                await window.fsDeleteDoc(window.fsDoc(window.db, 'reviews', id));
+                await window.renderAdminReviews();
+            } catch (err) {
+                console.error('Review deletion failed', err);
+                alert('Review delete failed. Check Firestore permissions. ' + (err?.message || ''));
+            }
+        };
+
+        function delofiaWatchReviews(productId) {
+            // Normalize the selected product ID so the review form and live list use the same key.
+            const normalizedProductId = productId == null ? '' : String(productId).trim();
+            delofiaCurrentReviewProductId = normalizedProductId;
+            if (delofiaReviewsUnsubscribe) { delofiaReviewsUnsubscribe(); delofiaReviewsUnsubscribe = null; }
+            const list = document.getElementById('delofiaReviewList');
+            if (!list) return;
+            if (!normalizedProductId) {
+                list.innerHTML = '<p class="text-sm text-red-600">Could not identify this product. Close and reopen the product, then try again.</p>';
+                console.error('Review loading skipped: missing product ID', productId);
+                return;
+            }
+            if (!window.db) {
+                list.innerHTML = '<p class="text-sm text-red-600">Firebase database is not ready. Refresh and try again.</p>';
+                return;
+            }
+            list.innerHTML = '<p class="text-sm text-gray-500">Loading reviews…</p>';
+            try {
+                // Listen to the reviews collection and filter by normalized product ID.
+                // This avoids query/index mismatches and keeps count/list updated in real time.
+                delofiaReviewsUnsubscribe = window.fsOnSnapshot(window.fsCollection(window.db, 'reviews'), snapshot => {
+                    const rows = [];
+                    snapshot.forEach(item => {
+                        const data = item.data();
+                        if (data.productId != null && String(data.productId).trim() === normalizedProductId) {
+                            rows.push({ id: item.id, ...data });
+                        }
+                    });
+                    delofiaRenderReviews(rows);
+                }, err => {
+                    console.error('Review loading failed:', err);
+                    list.innerHTML = `<p class="text-sm text-red-600">Reviews could not be loaded: ${delofiaEscape(err?.message || 'Check Firestore read permissions.')}</p>`;
+                });
+            } catch (err) {
+                console.error('Review listener setup failed:', err);
+                list.innerHTML = `<p class="text-sm text-red-600">Reviews are not available right now: ${delofiaEscape(err?.message || 'Unknown error')}</p>`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            delofiaSetRating(5);
+            const form = document.getElementById('delofiaReviewForm'); if (!form) return;
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+                const message = document.getElementById('delofiaReviewFormMessage');
+                const submit = document.getElementById('delofiaSubmitReview');
+                if (!delofiaCurrentReviewProductId) { message.textContent = 'Please open a product first.'; return; }
+                const name = document.getElementById('delofiaReviewName').value.trim();
+                const text = document.getElementById('delofiaReviewText').value.trim();
+                if (!name || !text) { message.textContent = 'Please enter your name and review.'; return; }
+                submit.disabled = true; submit.textContent = 'Submitting…'; message.textContent = '';
+                try {
+                    let photo = '';
+                    const file = document.getElementById('delofiaReviewPhoto').files?.[0];
+                    if (file) {
+                        if (!file.type.startsWith('image/')) throw new Error('Please select an image file.');
+                        if (file.size > 500000) throw new Error('Please choose an image under 500 KB.');
+                        photo = await new Promise((resolve,reject) => { const reader = new FileReader(); reader.onload=()=>resolve(String(reader.result)); reader.onerror=()=>reject(new Error('Could not read image.')); reader.readAsDataURL(file); });
+                    }
+                    const id = 'rv_' + Date.now() + '_' + Math.random().toString(36).slice(2,9);
+                    await window.fsSetDoc(window.fsDoc(window.db, 'reviews', id), { productId: String(delofiaCurrentReviewProductId || '').trim(), productTitle: document.getElementById('detailTitle').textContent, name, text, rating: delofiaChosenRating, photo, createdAt: Date.now() });
+                    form.reset(); delofiaSetRating(5); message.className = 'text-sm text-emerald-700'; message.textContent = 'Thank you! Your review has been submitted.';
+                } catch (err) { console.error('Review submission failed', err); message.className = 'text-sm text-red-600'; message.textContent = err?.message || 'Review could not be submitted. Please check Firebase permissions.'; }
+                finally { submit.disabled = false; submit.textContent = 'Submit Review'; }
+            });
+        });
+
         function toggleAdminVariants() {
             const enabled = document.getElementById('prodVariantsEnabled')?.checked;
             document.getElementById('adminVariantsEditor')?.classList.toggle('hidden', !enabled);
             document.getElementById('addVariantGroupBtn')?.classList.toggle('hidden', !enabled);
             if (enabled && !adminVariantGroups.length) {
-                adminVariantGroups = [{ name: 'Color', options: [{ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] }];
+                adminVariantGroups = [{ name: 'Color', options: [{ name: '', image: '', price: '', stockQty: 0, descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] }];
                 renderAdminVariantEditor();
             }
         }
 
         function addAdminVariantGroup() {
-            adminVariantGroups.push({ name: '', options: [{ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] });
+            adminVariantGroups.push({ name: '', options: [{ name: '', image: '', price: '', stockQty: 0, descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true }] });
             renderAdminVariantEditor();
         }
 
         function addAdminVariantOption(groupIndex) {
             if (!adminVariantGroups[groupIndex]) return;
-            adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
+            adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', stockQty: 0, descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
             renderAdminVariantEditor();
         }
 
@@ -3585,7 +3927,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         function removeAdminVariantOption(groupIndex, optionIndex) {
             if (!adminVariantGroups[groupIndex]) return;
             adminVariantGroups[groupIndex].options.splice(optionIndex, 1);
-            if (!adminVariantGroups[groupIndex].options.length) adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
+            if (!adminVariantGroups[groupIndex].options.length) adminVariantGroups[groupIndex].options.push({ name: '', image: '', price: '', stockQty: 0, descriptionTable: { columns: 2, rows: [['Product Size', ''], ['Material', '']] }, showDescriptionTable: true });
             renderAdminVariantEditor();
         }
 
@@ -3639,6 +3981,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     const compatibleInput = document.createElement('input'); compatibleInput.type = 'text'; compatibleInput.value = Array.isArray(option.availableWith) ? option.availableWith.join(', ') : (option.availableWith || ''); compatibleInput.placeholder = 'e.g. Brown, Blue'; compatibleInput.className = 'w-full border rounded-lg p-2 text-xs'; compatibleInput.oninput = () => { option.availableWith = compatibleInput.value.split(',').map(v => v.trim()).filter(Boolean); };
                     const priceLabel = document.createElement('label'); priceLabel.className = 'block text-[11px] font-bold text-gray-700'; priceLabel.textContent = 'Variant price (৳; blank = use main price)';
                     const priceInput = document.createElement('input'); priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = option.price ?? ''; priceInput.placeholder = 'e.g. 599'; priceInput.className = 'w-full border rounded-lg p-2 text-xs'; priceInput.oninput = () => { option.price = priceInput.value; };
+                    const stockLabel = document.createElement('label'); stockLabel.className = 'block text-[11px] font-bold text-gray-700'; stockLabel.textContent = 'Stock quantity (hidden from customers)';
+                    const stockInput = document.createElement('input'); stockInput.type = 'number'; stockInput.min = '0'; stockInput.step = '1'; stockInput.value = Number.isFinite(Number(option.stockQty)) ? Number(option.stockQty) : 0; stockInput.className = 'w-full border rounded-lg p-2 text-xs'; stockInput.oninput = () => { option.stockQty = Math.max(0, parseInt(stockInput.value || '0', 10) || 0); };
                     const descHead = document.createElement('div'); descHead.className = 'font-bold text-xs text-purple-900 pt-2'; descHead.textContent = 'This variant’s description table';
                     const showDescLabel = document.createElement('label'); showDescLabel.className = 'flex items-center gap-2 rounded border border-purple-200 bg-purple-50 p-2 text-[11px] font-bold text-purple-900';
                     const showDescCheck = document.createElement('input'); showDescCheck.type = 'checkbox'; showDescCheck.checked = option.showDescriptionTable !== false; showDescCheck.onchange = () => { option.showDescriptionTable = showDescCheck.checked; };
@@ -3672,13 +4016,15 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                             const childImageControls = document.createElement('div'); childImageControls.className = 'flex items-center gap-2 mt-1';
                             if (child.image) { const childImagePreview = document.createElement('img'); childImagePreview.src = child.image; childImagePreview.alt = 'Size variant image'; childImagePreview.className = 'w-12 h-12 object-contain border rounded bg-white'; childImageControls.appendChild(childImagePreview); }
                             const childImageRemove = document.createElement('button'); childImageRemove.type = 'button'; childImageRemove.className = 'text-[10px] font-bold text-red-600 underline'; childImageRemove.textContent = child.image ? 'Remove this size image (use Color image)' : 'No separate image — Color image will be used'; childImageRemove.onclick = () => { child.image = ''; renderAdminVariantEditor(); }; childImageControls.appendChild(childImageRemove);
+                            const childStockLabel = document.createElement('label'); childStockLabel.className = 'block text-[11px] font-bold text-gray-700 mt-2'; childStockLabel.textContent = 'Stock quantity for this size (hidden from customers)';
+                            const childStock = document.createElement('input'); childStock.type = 'number'; childStock.min = '0'; childStock.step = '1'; childStock.value = Number.isFinite(Number(child.stockQty)) ? Number(child.stockQty) : 0; childStock.className = 'w-full border rounded-lg p-2 text-xs'; childStock.oninput = () => { child.stockQty = Math.max(0, parseInt(childStock.value || '0', 10) || 0); };
                             const childDetails = document.createElement('textarea'); childDetails.value = child.details || ''; childDetails.placeholder = 'Optional details for this size'; childDetails.className = 'w-full border rounded p-2 text-xs mt-1'; childDetails.oninput = () => { child.details = childDetails.value; };
-                            nestedWrap.append(childRow, childImageLabel, childImageControls, childDetails);
+                            nestedWrap.append(childRow, childImageLabel, childImageControls, childDetails, childStockLabel, childStock);
                         });
                         const addChild = document.createElement('button'); addChild.type = 'button'; addChild.className = 'rounded bg-indigo-700 text-white px-3 py-2 text-xs font-bold'; addChild.textContent = '+ Add size / variant'; addChild.onclick = () => { option.childVariants.push({name:'',price:'',image:'',details:''}); renderAdminVariantEditor(); };
                         nestedWrap.appendChild(addChild);
                     }
-                    left.append(optName, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
+                    left.append(optName, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, stockLabel, stockInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
                     setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
                     if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
                     const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-red-600 text-[11px] font-bold'; remove.textContent = 'Remove option'; remove.onclick = () => removeAdminVariantOption(gi, oi); row.appendChild(remove);
@@ -3847,6 +4193,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     photoAutoRotate: document.getElementById('prodPhotoAutoRotate')?.checked === true,
                     photoInterval: Math.max(2, Math.min(10, Number(document.getElementById('prodPhotoInterval')?.value) || 4)),
                     description: desc,
+                    howToUse: document.getElementById('prodHowToUse')?.value.trim() || '',
                     descriptionTable: firestoreSafeDescriptionTable(adminBaseDescriptionTable),
                     showDescriptionTable: document.getElementById('prodShowDescriptionTable')?.checked !== false,
                     showPrice,
@@ -3862,13 +4209,15 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                             name: String(o.name || '').trim(),
                             image: o.image || '',
                             price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
+                            stockQty: Math.max(0, parseInt(o.stockQty ?? 0, 10) || 0),
                             descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
                             showDescriptionTable: o.showDescriptionTable !== false,
                             availableWith: Array.isArray(o.availableWith) ? o.availableWith : [],
-                            childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
+                            childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), stockQty: Math.max(0, parseInt(cv.stockQty ?? 0, 10) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
                         })).filter(o => o.name)
                     })).filter(g => g.name && g.options.length) : [],
                     stockOut: document.getElementById('prodStockOut').checked,
+                    stockQty: Math.max(0, parseInt(document.getElementById('prodStockQty')?.value || '0', 10) || 0),
                     displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
                 };
 
@@ -3998,7 +4347,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 
             document.getElementById('prodVariantsEnabled').checked = !!p.variantEnabled;
             const showDescTable = document.getElementById('prodShowDescriptionTable'); if (showDescTable) showDescTable.checked = p.showDescriptionTable !== false;
-            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false, availableWith: o.availableWith || [], childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: cv.name || '', price: cv.price ?? '', image: cv.image || '', details: cv.details || '' })) : [] })) })) : [];
+            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', stockQty: o.stockQty ?? 0, descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false, availableWith: o.availableWith || [], childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: cv.name || '', price: cv.price ?? '', stockQty: cv.stockQty ?? 0, image: cv.image || '', details: cv.details || '' })) : [] })) })) : [];
             adminBaseDescriptionTable = normalizeDescriptionTable(p.descriptionTable || { columns: 2, rows: [['Product Size', ''], ['Material', '']] });
             toggleAdminVariants();
             renderAdminVariantEditor();
@@ -4011,10 +4360,12 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
             renderProductPhotoPreview();
             document.getElementById('prodDesc').value = p.description || '';
+            const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = p.howToUse || '';
             renderDescriptionTableEditor('baseDescriptionTableEditor', adminBaseDescriptionTable, 'base');
             document.getElementById('prodShowPrice').checked = p.showPrice;
             document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
             document.getElementById('prodStockOut').checked = !!p.stockOut;
+            const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = String(p.stockQty ?? 0);
             ensureProductFormModalPlacement();
             const editCard = document.getElementById('productFormCard');
             editCard.classList.add('product-edit-active');
@@ -4041,6 +4392,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('prodDisplayOrder').value = '';
             closeProductEditModal();
             document.getElementById('productForm').reset();
+            const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = '';
+            const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = '0';
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = false;
             const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = '4';
             selectedProductPhotoData = [];
