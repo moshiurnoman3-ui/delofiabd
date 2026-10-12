@@ -6410,3 +6410,47 @@ html, body { max-width:100%; overflow-x:clip; }
   #delofiaMobileActionBar button, #delofiaMobileActionBar a { font-size:10px; }
 }
 </style>
+
+
+<style id="delofia-mobile-header-counts-v60">
+/* Mobile-only header refinement: show wishlist count and cart amount, hide WhatsApp header/floating buttons. Keep desktop unchanged. */
+@media (max-width: 640px) {
+  header #delofiaHeaderActions {
+    display: flex !important; flex-flow: row nowrap !important; align-items: center !important;
+    justify-content: flex-end !important; gap: 4px !important; width: auto !important;
+    min-width: 0 !important; flex: 0 1 auto !important;
+  }
+  header #delofiaHeaderActions > a[href*="wa.me"],
+  header a[href*="wa.me"] { display: none !important; }
+  #delofiaFloatingWhatsapp { display: none !important; }
+  header #headerWishlistButton, header #headerCartButton {
+    display: inline-flex !important; width: auto !important; min-width: 0 !important;
+    flex: 0 1 auto !important; align-items: center !important; justify-content: center !important;
+    gap: 3px !important; padding: 6px 6px !important; white-space: nowrap !important;
+    border-radius: 9px !important; font-size: 10px !important;
+  }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) {
+    display: inline !important; font-size: 10px !important;
+  }
+  header #headerWishlistButton #wishlistCountBadge,
+  header #headerCartButton #cartCountBadge {
+    display: inline-flex !important; min-width: 15px !important; width: auto !important;
+    height: 15px !important; padding: 0 3px !important; align-items: center !important;
+    justify-content: center !important; font-size: 9px !important; line-height: 15px !important;
+  }
+  header #headerCartButton #cartValueLabel {
+    display: inline !important; font-size: 9px !important; line-height: 1.1 !important;
+    white-space: nowrap !important; margin-left: 1px !important;
+  }
+}
+@media (max-width: 380px) {
+  header #brandLogo { gap: 4px !important; }
+  header #brandLogo span:first-child { font-size: 15px !important; }
+  header #delofiaHeaderActions { gap: 3px !important; }
+  header #headerWishlistButton, header #headerCartButton { padding: 5px 4px !important; gap: 2px !important; }
+  header #headerWishlistButton > span:not(#wishlistCountBadge),
+  header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size: 9px !important; }
+  header #headerCartButton #cartValueLabel { font-size: 8px !important; }
+}
+</style>
