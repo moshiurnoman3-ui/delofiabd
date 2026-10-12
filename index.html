@@ -626,6 +626,61 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 }
 </style>
 
+
+<style id="delofia-mobile-header-spacing-v26">
+@media (max-width: 640px) {
+  /* Keep the existing desktop design untouched; fit the phone header in one screen. */
+  header > div.max-w-7xl {
+    display:flex !important; flex-wrap:nowrap !important; width:100% !important;
+    box-sizing:border-box !important; padding:7px 8px !important; gap:7px !important;
+    min-width:0 !important; overflow:visible !important;
+  }
+  #delofiaMenuButton { flex:0 0 32px !important; width:32px !important; height:32px !important; }
+  #brandLogo {
+    flex:1 1 auto !important; min-width:0 !important; width:auto !important;
+    gap:5px !important; overflow:hidden !important;
+  }
+  #brandLogoMark { flex:0 0 27px !important; width:27px !important; height:27px !important; font-size:14px !important; }
+  #brandLogo > div { min-width:0 !important; }
+  #brandLogo span:first-child { font-size:clamp(13px, 4vw, 17px) !important; letter-spacing:.02em !important; white-space:nowrap !important; }
+  #brandLogo span:last-child { display:none !important; }
+  header #delofiaHeaderActions {
+    flex:0 0 96px !important; width:96px !important; min-width:96px !important;
+    display:grid !important; grid-template-columns:1fr 1fr !important;
+    grid-template-areas:"login whatsapp" "wishlist cart" !important;
+    gap:4px !important; align-items:center !important; justify-items:stretch !important;
+    margin-left:auto !important;
+  }
+  header #customerAccountHeaderBtn {
+    grid-area:login !important; width:100% !important; min-width:0 !important;
+    height:27px !important; padding:3px 2px !important; gap:3px !important;
+    justify-content:center !important; white-space:nowrap !important; font-size:10px !important;
+  }
+  header #customerAccountHeaderLabel { display:inline !important; }
+  header #delofiaHeaderActions > a[href*="wa.me"] {
+    grid-area:whatsapp !important; display:flex !important; width:100% !important;
+    min-width:0 !important; height:27px !important; padding:0 !important;
+    justify-content:center !important; align-items:center !important; font-size:0 !important;
+  }
+  header #delofiaHeaderActions > a[href*="wa.me"] i { font-size:17px !important; }
+  header #headerWishlistButton { grid-area:wishlist !important; }
+  header #headerCartButton { grid-area:cart !important; }
+  header #headerWishlistButton, header #headerCartButton {
+    display:flex !important; width:100% !important; min-width:0 !important;
+    height:27px !important; padding:3px 0 !important; margin:0 !important;
+    align-items:center !important; justify-content:center !important; gap:0 !important;
+    border-radius:9px !important; box-sizing:border-box !important;
+  }
+  header #headerWishlistButton > span, header #headerCartButton > span { display:none !important; }
+  header #headerWishlistButton > i, header #headerCartButton > i {
+    display:inline-block !important; font-size:15px !important; margin:0 !important;
+  }
+  /* Floating round WhatsApp stays on home, but not inside product detail. */
+  #delofiaFloatingWhatsapp { display:flex !important; }
+  body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display:none !important; }
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
