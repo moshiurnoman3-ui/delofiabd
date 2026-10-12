@@ -152,6 +152,117 @@ body:not(.delofia-admin-dark) #adminModal .text-gray-200,
 body:not(.delofia-admin-dark) #adminModal .text-gray-300 { color:#374151!important; }
 </style>
 
+<style id="delofia-checkout-cart-summary-dark-theme-fix">
+/* Checkout cart summary: readable product name, variant/quantity, price and subtotal in storefront dark theme. */
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem {
+  color: #f4f4f5 !important;
+  border-color: #3f3f46 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem > div,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .border-t {
+  color: #f4f4f5 !important;
+  border-color: #3f3f46 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem p,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem strong,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem span,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem div {
+  color: #f4f4f5 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem p.text-gray-500,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .text-gray-500,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .text-gray-600 {
+  color: #d4d4d8 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem img {
+  background: #27272a !important;
+  border-color: #52525b !important;
+}
+</style>
+
+<style id="delofia-checkout-summary-background-fix-v2">
+/* Fix white-on-white checkout summary: give the whole summary a dark surface in storefront dark mode. */
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+  border-color: #3f3f46 !important;
+  border-radius: 10px !important;
+  padding: 12px !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem > div,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .flex.gap-3.items-center {
+  background-color: #18181b !important;
+  color: #f4f4f5 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .border-t {
+  background-color: #18181b !important;
+  border-color: #52525b !important;
+  color: #ffffff !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem p,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem strong,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem span {
+  color: #f4f4f5 !important;
+}
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem p.text-gray-500,
+body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .text-gray-500 {
+  color: #d4d4d8 !important;
+}
+</style>
+
+<style id="delofia-cart-quantity-dark-theme-fix">
+/* Cart quantity: keep the number and +/- controls readable in dark storefront theme. */
+body.delofia-dark-storefront #cartModal #cartItemsList span.text-sm.font-bold {
+  color: #ffffff !important;
+  background: #27272a !important;
+  border: 1px solid #52525b !important;
+  border-radius: 6px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  padding: 3px 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.2 !important;
+}
+body.delofia-dark-storefront #cartModal #cartItemsList button[onclick^="changeCartQty"] {
+  background: #3f3f46 !important;
+  color: #ffffff !important;
+  border: 1px solid #52525b !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+}
+body.delofia-dark-storefront #cartModal #cartItemsList button[onclick^="changeCartQty"]:hover {
+  background: #6d28d9 !important;
+}
+</style>
+
+<style id="delofia-quantity-dark-theme-visibility-fix">
+/* Keep product-order quantity controls readable in storefront dark theme. */
+body.delofia-dark-storefront #productDetailModal #detailQty {
+  color: #ffffff !important;
+  background: #27272a !important;
+  border: 1px solid #52525b !important;
+  border-radius: 8px !important;
+  min-width: 34px !important;
+  padding: 3px 4px !important;
+  display: inline-block !important;
+  line-height: 1.5 !important;
+}
+body.delofia-dark-storefront #productDetailModal .mb-6 > label {
+  color: #f4f4f5 !important;
+}
+body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty(-1)"],
+body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty(1)"] {
+  background: #3f3f46 !important;
+  color: #ffffff !important;
+  border: 1px solid #52525b !important;
+}
+body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty(-1)"]:hover,
+body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty(1)"]:hover {
+  background: #6d28d9 !important;
+}
+</style>
 
 <style id="delofia-admin-dark-contrast-comprehensive">
 /* Comprehensive dark-admin contrast repair: cover admin panels, nested cards, editors and product edit popup. */
@@ -1342,7 +1453,8 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
                         inside: Number.isFinite(Number(saved.inside)) ? Number(saved.inside) : 90,
                         sub: Number.isFinite(Number(saved.sub)) ? Number(saved.sub) : 100,
                         outside: Number.isFinite(Number(saved.outside)) ? Number(saved.outside) : 110,
-                        districtRates: (saved.districtRates && typeof saved.districtRates === 'object') ? saved.districtRates : {}
+                        districtRates: (saved.districtRates && typeof saved.districtRates === 'object') ? saved.districtRates : {},
+                        districtRatesEnabled: (saved.districtRatesEnabled && typeof saved.districtRatesEnabled === 'object') ? saved.districtRatesEnabled : {}
                     };
                     window.updateShippingLabels();
                     window.renderDistrictRateOverrides?.();
@@ -1465,7 +1577,7 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
         };
         window.orders = [];
         window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, storefrontTheme: 'dark', adminTheme: 'light', heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
-        window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {} };
+        window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {}, districtRatesEnabled: {} };
         window.paymentSettings = { advanceEnabled: false, advanceAmount: 100, bkashAccount: '', nagadAccount: '', bankAccount: '' };
         window.coupons = {};
         let paymentScreenshotData = null;
@@ -2397,10 +2509,40 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             const box = document.getElementById('districtRatesList');
             if (!box) return;
             const rates = window.shippingSettings?.districtRates || {};
+            const enabledMap = window.shippingSettings?.districtRatesEnabled || {};
             const entries = Object.entries(rates).sort((a,b) => a[0].localeCompare(b[0]));
             if (!entries.length) { box.innerHTML = '<p class="text-xs text-gray-500">No district-specific charges. Standard Dhaka/Outside charges apply.</p>'; return; }
-            box.innerHTML = entries.map(([district, amount]) => `<div class="flex items-center justify-between gap-3 rounded-xl border border-purple-100 bg-purple-50 p-3"><span class="text-sm font-semibold text-gray-800">${district.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</span><span class="text-sm font-bold text-purple-800">${Number(amount) === 0 ? 'Free' : '৳' + Number(amount).toFixed(2)}</span><button type="button" onclick="removeDistrictRateOverride(${JSON.stringify(district).replace(/</g,'\u003c')})" class="text-xs font-bold text-red-600 underline">Remove</button></div>`).join('');
+            box.innerHTML = entries.map(([district, amount]) => {
+                const safeName = district.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const enabledKey = Object.keys(enabledMap).find(k => k.toLowerCase() === district.toLowerCase());
+                const enabled = enabledKey ? enabledMap[enabledKey] !== false : true;
+                return `<div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border ${enabled ? 'border-purple-100 bg-purple-50' : 'border-gray-200 bg-gray-100'} p-3"><div class="min-w-0"><span class="block text-sm font-semibold text-gray-800">${safeName}</span><span class="text-sm font-bold ${enabled ? 'text-purple-800' : 'text-gray-500'}">${Number(amount) === 0 ? 'Free' : '৳' + Number(amount).toFixed(2)}${enabled ? '' : ' · OFF (standard charge applies)'}</span></div><div class="flex items-center gap-3"><label class="flex items-center gap-1 text-xs font-bold ${enabled ? 'text-emerald-700' : 'text-gray-500'}"><input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleDistrictRateOverride(decodeURIComponent('${encodeURIComponent(district)}'), this.checked)" class="h-4 w-4"> ${enabled ? 'ON' : 'OFF'}</label><button type="button" onclick="removeDistrictRateOverride(decodeURIComponent('${encodeURIComponent(district)}'))" class="text-xs font-bold text-red-600 underline">Remove</button></div></div>`;
+            }).join('');
         }
+
+        async function persistDistrictRateSettings(successMessage) {
+            if (!window.db || !window.fsSetDoc || !window.fsDoc) throw new Error('Firebase database is not ready.');
+            const current = window.shippingSettings || {};
+            await window.fsSetDoc(window.fsDoc(window.db, 'settings', 'shipping'), {
+                inside: Number(current.inside ?? 90), sub: Number(current.sub ?? 100), outside: Number(current.outside ?? 110),
+                districtRates: { ...(current.districtRates || {}) }, districtRatesEnabled: { ...(current.districtRatesEnabled || {}) },
+                updatedAt: new Date().toISOString()
+            });
+            if (successMessage) alert(successMessage);
+        }
+
+        async function toggleDistrictRateOverride(district, enabled) {
+            const rates = window.shippingSettings?.districtRates || {};
+            const actualKey = Object.keys(rates).find(key => key.trim().toLowerCase() === String(district).trim().toLowerCase());
+            if (!actualKey) { alert('District offer পাওয়া যায়নি। পেজ refresh করে আবার চেষ্টা করো।'); renderDistrictRateOverrides(); return; }
+            if (!window.shippingSettings.districtRatesEnabled) window.shippingSettings.districtRatesEnabled = {};
+            window.shippingSettings.districtRatesEnabled[actualKey] = !!enabled;
+            renderDistrictRateOverrides();
+            applyDistrictShippingRule?.();
+            try { await persistDistrictRateSettings('✅ ' + actualKey + ' district offer ' + (enabled ? 'ON' : 'OFF') + ' করে save হয়েছে।'); }
+            catch (error) { window.shippingSettings.districtRatesEnabled[actualKey] = !enabled; renderDistrictRateOverrides(); applyDistrictShippingRule?.(); alert('Firebase-এ save হয়নি: ' + (error?.code || error?.message || 'Unknown error')); }
+        }
+        window.toggleDistrictRateOverride = toggleDistrictRateOverride;
 
         function addDistrictRateOverride() {
             const district = document.getElementById('districtRateSelect')?.value;
@@ -2416,12 +2558,28 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             alert('জেলার চার্জ তালিকায় যোগ হয়েছে। সব পরিবর্তন স্থায়ী করতে নিচের Save Delivery Charges Settings চাপো।');
         }
 
-        function removeDistrictRateOverride(district) {
-            if (!window.shippingSettings?.districtRates || !(district in window.shippingSettings.districtRates)) return;
-            delete window.shippingSettings.districtRates[district];
+        async function removeDistrictRateOverride(district) {
+            const rates = window.shippingSettings?.districtRates;
+            if (!rates || typeof rates !== 'object') { alert('District charge list পাওয়া যায়নি।'); return; }
+            const wanted = String(district ?? '').trim().toLowerCase();
+            const actualKey = Object.keys(rates).find(key => String(key).trim().toLowerCase() === wanted);
+            if (!actualKey) { renderDistrictRateOverrides(); alert('এই district offer আর তালিকায় নেই।'); return; }
+            const oldRates = { ...rates };
+            const oldEnabled = { ...(window.shippingSettings.districtRatesEnabled || {}) };
+            delete window.shippingSettings.districtRates[actualKey];
+            Object.keys(window.shippingSettings.districtRatesEnabled || {}).forEach(k => { if (k.trim().toLowerCase() === wanted) delete window.shippingSettings.districtRatesEnabled[k]; });
             renderDistrictRateOverrides();
-            alert('জেলার আলাদা চার্জ সরানো হয়েছে। পরিবর্তন স্থায়ী করতে Save Delivery Charges Settings চাপো।');
+            applyDistrictShippingRule?.();
+            try {
+                await persistDistrictRateSettings('✅ ' + actualKey + ' delivery offer permanently removed and saved.');
+            } catch (error) {
+                window.shippingSettings.districtRates = oldRates;
+                window.shippingSettings.districtRatesEnabled = oldEnabled;
+                renderDistrictRateOverrides(); applyDistrictShippingRule?.();
+                alert('Remove save হয়নি, আগের offer ফিরিয়ে আনা হয়েছে। Error: ' + (error?.code || error?.message || 'Unknown error'));
+            }
         }
+        window.removeDistrictRateOverride = removeDistrictRateOverride;
 
         function applyDistrictShippingRule() {
             const input = document.getElementById('custCity');
@@ -2462,7 +2620,7 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             updateDistrictShippingLabel();
             const districtRates = shippingSettings.districtRates || {};
             const overrideKey = Object.keys(districtRates).find(k => k.toLowerCase() === district.toLowerCase());
-            if (overrideKey) shippingFee = Number(districtRates[overrideKey]) || 0;
+            if (overrideKey && (window.shippingSettings?.districtRatesEnabled?.[overrideKey] !== false)) shippingFee = Number(districtRates[overrideKey]) || 0;
 
             document.getElementById('checkoutShipping').innerText = Number(shippingFee).toFixed(2);
 
@@ -2632,7 +2790,7 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
             }
             const districtRates = shippingSettings.districtRates || {};
             const districtOverrideKey = Object.keys(districtRates).find(k => k.toLowerCase() === city.toLowerCase());
-            if (districtOverrideKey) {
+            if (districtOverrideKey && (window.shippingSettings?.districtRatesEnabled?.[districtOverrideKey] !== false)) {
                 shipFee = Number(districtRates[districtOverrideKey]) || 0;
                 shipAreaName = `${city} (district-specific charge)`;
             } else {
@@ -3196,7 +3354,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 alert('Please enter valid delivery charges (0 or more).');
                 return;
             }
-            const nextSettings = { inside, sub, outside, districtRates: { ...(window.shippingSettings?.districtRates || {}) }, updatedAt: new Date().toISOString() };
+            const nextSettings = { inside, sub, outside, districtRates: { ...(window.shippingSettings?.districtRates || {}) }, districtRatesEnabled: { ...(window.shippingSettings?.districtRatesEnabled || {}) }, updatedAt: new Date().toISOString() };
             const saveButton = e.submitter || document.querySelector('#adminTabShipping button[type="submit"]');
             const oldButtonText = saveButton ? saveButton.innerHTML : '';
             if (saveButton) { saveButton.disabled = true; saveButton.innerHTML = 'Saving...'; }
@@ -3205,8 +3363,8 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 if (!window.db || !window.fsSetDoc || !window.fsDoc) {
                     throw new Error('Firebase database is not ready.');
                 }
-                await window.fsSetDoc(window.fsDoc(window.db, "settings", "shipping"), nextSettings, { merge: true });
-                window.shippingSettings = { inside, sub, outside, districtRates: { ...(nextSettings.districtRates || {}) } };
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "shipping"), nextSettings);
+                window.shippingSettings = { inside, sub, outside, districtRates: { ...(nextSettings.districtRates || {}) }, districtRatesEnabled: { ...(nextSettings.districtRatesEnabled || {}) } };
                 updateShippingLabels();
                 renderDistrictRateOverrides();
                 populateDistrictRateSelect();
