@@ -36,7 +36,7 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #c084fc; border-radius: 4px; }
-        body.admin-only-mode > *:not(#adminModal) { display: none !important; }
+        body.admin-only-mode > *:not(#adminModal):not(#productEditBackdrop):not(#productFormCard) { display: none !important; }
         body.admin-only-mode #adminModal { position: static !important; display: flex !important; min-height: 100vh; background: #f8f7fb !important; padding: 0 !important; }
         /* Mobile admin panel: swipe the tab bar horizontally and scroll the content vertically */
         #adminTabsScroller { max-width:100%; overscroll-behavior-x:contain; }
@@ -51,14 +51,20 @@
           #adminTabsScroller::-webkit-scrollbar { height:4px; }
           #adminTabsScroller::-webkit-scrollbar-thumb { background:#c084fc; border-radius:99px; }
         }
-        #productEditBackdrop { display:none; position:fixed; inset:0; z-index:70; background:rgba(17,24,39,.65); backdrop-filter:blur(3px); }
-        #productFormCard.product-edit-active { position:fixed !important; z-index:71; top:3vh; left:50%; transform:translateX(-50%); width:min(94vw,680px); max-height:94vh; overflow-y:auto; box-shadow:0 25px 80px rgba(0,0,0,.3); }
-        @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh; max-height:98vh; width:96vw; padding:1rem; } }
+        #productEditBackdrop { display:none; position:fixed; inset:0; z-index:10000; background:rgba(17,24,39,.65); backdrop-filter:blur(3px); opacity:0; transition:opacity .16s ease; }
+        #productEditBackdrop.is-visible { opacity:1; }
+        #productFormCard.product-edit-active { position:fixed !important; z-index:10001 !important; top:50% !important; left:50% !important; transform:translate(-50%,-48%) scale(.985) !important; width:min(94vw,700px) !important; max-height:90vh !important; overflow-y:auto !important; box-shadow:0 25px 80px rgba(0,0,0,.35) !important; border-radius:18px !important; background:#fff !important; opacity:0; animation:delofiaEditPopupIn .18s ease-out forwards; }
+        @keyframes delofiaEditPopupIn { to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
+        @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh !important; left:2vw !important; transform:none !important; width:96vw !important; max-height:98vh !important; padding:1rem !important; border-radius:14px !important; } @keyframes delofiaEditPopupIn { to { opacity:1; transform:none; } } }
         body.admin-only-mode #adminModal > div { width: 100%; max-width: none; min-height: 100vh; border-radius: 0; }
     </style>
 <style>
 .product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
 .product-photo-dragging { opacity: .58; transform: scale(.96); outline: 3px dashed #7c3aed; outline-offset: -3px; }
+        /* Restore subtle storefront product hover zoom without changing the detail modal image. */
+        #productsGrid .product-card-image { transition: transform .28s ease, opacity .25s ease; transform: scale(1); }
+        #productsGrid .group:hover .product-card-image { transform: scale(1.07); }
+        @media (hover: none) { #productsGrid .group:hover .product-card-image { transform: none; } }
 .product-photo-drop-target { outline: 3px solid #7c3aed; outline-offset: -3px; }
 </style>
 </head>
@@ -90,7 +96,8 @@
             </div>
 
             <!-- Header Actions -->
-            <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex items-center gap-2 sm:gap-4">
+                <button type="button" onclick="openCartModal()" class="relative flex items-center gap-2 bg-purple-100 hover:bg-purple-200 text-purple-900 px-3 py-2 rounded-full text-xs sm:text-sm font-bold transition" aria-label="Open shopping cart"><i class="fas fa-shopping-cart"></i><span class="hidden sm:inline">Cart</span><span id="cartCountBadge" class="min-w-5 h-5 px-1 rounded-full bg-purple-700 text-white text-[10px] flex items-center justify-center">0</span></button>
                 <a href="https://wa.me/8801410947236" target="_blank" class="hidden sm:flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-full text-xs font-semibold shadow-sm transition">
                     <i class="fab fa-whatsapp text-base"></i> WhatsApp
                 </a>
@@ -104,11 +111,11 @@
         <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-800 rounded-3xl p-6 sm:p-10 text-white mb-10 shadow-xl relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
             <div class="relative z-10 max-w-2xl">
-                <span class="bg-purple-500/30 text-purple-200 border border-purple-400/30 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider mb-4 inline-block">Exclusive Offers</span>
-                <h1 class="text-3xl sm:text-5xl font-extrabold leading-tight mb-4">𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .</h1>
-                <p class="text-purple-200 text-sm sm:text-base mb-6">Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.</p>
+                <span id="storefrontHeroBadge" class="bg-purple-500/30 text-purple-200 border border-purple-400/30 text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider mb-4 inline-block">Exclusive Offers</span>
+                <h1 id="storefrontHeroTitle" class="text-3xl sm:text-5xl font-extrabold leading-tight mb-4">𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .</h1>
+                <p id="storefrontHeroDescription" class="text-purple-200 text-sm sm:text-base mb-6">Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.</p>
                 <div class="flex flex-wrap gap-3">
-                    <a href="#productGrid" class="bg-white text-purple-900 hover:bg-purple-50 font-bold px-6 py-3 rounded-full text-sm shadow-md transition">Shop Now</a>
+                    <a href="#productGrid" id="storefrontShopButtonText" class="bg-white text-purple-900 hover:bg-purple-50 font-bold px-6 py-3 rounded-full text-sm shadow-md transition">Shop Now</a>
                     <a href="https://wa.me/8801410947236" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-3 rounded-full text-sm shadow-md transition flex items-center gap-2">
                         <i class="fab fa-whatsapp"></i> Instant WhatsApp Order
                     </a>
@@ -215,6 +222,7 @@
 
                     <!-- Direct Order Action Buttons -->
                     <div class="space-y-3 pt-4 border-t border-purple-100">
+                        <button id="detailAddCartBtn" onclick="addDetailProductToCart()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                         <button id="detailBuyBtn" onclick="startCheckoutFromDetail()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-purple-200 transition flex items-center justify-center gap-2">
                             <i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)
                         </button>
@@ -225,6 +233,17 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- SHOPPING CART MODAL -->
+    <div id="cartModal" class="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm hidden overflow-y-auto" onclick="if(event.target===this) closeCartModal()">
+      <div class="min-h-screen flex items-center justify-center p-3"><div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-4 sm:p-6 relative">
+        <button onclick="closeCartModal()" class="absolute right-3 top-3 w-9 h-9 rounded-full bg-gray-100 text-gray-700 text-xl" aria-label="Close cart">×</button>
+        <h2 class="text-xl font-extrabold text-purple-900 mb-4"><i class="fas fa-shopping-cart mr-2"></i>Your Cart</h2>
+        <div id="cartItemsList" class="space-y-3"></div>
+        <div class="flex items-center justify-between border-t mt-4 pt-4"><span class="font-bold">Subtotal</span><strong class="text-purple-800 text-xl" id="cartSubtotalLabel">৳0.00</strong></div>
+        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="closeCartModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 py-3 font-bold text-sm">Continue Shopping</button><button onclick="checkoutCart()" id="cartCheckoutBtn" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 font-bold text-sm">Checkout</button></div>
+      </div></div>
     </div>
 
     <!-- CUSTOMER IMAGE ZOOM / FULLSCREEN VIEW -->
@@ -627,6 +646,16 @@
                                 <input type="number" id="settingOutsideDhaka" required class="w-full bg-purple-50/50 border border-purple-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
                             </div>
 
+                            <div class="border-t border-purple-100 pt-5 mt-2">
+                                <h5 class="font-bold text-purple-900 mb-1">District-specific delivery offer</h5>
+                                <p class="text-xs text-gray-500 mb-3">যে কোনো জেলার জন্য আলাদা ডেলিভারি চার্জ দিন। ০ দিলে Free Delivery হবে। এই চার্জ সাধারণ Inside/Outside Dhaka চার্জকে override করবে।</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <select id="districtRateSelect" class="min-w-0 border border-purple-200 rounded-xl p-3 text-sm bg-white"><option value="">Select district</option></select>
+                                    <input type="number" id="districtRateAmount" min="0" step="1" placeholder="Charge ৳ (0 = free)" class="min-w-0 border border-purple-200 rounded-xl p-3 text-sm">
+                                    <button type="button" onclick="addDistrictRateOverride()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl text-sm">Add / Update</button>
+                                </div>
+                                <div id="districtRatesList" class="space-y-2 mt-3"><p class="text-xs text-gray-500">No district-specific charges.</p></div>
+                            </div>
                             <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl shadow transition text-sm">
                                 Save Delivery Charges Settings
                             </button>
@@ -698,6 +727,24 @@
                                 <input type="url" id="settingOtherSocialUrl" placeholder="WhatsApp Channel or other social link" class="w-full border rounded-xl p-3 text-sm">
                             </div>
                             
+                            <div class="border-t border-purple-100 pt-4 mt-4 space-y-3">
+                                <h5 class="font-bold text-purple-900 text-sm mb-1">Main Page Banner & Footer Text</h5>
+                                <p class="text-xs text-gray-500 mb-3">এখান থেকে Main Page-এর উপরের Banner এবং Footer-এর লেখা পরিবর্তন করতে পারবে। Save Store & Social Settings চাপবে।</p>
+                                <label class="block text-xs font-bold text-gray-700">Banner small heading</label><input id="settingHeroBadge" type="text" maxlength="100" class="w-full border rounded-xl p-3 text-sm" placeholder="Exclusive Offers">
+                                <label class="block text-xs font-bold text-gray-700">Banner main title</label><input id="settingHeroTitle" type="text" maxlength="180" class="w-full border rounded-xl p-3 text-sm" placeholder="Draft . Dreamy . Delicacy .">
+                                <label class="block text-xs font-bold text-gray-700">Banner description</label><textarea id="settingHeroDescription" rows="3" maxlength="500" class="w-full border rounded-xl p-3 text-sm" placeholder="Fast delivery across Bangladesh..."></textarea>
+                                <label class="block text-xs font-bold text-gray-700">Shop button text</label><input id="settingHeroShopText" type="text" maxlength="60" class="w-full border rounded-xl p-3 text-sm" placeholder="Shop Now">
+                                <label class="block text-xs font-bold text-gray-700">Hero WhatsApp button text</label><input id="settingHeroWhatsappText" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Instant WhatsApp Order">
+                                <label class="block text-xs font-bold text-gray-700">Footer brand name</label><input id="settingFooterBrand" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="DELOFIA">
+                                <label class="block text-xs font-bold text-gray-700">Footer brand description</label><textarea id="settingFooterDescription" rows="3" maxlength="500" class="w-full border rounded-xl p-3 text-sm"></textarea>
+                                <label class="block text-xs font-bold text-gray-700">Quick Contact heading</label><input id="settingFooterContactHeading" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Quick Contact">
+                                <label class="block text-xs font-bold text-gray-700">Delivery Information heading</label><input id="settingFooterDeliveryHeading" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Delivery Information">
+                                <label class="block text-xs font-bold text-gray-700">Inside Dhaka delivery text</label><input id="settingFooterInsideDelivery" type="text" maxlength="180" class="w-full border rounded-xl p-3 text-sm" placeholder="Inside Dhaka: Fast Delivery">
+                                <label class="block text-xs font-bold text-gray-700">Outside Dhaka delivery text</label><input id="settingFooterOutsideDelivery" type="text" maxlength="180" class="w-full border rounded-xl p-3 text-sm" placeholder="Outside Dhaka: Cash on delivery nationwide">
+                                <label class="block text-xs font-bold text-gray-700">Follow heading</label><input id="settingFooterFollowHeading" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Follow Delofia">
+                                <label class="block text-xs font-bold text-gray-700">Copyright text</label><input id="settingFooterCopyright" type="text" maxlength="180" class="w-full border rounded-xl p-3 text-sm" placeholder="© 2026 Delofia E-Commerce Store. All rights reserved.">
+                            </div>
+
                             <!-- CATEGORY AND SUB-CATEGORY SETTINGS -->
                             <div class="border-t border-purple-100 pt-4 mt-4">
                                 <h5 class="font-bold text-purple-900 text-sm mb-1">Categories & Sub-categories</h5>
@@ -718,6 +765,17 @@
                                 <div id="adminCategoryList" class="space-y-2"></div>
                             </div>
                             
+                            <div class="border-t border-purple-100 pt-4 mt-4 space-y-3">
+                                <h5 class="font-bold text-purple-900 text-sm mb-1">Main Page Product Photo Animation</h5>
+                                <p class="text-xs text-gray-500">শুধু main page-এর product card-এ ছবিগুলো নিজে নিজে বদলাবে। Product-এ click করে details খুললে auto change হবে না।</p>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-purple-50 border border-purple-100">
+                                    <input type="checkbox" id="settingProductPhotoAutoRotate" class="h-4 w-4">
+                                    <span class="text-sm font-bold">Enable automatic product photo animation</span>
+                                </label>
+                                <div><label for="settingProductPhotoInterval" class="block text-xs font-bold text-gray-700 mb-1">Change photo every (seconds)</label>
+                                    <select id="settingProductPhotoInterval" class="w-full border rounded-xl p-3 text-sm"><option value="2">2 seconds</option><option value="3">3 seconds</option><option value="4">4 seconds</option><option value="5">5 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option></select>
+                                </div>
+                            </div>
                             <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl">Save Store & Social Settings</button>
                         </form>
                     </div>
@@ -832,6 +890,21 @@
                                         </details>
                                     </div>
 
+                                    <div class="p-3 border border-purple-200 rounded-2xl bg-white space-y-3">
+                                        <h5 class="font-bold text-purple-900">This Product's Photo Animation</h5>
+                                        <p class="text-xs text-gray-500">শুধু Main Page-এর এই product card-এ ছবি auto change হবে। Product details খুললে animation হবে না।</p>
+                                        <label class="flex items-center gap-2 text-sm font-semibold">
+                                            <input type="checkbox" id="prodPhotoAutoRotate" class="h-4 w-4">
+                                            Enable photo animation for this product
+                                        </label>
+                                        <div>
+                                            <label for="prodPhotoInterval" class="block text-xs font-bold text-gray-700 mb-1">Change photo every</label>
+                                            <select id="prodPhotoInterval" class="w-full border rounded-xl p-2.5 text-sm">
+                                                <option value="2">2 seconds</option><option value="3">3 seconds</option><option value="4" selected>4 seconds</option><option value="5">5 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <div class="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-4 space-y-3">
                                         <div>
                                             <label class="block font-bold text-purple-950 mb-1">Product Description Builder</label>
@@ -890,24 +963,24 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
                 <div>
-                    <span class="text-xl font-black text-white tracking-widest block mb-2">DELOFIA</span>
-                    <p class="text-xs text-purple-300 leading-relaxed">Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.</p>
+                    <span id="storefrontFooterBrand" class="text-xl font-black text-white tracking-widest block mb-2">DELOFIA</span>
+                    <p id="storefrontFooterDescription" class="text-xs text-purple-300 leading-relaxed">Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.</p>
                 </div>
                 <div>
-                    <h5 class="text-sm font-bold text-white mb-3">Quick Contact</h5>
+                    <h5 id="storefrontFooterContactHeading" class="text-sm font-bold text-white mb-3">Quick Contact</h5>
                     <p class="text-xs text-purple-300 mb-1"><i class="fab fa-whatsapp text-emerald-400 mr-2"></i> WhatsApp: 01410947236</p>
                     <p class="text-xs text-purple-300"><i class="fas fa-phone text-purple-400 mr-2"></i> Phone: 01410947236</p>
                 </div>
                 <div>
-                    <h5 class="text-sm font-bold text-white mb-3">Delivery Information</h5>
-                    <p class="text-xs text-purple-300 mb-1">Inside Dhaka: Fast Delivery</p>
-                    <p class="text-xs text-purple-300">Outside Dhaka: Cash on delivery nationwide</p>
-                    <h5 class="text-sm font-bold text-white mt-5 mb-3">Follow Delofia</h5>
+                    <h5 id="storefrontFooterDeliveryHeading" class="text-sm font-bold text-white mb-3">Delivery Information</h5>
+                    <p id="storefrontFooterInsideDelivery" class="text-xs text-purple-300 mb-1">Inside Dhaka: Fast Delivery</p>
+                    <p id="storefrontFooterOutsideDelivery" class="text-xs text-purple-300">Outside Dhaka: Cash on delivery nationwide</p>
+                    <h5 id="storefrontFooterFollowHeading" class="text-sm font-bold text-white mt-5 mb-3">Follow Delofia</h5>
                     <div id="socialMediaLinks" class="flex items-center gap-3 flex-wrap"></div>
                 </div>
             </div>
             <div class="mt-8 pt-6 border-t border-purple-900/60 text-center text-[11px] text-purple-400">
-                &copy; 2026 Delofia E-Commerce Store. All rights reserved.
+                <span id="storefrontFooterCopyright">&copy; 2026 Delofia E-Commerce Store. All rights reserved.</span>
             </div>
         </div>
     </footer>
@@ -939,12 +1012,27 @@
         function setupRealtimeSync() {
             onSnapshot(collection(db, "products"), (snapshot) => {
                 const list = [];
-                snapshot.forEach(doc => list.push({ ...doc.data(), id: doc.id }));
+                snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
                 window.products = list;
-                window.renderProducts(document.getElementById('searchInput')?.value || '');
-                if (!document.getElementById('adminModal').classList.contains('hidden')) {
-                    window.renderAdminProductsList();
+                window.__productsSnapshotLoaded = true;
+                window.__productsLoadError = "";
+                window.dispatchEvent(new Event("delofia-products-updated"));
+                if (typeof window.renderProducts === 'function') {
+                    window.renderProducts(document.getElementById('searchInput')?.value || '');
                 }
+                // Refresh the admin catalog every time Firestore emits products.
+                if (typeof window.renderAdminProductsList === 'function') {
+                    window.renderAdminProductsList();
+                } else {
+                    console.error('Admin catalog renderer is not available yet.');
+                }
+            }, (error) => {
+                console.error('Products listener failed:', error);
+                window.__productsLoadError = String(error?.message || error);
+                window.__productsSnapshotLoaded = true;
+                window.dispatchEvent(new Event('delofia-products-updated'));
+                const list = document.getElementById('adminProductsList');
+                if (list) list.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-sm">Products load হয়নি: ' + String(error?.message || error).replace(/[<>]/g, '') + '</div>';
             });
 
             onSnapshot(collection(db, "orders"), (snapshot) => {
@@ -967,9 +1055,13 @@
                     window.shippingSettings = {
                         inside: Number.isFinite(Number(saved.inside)) ? Number(saved.inside) : 90,
                         sub: Number.isFinite(Number(saved.sub)) ? Number(saved.sub) : 100,
-                        outside: Number.isFinite(Number(saved.outside)) ? Number(saved.outside) : 110
+                        outside: Number.isFinite(Number(saved.outside)) ? Number(saved.outside) : 110,
+                        districtRates: (saved.districtRates && typeof saved.districtRates === 'object') ? saved.districtRates : {}
                     };
                     window.updateShippingLabels();
+                    window.renderDistrictRateOverrides?.();
+                    window.populateDistrictRateSelect?.();
+                    window.applyDistrictShippingRule?.();
                     // Keep admin inputs in sync with the value actually stored in Firestore.
                     const insideInput = document.getElementById('settingInsideDhaka');
                     const subInput = document.getElementById('settingSubDhaka');
@@ -1000,6 +1092,8 @@
                     window.updateWhatsappUI();
                     window.renderSocialLinks();
                     window.applyStoreLogo();
+                    window.applyStorefrontContent?.();
+                    window.renderProducts(document.getElementById('searchInput')?.value || '');
                 }
             });
 
@@ -1030,6 +1124,7 @@
             if (!matched) return;
             input.value = matched.value;
             input.readOnly = true;
+            if (typeof applyDistrictShippingRule === 'function') applyDistrictShippingRule();
             input.classList.add('bg-gray-100');
             const changeBtn = document.getElementById('changeDistrictBtn');
             if (changeBtn) changeBtn.classList.remove('hidden');
@@ -1043,6 +1138,9 @@
             input.value = '';
             input.classList.remove('bg-gray-100');
             if (changeBtn) changeBtn.classList.add('hidden');
+            const inside = document.querySelector('input[name="shippingMethod"][value="inside_dhaka"]');
+            if (inside) inside.checked = true;
+            recalculateTotals();
             input.focus();
         }
 
@@ -1067,6 +1165,7 @@
         }
 
         window.products = [];
+        window.__productsSnapshotLoaded = false;
         window.categoryTree = {
             'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag', 'Electric Water Bag', 'Pocket system'],
             'Dresses': ['Casual Wear', 'Party Dress'],
@@ -1075,8 +1174,8 @@
             'Other': []
         };
         window.orders = [];
-        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '' };
-        window.shippingSettings = { inside: 90, sub: 100, outside: 110 };
+        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
+        window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {} };
         window.paymentSettings = { advanceEnabled: false, advanceAmount: 100, bkashAccount: '', nagadAccount: '', bankAccount: '' };
         window.coupons = {};
         let paymentScreenshotData = null;
@@ -1091,6 +1190,7 @@
             renderCategoryControls();
             renderProducts();
             renderSocialLinks();
+            applyStorefrontContent();
             updateShippingLabels();
             updatePaymentUI();
             updateWhatsappUI();
@@ -1150,7 +1250,8 @@
             }
 
             filtered.forEach(product => {
-                const mainImg = (product.images && product.images[0]) ? product.images[0] : 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
+                const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+                const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
                 
@@ -1158,7 +1259,8 @@
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1">
+                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
@@ -1170,6 +1272,7 @@
                         </div>
                         
                         <div class="space-y-2">
+                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
                             ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `openDirectCheckout('${product.id}')`}" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : (product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Options' : 'Direct Order')}</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + (product.title || ''))}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
                         </div>
@@ -1177,6 +1280,36 @@
                 `;
                 grid.appendChild(card);
             });
+            startMainPageProductPhotoAnimation();
+        }
+
+        let mainPagePhotoAnimationTimer = null;
+        function startMainPageProductPhotoAnimation() {
+            if (mainPagePhotoAnimationTimer) { clearInterval(mainPagePhotoAnimationTimer); mainPagePhotoAnimationTimer = null; }
+            const animatedCards = Array.from(document.querySelectorAll('#productsGrid img.product-card-image[data-auto-rotate="true"]'));
+            if (!animatedCards.length) return;
+            mainPagePhotoAnimationTimer = setInterval(() => {
+                // This animation only targets cards in the main product grid, never the product-detail modal.
+                const images = document.querySelectorAll('#productsGrid img.product-card-image[data-auto-rotate="true"]');
+                images.forEach(img => {
+                    let list = [];
+                    try { list = JSON.parse(img.dataset.productImages || '[]'); } catch (_) { list = []; }
+                    if (!Array.isArray(list) || list.length < 2) return;
+                    const rect = img.getBoundingClientRect();
+                    if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+                    const now = Date.now();
+                    const intervalMs = Math.max(2, Math.min(10, Number(img.dataset.photoInterval) || 4)) * 1000;
+                    if (!img.dataset.nextPhotoAt) img.dataset.nextPhotoAt = String(now + intervalMs);
+                    if (now < Number(img.dataset.nextPhotoAt)) return;
+                    img.dataset.nextPhotoAt = String(now + intervalMs);
+                    let index = Number(img.dataset.photoIndex || 0);
+                    index = (index + 1) % list.length;
+                    img.dataset.photoIndex = String(index);
+                    img.style.transition = 'opacity .25s ease';
+                    img.style.opacity = '0.25';
+                    setTimeout(() => { if (img.isConnected) { img.src = list[index]; img.style.opacity = '1'; } }, 160);
+                });
+            }, 250);
         }
 
         function renderCategoryControls() {
@@ -1385,26 +1518,58 @@
         }
 
         async function saveStoreSettings(e) {
-            e.preventDefault();
-            if (pendingStoreLogo !== null) storeSettings.logoImage = pendingStoreLogo;
-            storeSettings.whatsappEnabled = document.getElementById('settingWhatsappEnabled').checked;
-            storeSettings.whatsappNumber = document.getElementById('settingWhatsappNumber').value.trim();
-            storeSettings.facebookUrl = document.getElementById('settingFacebookUrl').value.trim();
-            storeSettings.instagramUrl = document.getElementById('settingInstagramUrl').value.trim();
-            storeSettings.tiktokUrl = document.getElementById('settingTiktokUrl').value.trim();
-            storeSettings.youtubeUrl = document.getElementById('settingYoutubeUrl').value.trim();
-            storeSettings.otherSocialUrl = document.getElementById('settingOtherSocialUrl').value.trim();
-            
-            if (window.db) {
-                await window.fsSetDoc(window.fsDoc(window.db, "settings", "store"), storeSettings);
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            const saveBtn = e?.submitter || document.querySelector('#adminTabStoreSettings form button[type="submit"]');
+            const oldBtnText = saveBtn ? saveBtn.textContent : '';
+            try {
+                if (pendingStoreLogo !== null) storeSettings.logoImage = pendingStoreLogo;
+                storeSettings.whatsappEnabled = !!document.getElementById('settingWhatsappEnabled')?.checked;
+                storeSettings.whatsappNumber = document.getElementById('settingWhatsappNumber')?.value.trim() || '';
+                storeSettings.facebookUrl = document.getElementById('settingFacebookUrl')?.value.trim() || '';
+                storeSettings.instagramUrl = document.getElementById('settingInstagramUrl')?.value.trim() || '';
+                storeSettings.tiktokUrl = document.getElementById('settingTiktokUrl')?.value.trim() || '';
+                storeSettings.youtubeUrl = document.getElementById('settingYoutubeUrl')?.value.trim() || '';
+                storeSettings.otherSocialUrl = document.getElementById('settingOtherSocialUrl')?.value.trim() || '';
+                storeSettings.productPhotoAutoRotate = !!document.getElementById('settingProductPhotoAutoRotate')?.checked;
+                storeSettings.productPhotoInterval = Math.max(2, Math.min(10, Number(document.getElementById('settingProductPhotoInterval')?.value) || 4));
+                const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
+                Object.entries(settingTextFields).forEach(([key, id]) => { const field = document.getElementById(id); if (field) storeSettings[key] = field.value.trim(); });
+                if (!window.db || typeof window.fsSetDoc !== 'function' || typeof window.fsDoc !== 'function') {
+                    throw new Error('Firebase settings connection is not ready. Please refresh and try again.');
+                }
+                if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+                await window.fsSetDoc(window.fsDoc(window.db, 'settings', 'store'), storeSettings);
+                pendingStoreLogo = null;
+                applyStoreLogo(); updateWhatsappUI(); renderSocialLinks(); applyStorefrontContent();
+                renderProducts(document.getElementById('searchInput')?.value || '');
+                alert('Store settings saved successfully!');
+            } catch (err) {
+                console.error('Failed to save Delofia store settings:', err);
+                alert('Store settings save হয়নি। Firebase connection/permission check করুন।\n\n' + (err?.message || err));
+            } finally {
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = oldBtnText || 'Save Store & Social Settings'; }
             }
-            pendingStoreLogo = null;
-            applyStoreLogo();
-            updateWhatsappUI();
-            renderSocialLinks();
-            renderProducts(document.getElementById('searchInput')?.value || '');
-            alert('Store settings saved successfully!');
         }
+
+        function applyStorefrontContent() {
+            const fields = {
+                storefrontHeroBadge: ['heroBadge', 'Exclusive Offers'],
+                storefrontHeroTitle: ['heroTitle', '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .'],
+                storefrontHeroDescription: ['heroDescription', 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.'],
+                storefrontShopButtonText: ['heroShopText', 'Shop Now'],
+                storefrontHeroWhatsappText: ['heroWhatsappText', 'Instant WhatsApp Order'],
+                storefrontFooterBrand: ['footerBrand', 'DELOFIA'],
+                storefrontFooterDescription: ['footerDescription', 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.'],
+                storefrontFooterContactHeading: ['footerContactHeading', 'Quick Contact'],
+                storefrontFooterDeliveryHeading: ['footerDeliveryHeading', 'Delivery Information'],
+                storefrontFooterInsideDelivery: ['footerInsideDelivery', 'Inside Dhaka: Fast Delivery'],
+                storefrontFooterOutsideDelivery: ['footerOutsideDelivery', 'Outside Dhaka: Cash on delivery nationwide'],
+                storefrontFooterFollowHeading: ['footerFollowHeading', 'Follow Delofia'],
+                storefrontFooterCopyright: ['footerCopyright', '© 2026 Delofia E-Commerce Store. All rights reserved.']
+            };
+            Object.entries(fields).forEach(([id, pair]) => { const el = document.getElementById(id); if (el) el.textContent = String(storeSettings[pair[0]] ?? pair[1]); });
+        }
+        window.applyStorefrontContent = applyStorefrontContent;
 
         function renderSocialLinks() {
             const container = document.getElementById('socialMediaLinks');
@@ -1467,6 +1632,8 @@
         let selectedVariantChoices = {};
         let currentCheckoutVariants = {};
         let currentCheckoutUnitPrice = 0;
+        let shoppingCart = [];
+        let cartCheckoutMode = false;
 
         // Detect platform & icon for Video Links
         function getVideoPlatformInfo(url) {
@@ -1578,7 +1745,8 @@
                 ? '<i class="fas fa-lock"></i> Stock Out'
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
-            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : 'https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia';
+            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
+            mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
             thumbsContainer.innerHTML = '';
@@ -1621,6 +1789,74 @@
             }
         }
 
+        function cartItemKey(productId, variants) {
+            return String(productId) + '::' + Object.keys(variants || {}).sort().map(k => k + '=' + variants[k]).join('|');
+        }
+        function updateCartBadge() {
+            const count = shoppingCart.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+            const badge = document.getElementById('cartCountBadge'); if (badge) badge.textContent = String(count);
+        }
+        function addProductToCart(productId) {
+            const prod = products.find(p => p.id === productId);
+            if (!prod || prod.stockOut) { alert('এই পণ্যটি এখন স্টকে নেই।'); return; }
+            if (prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.length) { openProductDetail(productId); return; }
+            const variants = {}, unitPrice = Number(prod.price || 0), key = cartItemKey(productId, variants);
+            const old = shoppingCart.find(i => i.key === key);
+            if (old) old.qty += 1; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
+            updateCartBadge(); renderCartItems();
+            const btn = document.querySelector(`button[onclick="addProductToCart('${productId}')"]`);
+            if (btn) { const previous = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check"></i> Added'; setTimeout(() => { if (btn.isConnected) btn.innerHTML = previous; }, 1000); }
+        }
+        function addDetailProductToCart() {
+            const prod = selectedDetailProd; if (!prod || prod.stockOut) return;
+            const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
+            const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
+            if (missing) { alert('Please choose ' + missing.name + ' before adding to cart.'); return; }
+            const colorGroup = requiredGroups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const selectedColor = colorGroup && colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]);
+            if (selectedColor && Array.isArray(selectedColor.childVariants) && selectedColor.childVariants.some(v => String(v.name || '').trim()) && !selectedVariantChoices['__size']) { alert('Please choose a size / variant for this color.'); return; }
+            const variants = {...(selectedVariantChoices || {})};
+            const meta = {...(selectedVariantMeta || {})};
+            const priced = Object.values(meta).reverse().find(o => o && o.price !== '' && o.price != null && Number.isFinite(Number(o.price)));
+            const unitPrice = priced ? Number(priced.price) : Number(prod.price || 0);
+            const colorMeta = colorGroup && meta[colorGroup.name];
+            const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
+            const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
+            if (old) old.qty += detailQtyVal; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
+            updateCartBadge(); renderCartItems(); closeProductDetail(); openCartModal();
+        }
+        function renderCartItems() {
+            const box = document.getElementById('cartItemsList'); if (!box) return;
+            if (!shoppingCart.length) { box.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty.</p>'; }
+            else box.innerHTML = shoppingCart.map((item, index) => `<div class="flex gap-3 border border-purple-100 rounded-xl p-3 items-center"><div class="w-16 h-16 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0"><img src="${escapeHtml(item.image || '')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></div><div class="min-w-0 flex-1"><p class="font-bold text-sm">${escapeHtml(item.title)}</p><p class="text-xs text-gray-500">${escapeHtml(Object.values(item.variants || {}).filter(Boolean).join(' / ') || 'Standard')}</p><p class="text-sm font-bold text-purple-800">৳${(Number(item.unitPrice)||0).toFixed(2)} each · ৳${((Number(item.unitPrice)||0)*(Number(item.qty)||0)).toFixed(2)}</p><div class="flex items-center gap-2 mt-2"><button onclick="changeCartQty(${index},-1)" class="w-7 h-7 rounded bg-purple-100 font-bold">−</button><span class="text-sm font-bold">${item.qty}</span><button onclick="changeCartQty(${index},1)" class="w-7 h-7 rounded bg-purple-100 font-bold">+</button><button onclick="removeCartItem(${index})" class="ml-auto text-red-600 text-xs font-bold">Remove</button></div></div></div>`).join('');
+            const subtotal = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
+            const label = document.getElementById('cartSubtotalLabel'); if (label) label.textContent = '৳' + subtotal.toFixed(2);
+            updateCartBadge();
+        }
+        function changeCartQty(index, delta) { if (!shoppingCart[index]) return; shoppingCart[index].qty = Math.max(1, Number(shoppingCart[index].qty || 1) + delta); renderCartItems(); }
+        function removeCartItem(index) { shoppingCart.splice(index,1); renderCartItems(); }
+        function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); }
+        function closeCartModal() { const m = document.getElementById('cartModal'); if (m) m.classList.add('hidden'); }
+        function checkoutCart() {
+            if (!shoppingCart.length) { alert('Your cart is empty.'); return; }
+            const first = shoppingCart[0], prod = products.find(p => p.id === first.productId);
+            if (!prod) { alert('A product in your cart is no longer available. Please remove it and try again.'); return; }
+            cartCheckoutMode = true; currentCheckoutProduct = prod; currentCheckoutQty = 1; currentCheckoutVariants = {...(first.variants || {})};
+            currentCheckoutUnitPrice = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
+            appliedDiscount = 0; appliedCouponCode = '';
+            const summary = document.getElementById('checkoutSummaryItem');
+            summary.innerHTML = `<div class="w-full space-y-3">${shoppingCart.map(i => `<div class="flex gap-3 items-center"><img src="${escapeHtml(i.image || '')}" class="w-14 h-14 rounded-lg object-contain bg-white border" onerror="this.style.display='none'"><div class="min-w-0 flex-1"><p class="font-bold text-sm">${escapeHtml(i.title)}</p><p class="text-xs text-gray-500">${escapeHtml(Object.values(i.variants || {}).filter(Boolean).join(' / ') || 'Standard')} · Qty ${i.qty}</p></div><strong class="text-sm">৳${(Number(i.unitPrice||0)*Number(i.qty||0)).toFixed(2)}</strong></div>`).join('')}<div class="border-t pt-2 text-right font-bold">Cart subtotal: ৳${currentCheckoutUnitPrice.toFixed(2)}</div></div>`;
+            closeCartModal();
+            updateShippingLabels();
+            const discountInput = document.getElementById('discountInput'); if (discountInput) discountInput.value = '';
+            const discountRow = document.getElementById('discountRow'); if (discountRow) discountRow.classList.add('hidden');
+            const codRadio = document.querySelector('input[name="paymentMethod"][value="cod"]'); if (codRadio) codRadio.checked = true;
+            const txn = document.getElementById('advanceTransactionId'); if (txn) txn.value = '';
+            const shot = document.getElementById('advanceScreenshot'); if (shot) shot.value = '';
+            updatePaymentUI(); applyDistrictShippingRule(); recalculateTotals();
+            const modal = document.getElementById('checkoutModal'); modal.classList.remove('hidden'); pushModalState('checkout');
+        }
+
         function updateDetailQty(delta) {
             detailQtyVal = Math.max(1, detailQtyVal + delta);
             document.getElementById('detailQty').innerText = detailQtyVal;
@@ -1651,6 +1887,7 @@
         }
 
         function openDirectCheckout(prodId, qty = 1, variantChoices = {}, variantMeta = {}) {
+            cartCheckoutMode = false;
             const prod = products.find(p => p.id === prodId);
             if (!prod || prod.stockOut) return;
 
@@ -1667,17 +1904,20 @@
             const img = (prod.images && prod.images[0]) ? prod.images[0] : 'https://placehold.co/100x100/8b5cf6/ffffff?text=Delofia';
             
             summaryBox.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="relative w-16 h-16 bg-white rounded-xl overflow-hidden border border-gray-300 flex-shrink-0">
+                <div class="flex items-start gap-3 min-w-0">
+                    <div class="w-16 h-16 bg-white rounded-xl overflow-hidden border border-gray-300 flex-shrink-0">
                         <img src="${img}" class="w-full h-full object-contain bg-white">
-                        <span class="absolute -top-1 -right-1 bg-gray-700 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center">${currentCheckoutQty}</span>
                     </div>
-                    <div>
+                    <div class="min-w-0 flex-1">
                         <h4 class="font-bold text-sm text-gray-900">${prod.title}</h4>
-                        <p class="text-xs text-gray-500">${Object.values(currentCheckoutVariants).filter(Boolean).length ? 'Selected: ' + Object.values(currentCheckoutVariants).filter(Boolean).join(' / ') : 'Delofia Standard Package'}</p>
+                        <p class="text-xs text-gray-500 mb-2">${Object.values(currentCheckoutVariants).filter(Boolean).length ? 'Selected: ' + Object.values(currentCheckoutVariants).filter(Boolean).join(' / ') : 'Delofia Standard Package'}</p>
+                        <div class="text-xs text-gray-700 space-y-1">
+                            <p>Unit price: <strong>৳${Number(currentCheckoutUnitPrice).toFixed(2)}</strong></p>
+                            <p>Quantity: <strong>${currentCheckoutQty}</strong></p>
+                            <p>Product total: <strong>৳${(currentCheckoutUnitPrice * currentCheckoutQty).toFixed(2)}</strong></p>
+                        </div>
                     </div>
                 </div>
-                <div class="font-bold text-gray-900 text-sm">৳${(currentCheckoutUnitPrice * currentCheckoutQty).toFixed(2)}</div>
             `;
 
             appliedDiscount = 0; appliedCouponCode = ''; paymentScreenshotData = null;
@@ -1687,6 +1927,7 @@
             const txn = document.getElementById('advanceTransactionId'); if (txn) txn.value = '';
             const shot = document.getElementById('advanceScreenshot'); if (shot) shot.value = '';
             updatePaymentUI();
+            applyDistrictShippingRule();
             recalculateTotals();
 
             const modal = document.getElementById('checkoutModal');
@@ -1706,15 +1947,98 @@
         }
 
         function updateShippingLabels() {
-            document.getElementById('labelChargeInside').innerText = Number(shippingSettings.inside).toFixed(2);
-            document.getElementById('labelChargeSub').innerText = Number(shippingSettings.sub).toFixed(2);
-            document.getElementById('labelChargeOutside').innerText = Number(shippingSettings.outside).toFixed(2);
+            const insideLabel = document.getElementById('labelChargeInside');
+            const subLabel = document.getElementById('labelChargeSub');
+            const outsideLabel = document.getElementById('labelChargeOutside');
+            if (insideLabel) insideLabel.innerText = Number(shippingSettings.inside).toFixed(2);
+            if (subLabel) subLabel.innerText = Number(shippingSettings.sub).toFixed(2);
+            if (outsideLabel) outsideLabel.innerText = Number(shippingSettings.outside).toFixed(2);
+            // District-specific offer is also reflected in the shipping-method price shown to customers.
+            updateDistrictShippingLabel();
+        }
+
+        function updateDistrictShippingLabel() {
+            const input = document.getElementById('custCity');
+            const district = (input?.value || '').trim();
+            const rates = window.shippingSettings?.districtRates || {};
+            const overrideKey = Object.keys(rates).find(k => k.trim().toLowerCase() === district.toLowerCase());
+            // Reset to the normal rates first.
+            const insideLabel = document.getElementById('labelChargeInside');
+            const subLabel = document.getElementById('labelChargeSub');
+            const outsideLabel = document.getElementById('labelChargeOutside');
+            if (insideLabel) insideLabel.innerText = Number(window.shippingSettings?.inside ?? 90).toFixed(2);
+            if (subLabel) subLabel.innerText = Number(window.shippingSettings?.sub ?? 100).toFixed(2);
+            if (outsideLabel) outsideLabel.innerText = Number(window.shippingSettings?.outside ?? 110).toFixed(2);
+            if (!overrideKey) return;
+            const amount = Number(rates[overrideKey]);
+            const targetLabel = district.toLowerCase() === 'dhaka' ? insideLabel : outsideLabel;
+            if (targetLabel && Number.isFinite(amount)) targetLabel.innerText = amount === 0 ? '0.00 (Free)' : amount.toFixed(2);
+        }
+
+        function populateDistrictRateSelect() {
+            const select = document.getElementById('districtRateSelect');
+            const datalist = document.getElementById('bdDistricts');
+            if (!select || !datalist) return;
+            const current = select.value;
+            select.innerHTML = '<option value="">Select district</option>' + Array.from(datalist.options).map(o => `<option value="${o.value}">${o.value}</option>`).join('');
+            if (current) select.value = current;
+        }
+
+        function renderDistrictRateOverrides() {
+            const box = document.getElementById('districtRatesList');
+            if (!box) return;
+            const rates = window.shippingSettings?.districtRates || {};
+            const entries = Object.entries(rates).sort((a,b) => a[0].localeCompare(b[0]));
+            if (!entries.length) { box.innerHTML = '<p class="text-xs text-gray-500">No district-specific charges. Standard Dhaka/Outside charges apply.</p>'; return; }
+            box.innerHTML = entries.map(([district, amount]) => `<div class="flex items-center justify-between gap-3 rounded-xl border border-purple-100 bg-purple-50 p-3"><span class="text-sm font-semibold text-gray-800">${district.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</span><span class="text-sm font-bold text-purple-800">${Number(amount) === 0 ? 'Free' : '৳' + Number(amount).toFixed(2)}</span><button type="button" onclick="removeDistrictRateOverride(${JSON.stringify(district).replace(/</g,'\u003c')})" class="text-xs font-bold text-red-600 underline">Remove</button></div>`).join('');
+        }
+
+        function addDistrictRateOverride() {
+            const district = document.getElementById('districtRateSelect')?.value;
+            const amountRaw = document.getElementById('districtRateAmount')?.value;
+            const amount = Number(amountRaw);
+            if (!district) { alert('আগে একটি জেলা নির্বাচন করো।'); return; }
+            if (amountRaw === '' || !Number.isFinite(amount) || amount < 0) { alert('সঠিক delivery charge দাও (০ বা তার বেশি)।'); return; }
+            if (!window.shippingSettings) window.shippingSettings = {inside:90, sub:100, outside:110, districtRates:{}};
+            if (!window.shippingSettings.districtRates) window.shippingSettings.districtRates = {};
+            window.shippingSettings.districtRates[district] = amount;
+            renderDistrictRateOverrides();
+            const input = document.getElementById('districtRateAmount'); if (input) input.value = '';
+            alert('জেলার চার্জ তালিকায় যোগ হয়েছে। সব পরিবর্তন স্থায়ী করতে নিচের Save Delivery Charges Settings চাপো।');
+        }
+
+        function removeDistrictRateOverride(district) {
+            if (!window.shippingSettings?.districtRates || !(district in window.shippingSettings.districtRates)) return;
+            delete window.shippingSettings.districtRates[district];
+            renderDistrictRateOverrides();
+            alert('জেলার আলাদা চার্জ সরানো হয়েছে। পরিবর্তন স্থায়ী করতে Save Delivery Charges Settings চাপো।');
+        }
+
+        function applyDistrictShippingRule() {
+            const input = document.getElementById('custCity');
+            if (!input) return;
+            const district = input.value.trim();
+            if (!district) return;
+            const rates = window.shippingSettings?.districtRates || {};
+            const overrideKey = Object.keys(rates).find(k => k.toLowerCase() === district.toLowerCase());
+            const radios = document.querySelectorAll('input[name="shippingMethod"]');
+            if (overrideKey) {
+                // Keep a base-area radio selected for compatibility; district override determines actual fee.
+                const base = document.querySelector(`input[name="shippingMethod"][value="${district.toLowerCase() === 'dhaka' ? 'inside_dhaka' : 'outside_dhaka'}"]`);
+                if (base) base.checked = true;
+            } else {
+                const targetValue = district.toLowerCase() === 'dhaka' ? 'inside_dhaka' : 'outside_dhaka';
+                const target = document.querySelector(`input[name="shippingMethod"][value="${targetValue}"]`);
+                if (target) target.checked = true;
+            }
+            updateDistrictShippingLabel();
+            recalculateTotals();
         }
 
         function recalculateTotals() {
             if (!currentCheckoutProduct) return;
 
-            const subtotal = currentCheckoutUnitPrice * currentCheckoutQty;
+            const subtotal = cartCheckoutMode ? shoppingCart.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.qty || 0), 0) : currentCheckoutUnitPrice * currentCheckoutQty;
             document.getElementById('checkoutSubtotal').innerText = subtotal.toFixed(2);
 
             const selectedRadio = document.querySelector('input[name="shippingMethod"]:checked').value;
@@ -1725,6 +2049,11 @@
             } else if (selectedRadio === 'outside_dhaka') {
                 shippingFee = shippingSettings.outside;
             }
+            const district = document.getElementById('custCity')?.value.trim() || '';
+            updateDistrictShippingLabel();
+            const districtRates = shippingSettings.districtRates || {};
+            const overrideKey = Object.keys(districtRates).find(k => k.toLowerCase() === district.toLowerCase());
+            if (overrideKey) shippingFee = Number(districtRates[overrideKey]) || 0;
 
             document.getElementById('checkoutShipping').innerText = Number(shippingFee).toFixed(2);
 
@@ -1735,7 +2064,7 @@
         function applyDiscount() {
             const code = document.getElementById('discountInput').value.trim().toUpperCase();
             const coupon = window.coupons?.[code];
-            const subtotal = currentCheckoutProduct ? Number(currentCheckoutProduct.price) * Number(currentCheckoutQty) : 0;
+            const subtotal = cartCheckoutMode ? shoppingCart.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.qty || 0), 0) : (currentCheckoutProduct ? Number(currentCheckoutUnitPrice) * Number(currentCheckoutQty) : 0);
             if (code === 'DELOFIA10' && !coupon) {
                 appliedDiscount = Math.min(50, subtotal);
                 appliedCouponCode = code;
@@ -1892,8 +2221,16 @@
                 shipFee = shippingSettings.outside;
                 shipAreaName = "Outside Dhaka";
             }
+            const districtRates = shippingSettings.districtRates || {};
+            const districtOverrideKey = Object.keys(districtRates).find(k => k.toLowerCase() === city.toLowerCase());
+            if (districtOverrideKey) {
+                shipFee = Number(districtRates[districtOverrideKey]) || 0;
+                shipAreaName = `${city} (district-specific charge)`;
+            } else {
+                shipAreaName = city.toLowerCase() === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka';
+            }
 
-            const subtotal = currentCheckoutUnitPrice * currentCheckoutQty;
+            const subtotal = cartCheckoutMode ? shoppingCart.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.qty || 0), 0) : currentCheckoutUnitPrice * currentCheckoutQty;
             const discount = Math.max(0, Number(appliedDiscount) || 0);
             const total = Math.max(0, subtotal + Number(shipFee) - discount);
             const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
@@ -1911,11 +2248,12 @@
                 customerName: `${firstName} ${lastName}`.trim(),
                 phone: phone,
                 address: `${address}, ${city} ${postal}`.trim(),
-                productTitle: currentCheckoutProduct.title,
-                variantSelection: Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '),
-                quantity: currentCheckoutQty,
-                unitPrice: Number(currentCheckoutUnitPrice) || 0,
+                productTitle: cartCheckoutMode ? shoppingCart.map(i => i.title).join(', ') : currentCheckoutProduct.title,
+                variantSelection: cartCheckoutMode ? shoppingCart.map(i => `${i.title}: ${Object.values(i.variants || {}).filter(Boolean).join(' / ')}`).join('; ') : Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '),
+                quantity: cartCheckoutMode ? shoppingCart.reduce((sum, i) => sum + Number(i.qty || 0), 0) : currentCheckoutQty,
+                unitPrice: cartCheckoutMode ? subtotal : (Number(currentCheckoutUnitPrice) || 0),
                 variantUnitPrice: Number(currentCheckoutUnitPrice) || 0,
+                items: cartCheckoutMode ? shoppingCart.map(i => ({ productId:i.productId, productTitle:i.title, variantSelection:Object.values(i.variants || {}).filter(Boolean).join(' / '), quantity:Number(i.qty)||1, unitPrice:Number(i.unitPrice)||0, lineTotal:(Number(i.qty)||1)*(Number(i.unitPrice)||0), image:i.image||'' })) : [{ productId:currentCheckoutProduct.id, productTitle:currentCheckoutProduct.title, variantSelection:Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '), quantity:currentCheckoutQty, unitPrice:Number(currentCheckoutUnitPrice)||0, lineTotal:(Number(currentCheckoutUnitPrice)||0)*currentCheckoutQty }],
                 subtotal: subtotal,
                 discount: discount,
                 couponCode: appliedCouponCode || '',
@@ -1943,6 +2281,8 @@
             }
 
             lastCompletedOrderMemo = { ...orderObj };
+            if (cartCheckoutMode) { shoppingCart = []; updateCartBadge(); renderCartItems(); }
+            cartCheckoutMode = false;
             closeCheckoutModal(true);
             // Clear the checkout marker without firing popstate, so the success
             // modal and its memo remain visible after the order is saved.
@@ -2024,7 +2364,9 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 <div class="support"><strong>Payment details:</strong> ${escapeHtml(o.paymentMethod === 'advance' ? 'Advance payment via ' + (o.paymentProvider || 'selected provider') : 'Cash on Delivery')}<br>${o.transactionId ? '<strong>Transaction ID:</strong> ' + escapeHtml(o.transactionId) + '<br>' : ''}${o.paymentMethod === 'advance' ? '<strong>Advance amount:</strong> ' + money(o.advanceAmount) + '<br>' : ''}<strong>Need help with your order?</strong><br>Call / WhatsApp: <strong>01410947236</strong><br>Please keep this memo until your order is delivered.</div>
 <div class="foot">Thank you for shopping with Delofia!<br>Official order memo • DELOFIA watermark</div>
 <button class="no-print" onclick="window.print()" style="display:block;margin:24px auto 0;background:#6d28d9;color:white;border:0;border-radius:9px;padding:12px 22px;font-weight:bold;cursor:pointer">Print / Save as PDF</button>
-</div></main><script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script></body></html>`;
+</div></main><script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script>
+
+</body></html>`;
             try {
                 const blob = new Blob([memoHtml], { type: 'text/html;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
@@ -2232,6 +2574,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
             if (tab === 'payment') { populatePaymentAdminSettings(); renderCouponsAdmin(); }
+            if (tab === 'shipping') { populateDistrictRateSelect(); renderDistrictRateOverrides(); }
             if (tab === 'sessions') { const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes()); renderAdminSessions(); }
             if (tab === 'store') {
                 renderCategoryControls();
@@ -2242,6 +2585,9 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 document.getElementById('settingTiktokUrl').value = storeSettings.tiktokUrl || '';
                 document.getElementById('settingYoutubeUrl').value = storeSettings.youtubeUrl || '';
                 document.getElementById('settingOtherSocialUrl').value = storeSettings.otherSocialUrl || '';
+                const textSettingsMap = { settingHeroBadge: ['heroBadge', 'Exclusive Offers'], settingHeroTitle: ['heroTitle', '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .'], settingHeroDescription: ['heroDescription', 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.'], settingHeroShopText: ['heroShopText', 'Shop Now'], settingHeroWhatsappText: ['heroWhatsappText', 'Instant WhatsApp Order'], settingFooterBrand: ['footerBrand', 'DELOFIA'], settingFooterDescription: ['footerDescription', 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.'], settingFooterContactHeading: ['footerContactHeading', 'Quick Contact'], settingFooterDeliveryHeading: ['footerDeliveryHeading', 'Delivery Information'], settingFooterInsideDelivery: ['footerInsideDelivery', 'Inside Dhaka: Fast Delivery'], settingFooterOutsideDelivery: ['footerOutsideDelivery', 'Outside Dhaka: Cash on delivery nationwide'], settingFooterFollowHeading: ['footerFollowHeading', 'Follow Delofia'], settingFooterCopyright: ['footerCopyright', '© 2026 Delofia E-Commerce Store. All rights reserved.'] }; Object.entries(textSettingsMap).forEach(([id, pair]) => { const field = document.getElementById(id); if (field) field.value = storeSettings[pair[0]] ?? pair[1]; });
+                const autoRotateField = document.getElementById('settingProductPhotoAutoRotate'); if (autoRotateField) autoRotateField.checked = !!storeSettings.productPhotoAutoRotate;
+                const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
                 pendingStoreLogo = null; applyStoreLogo();
             }
         }
@@ -2251,6 +2597,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             document.getElementById('settingInsideDhaka').value = shippingSettings.inside;
             document.getElementById('settingSubDhaka').value = shippingSettings.sub;
             document.getElementById('settingOutsideDhaka').value = shippingSettings.outside;
+            populateDistrictRateSelect(); renderDistrictRateOverrides();
             document.getElementById('settingWhatsappEnabled').checked = !!storeSettings.whatsappEnabled;
             document.getElementById('settingWhatsappNumber').value = storeSettings.whatsappNumber || '01410947236';
             document.getElementById('settingFacebookUrl').value = storeSettings.facebookUrl || '';
@@ -2258,6 +2605,9 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             document.getElementById('settingTiktokUrl').value = storeSettings.tiktokUrl || '';
             document.getElementById('settingYoutubeUrl').value = storeSettings.youtubeUrl || '';
             document.getElementById('settingOtherSocialUrl').value = storeSettings.otherSocialUrl || '';
+                const textSettingsMap = { settingHeroBadge: ['heroBadge', 'Exclusive Offers'], settingHeroTitle: ['heroTitle', '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .'], settingHeroDescription: ['heroDescription', 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.'], settingHeroShopText: ['heroShopText', 'Shop Now'], settingHeroWhatsappText: ['heroWhatsappText', 'Instant WhatsApp Order'], settingFooterBrand: ['footerBrand', 'DELOFIA'], settingFooterDescription: ['footerDescription', 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.'], settingFooterContactHeading: ['footerContactHeading', 'Quick Contact'], settingFooterDeliveryHeading: ['footerDeliveryHeading', 'Delivery Information'], settingFooterInsideDelivery: ['footerInsideDelivery', 'Inside Dhaka: Fast Delivery'], settingFooterOutsideDelivery: ['footerOutsideDelivery', 'Outside Dhaka: Cash on delivery nationwide'], settingFooterFollowHeading: ['footerFollowHeading', 'Follow Delofia'], settingFooterCopyright: ['footerCopyright', '© 2026 Delofia E-Commerce Store. All rights reserved.'] }; Object.entries(textSettingsMap).forEach(([id, pair]) => { const field = document.getElementById(id); if (field) field.value = storeSettings[pair[0]] ?? pair[1]; });
+                const autoRotateField = document.getElementById('settingProductPhotoAutoRotate'); if (autoRotateField) autoRotateField.checked = !!storeSettings.productPhotoAutoRotate;
+                const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
             pendingStoreLogo = null; applyStoreLogo();
 
             renderOrdersTable();
@@ -2356,7 +2706,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 alert('Please enter valid delivery charges (0 or more).');
                 return;
             }
-            const nextSettings = { inside, sub, outside, updatedAt: new Date().toISOString() };
+            const nextSettings = { inside, sub, outside, districtRates: { ...(window.shippingSettings?.districtRates || {}) }, updatedAt: new Date().toISOString() };
             const saveButton = e.submitter || document.querySelector('#adminTabShipping button[type="submit"]');
             const oldButtonText = saveButton ? saveButton.innerHTML : '';
             if (saveButton) { saveButton.disabled = true; saveButton.innerHTML = 'Saving...'; }
@@ -2366,8 +2716,11 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     throw new Error('Firebase database is not ready.');
                 }
                 await window.fsSetDoc(window.fsDoc(window.db, "settings", "shipping"), nextSettings, { merge: true });
-                window.shippingSettings = { inside, sub, outside };
+                window.shippingSettings = { inside, sub, outside, districtRates: { ...(nextSettings.districtRates || {}) } };
                 updateShippingLabels();
+                renderDistrictRateOverrides();
+                populateDistrictRateSelect();
+                applyDistrictShippingRule();
                 document.getElementById('settingInsideDhaka').value = inside;
                 document.getElementById('settingSubDhaka').value = sub;
                 document.getElementById('settingOutsideDhaka').value = outside;
@@ -2633,6 +2986,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     const optName = document.createElement('input'); optName.value = option.name || ''; optName.placeholder = 'Option name (Blue / Pink / Small / Large)'; optName.className = 'w-full border rounded-lg p-2 text-xs'; optName.oninput = () => updateAdminVariantOptionName(gi, oi, optName.value);
                     const upload = document.createElement('input'); upload.type = 'file'; upload.accept = 'image/*'; upload.className = 'block w-full text-[11px]'; upload.onchange = ev => handleVariantImageUpload(ev, gi, oi);
                     const hint = document.createElement('p'); hint.className = 'text-[10px] text-gray-500'; hint.textContent = option.image ? 'Image added ✓ (choose again to replace)' : 'Optional: upload this option’s photo';
+                    const optionImageRemove = document.createElement('button'); optionImageRemove.type = 'button'; optionImageRemove.className = 'text-[10px] font-bold text-red-600 underline'; optionImageRemove.textContent = option.image ? 'Remove this option image' : 'No option image'; optionImageRemove.onclick = () => { option.image = ''; renderAdminVariantEditor(); };
                     const compatibleLabel = document.createElement('label'); compatibleLabel.className = 'block text-[11px] font-bold text-gray-700'; compatibleLabel.textContent = 'Only show with these Color options (optional; comma-separated; blank = all colors)';
                     const compatibleInput = document.createElement('input'); compatibleInput.type = 'text'; compatibleInput.value = Array.isArray(option.availableWith) ? option.availableWith.join(', ') : (option.availableWith || ''); compatibleInput.placeholder = 'e.g. Brown, Blue'; compatibleInput.className = 'w-full border rounded-lg p-2 text-xs'; compatibleInput.oninput = () => { option.availableWith = compatibleInput.value.split(',').map(v => v.trim()).filter(Boolean); };
                     const priceLabel = document.createElement('label'); priceLabel.className = 'block text-[11px] font-bold text-gray-700'; priceLabel.textContent = 'Variant price (৳; blank = use main price)';
@@ -2667,13 +3021,16 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                             const childImage = document.createElement('input'); childImage.type = 'file'; childImage.accept = 'image/*'; childImage.className = 'block w-full text-[10px] mt-1';
                             childImage.onchange = ev => { const f = ev.target.files && ev.target.files[0]; if (!f) return; if (f.size > 700000) { alert('Please use an image smaller than 700 KB.'); ev.target.value=''; return; } const reader = new FileReader(); reader.onload = () => { child.image = reader.result; }; reader.readAsDataURL(f); };
                             const childImageLabel = document.createElement('label'); childImageLabel.className = 'block text-[10px] text-gray-500 mt-1'; childImageLabel.textContent = child.image ? 'Variant image added ✓ (choose to replace)' : 'Optional image for this size'; childImageLabel.appendChild(childImage);
+                            const childImageControls = document.createElement('div'); childImageControls.className = 'flex items-center gap-2 mt-1';
+                            if (child.image) { const childImagePreview = document.createElement('img'); childImagePreview.src = child.image; childImagePreview.alt = 'Size variant image'; childImagePreview.className = 'w-12 h-12 object-contain border rounded bg-white'; childImageControls.appendChild(childImagePreview); }
+                            const childImageRemove = document.createElement('button'); childImageRemove.type = 'button'; childImageRemove.className = 'text-[10px] font-bold text-red-600 underline'; childImageRemove.textContent = child.image ? 'Remove this size image (use Color image)' : 'No separate image — Color image will be used'; childImageRemove.onclick = () => { child.image = ''; renderAdminVariantEditor(); }; childImageControls.appendChild(childImageRemove);
                             const childDetails = document.createElement('textarea'); childDetails.value = child.details || ''; childDetails.placeholder = 'Optional details for this size'; childDetails.className = 'w-full border rounded p-2 text-xs mt-1'; childDetails.oninput = () => { child.details = childDetails.value; };
-                            nestedWrap.append(childRow, childImageLabel, childDetails);
+                            nestedWrap.append(childRow, childImageLabel, childImageControls, childDetails);
                         });
                         const addChild = document.createElement('button'); addChild.type = 'button'; addChild.className = 'rounded bg-indigo-700 text-white px-3 py-2 text-xs font-bold'; addChild.textContent = '+ Add size / variant'; addChild.onclick = () => { option.childVariants.push({name:'',price:'',image:'',details:''}); renderAdminVariantEditor(); };
                         nestedWrap.appendChild(addChild);
                     }
-                    left.append(optName, upload, hint, compatibleLabel, compatibleInput, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
+                    left.append(optName, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
                     setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
                     if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
                     const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-red-600 text-[11px] font-bold'; remove.textContent = 'Remove option'; remove.onclick = () => removeAdminVariantOption(gi, oi); row.appendChild(remove);
@@ -2716,12 +3073,13 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 b.className = 'border rounded-xl px-3 py-2 text-xs font-bold ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
                 b.textContent = child.name;
                 b.onclick = () => {
-                    selectedVariantChoices['__size'] = child.name;
-                    selectedVariantMeta['__size'] = child;
-                    if (child.image) { const img = document.getElementById('detailMainImage'); if (img) img.src = child.image; }
+                    const wasSelected = selectedVariantChoices['__size'] === child.name;
+                    if (wasSelected) { delete selectedVariantChoices['__size']; delete selectedVariantMeta['__size']; }
+                    else { selectedVariantChoices['__size'] = child.name; selectedVariantMeta['__size'] = child; }
+                    { const img = document.getElementById('detailMainImage'); const fallback = colorOption?.image || (Array.isArray(selectedDetailProd?.images) ? selectedDetailProd.images.find(Boolean) : '') || selectedDetailProd?.image || ''; if (img) img.src = (!wasSelected && child.image) ? child.image : (fallback || ''); }
                     renderChildVariants(colorOption);
                     updateDetailPriceFromVariants();
-                    if (child.details) { const d = document.getElementById('detailDescription'); if (d) d.textContent = child.details; }
+                    if (!wasSelected && child.details) { const d = document.getElementById('detailDescription'); if (d) d.textContent = child.details; }
                     updateDetailWhatsappVariantLink();
                 };
                 opts.appendChild(b);
@@ -2773,18 +3131,23 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                         button.className = 'border rounded-xl px-3 py-2 text-xs font-bold transition ' + (selected ? 'border-purple-700 bg-purple-100 text-purple-900' : 'border-gray-300 bg-white text-gray-700');
                         button.textContent = option.name;
                         button.onclick = () => {
-                            selectedVariantChoices[group.name] = option.name;
-                            selectedVariantMeta[group.name] = option;
-                            if (option.image && mainImg) mainImg.src = option.image;
-                            // Selecting a color clears any previous child size and renders only this color's sizes.
-                            if (isColorGroup(group)) {
-                                delete selectedVariantChoices['__size'];
-                                delete selectedVariantMeta['__size'];
-                            }
+                            const wasSelected = selectedVariantChoices[group.name] === option.name;
+                            if (wasSelected) { delete selectedVariantChoices[group.name]; delete selectedVariantMeta[group.name]; }
+                            else { selectedVariantChoices[group.name] = option.name; selectedVariantMeta[group.name] = option; }
+                            const chosenColor = colorGroup && selectedVariantChoices[colorGroup.name] ? colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]) : null;
+                            const fallback = chosenColor?.image || (Array.isArray(selectedDetailProd?.images) ? selectedDetailProd.images.find(Boolean) : '') || selectedDetailProd?.image || '';
+                            if (mainImg) mainImg.src = (!wasSelected && option.image) ? option.image : (fallback || '');
+                            // Selecting or clearing a color clears any previous child size.
+                            if (isColorGroup(group)) { delete selectedVariantChoices['__size']; delete selectedVariantMeta['__size']; }
                             render();
-                            if (isColorGroup(group)) renderChildVariants(option);
+                            if (colorGroup && selectedVariantChoices[colorGroup.name]) {
+                                const activeColor = colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]);
+                                if (activeColor) renderChildVariants(activeColor);
+                            } else {
+                                const oldChildBox = container.querySelector('[data-child-variant-box]'); if (oldChildBox) oldChildBox.remove();
+                            }
                             updateDetailPriceFromVariants();
-                            renderCustomerDescription(selectedDetailProd, option);
+                            if (!wasSelected) renderCustomerDescription(selectedDetailProd, option);
                             updateDetailWhatsappVariantLink();
                         };
                         options.appendChild(button);
@@ -2833,6 +3196,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                     title,
                     price,
                     images: finalImages,
+                    photoAutoRotate: document.getElementById('prodPhotoAutoRotate')?.checked === true,
+                    photoInterval: Math.max(2, Math.min(10, Number(document.getElementById('prodPhotoInterval')?.value) || 4)),
                     description: desc,
                     descriptionTable: firestoreSafeDescriptionTable(adminBaseDescriptionTable),
                     showDescriptionTable: document.getElementById('prodShowDescriptionTable')?.checked !== false,
@@ -2875,10 +3240,22 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 
         function renderAdminProductsList() {
             const list = document.getElementById('adminProductsList');
-            if(!list) return;
+            if (!list) return;
+            const catalogProducts = Array.isArray(window.products) ? window.products : [];
             list.innerHTML = '';
+            if (!catalogProducts.length) {
+                const empty = document.createElement('div');
+                empty.className = 'p-4 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl';
+                empty.textContent = window.__productsLoadError
+                    ? ('Firebase থেকে Product লোড হয়নি: ' + window.__productsLoadError)
+                    : (window.__productsSnapshotLoaded
+                        ? 'Firebase products collection-এ এখন কোনো Product পাওয়া যায়নি। Product মুছে ফেলা হয়নি; connection/rules পরীক্ষা করুন।'
+                        : 'Firebase থেকে Product লোড হচ্ছে...');
+                list.appendChild(empty);
+                return;
+            }
 
-            products.forEach(p => {
+            catalogProducts.forEach(p => {
                 const img = (p.images && p.images[0]) ? p.images[0] : 'https://placehold.co/100x100';
                 let subDisplay = Array.isArray(p.subCategory) ? p.subCategory.join(', ') : (p.subCategory || '');
                 const hasVideo = !!(p.videoUrl && p.videoUrl.trim());
@@ -2906,6 +3283,9 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             });
         }
 
+        // Explicit bridge: Firebase module calls this function through window.
+        window.renderAdminProductsList = renderAdminProductsList;
+
         async function saveProductOrder(id) {
             const input = document.getElementById('order-' + id); if (!input) return;
             const p = products.find(item => item.id === id); if (!p) return;
@@ -2915,9 +3295,42 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             alert('Product display order saved.');
         }
 
+        let productFormOriginalParent = null;
+        let productFormPlaceholder = null;
+        function ensureProductFormModalPlacement() {
+            const card = document.getElementById('productFormCard');
+            if (!card) return;
+            if (!productFormPlaceholder) {
+                productFormOriginalParent = card.parentNode;
+                productFormPlaceholder = document.createComment('productFormCard original position');
+                productFormOriginalParent.insertBefore(productFormPlaceholder, card);
+            }
+            // Move the editor to <body> so the admin dashboard's overflow/transform
+            // cannot clip the fixed modal, especially on mobile screens.
+            if (card.parentNode !== document.body) document.body.appendChild(card);
+        }
         function closeProductEditModal() {
-            const card = document.getElementById('productFormCard'); if (card) card.classList.remove('product-edit-active');
-            const backdrop = document.getElementById('productEditBackdrop'); if (backdrop) backdrop.style.display = 'none';
+            const card = document.getElementById('productFormCard');
+            if (card) {
+                card.classList.remove('product-edit-active');
+                card.style.display = '';
+                card.style.position = '';
+                card.style.zIndex = '';
+                card.style.top = '';
+                card.style.left = '';
+                card.style.transform = '';
+                card.style.width = '';
+                card.style.maxHeight = '';
+                card.style.overflowY = '';
+                if (productFormPlaceholder && productFormPlaceholder.parentNode && card.parentNode === document.body) {
+                    productFormPlaceholder.parentNode.insertBefore(card, productFormPlaceholder.nextSibling);
+                    productFormPlaceholder.remove();
+                    productFormPlaceholder = null;
+                    productFormOriginalParent = null;
+                }
+            }
+            const backdrop = document.getElementById('productEditBackdrop');
+            if (backdrop) { backdrop.classList.remove('is-visible'); backdrop.style.display = 'none'; }
         }
 
         function editProduct(id) {
@@ -2945,6 +3358,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
 
             document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
+            const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = p.photoAutoRotate === true;
+            const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = String(p.photoInterval || 4);
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
             renderProductPhotoPreview();
             document.getElementById('prodDesc').value = p.description || '';
@@ -2952,9 +3367,24 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             document.getElementById('prodShowPrice').checked = p.showPrice;
             document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
             document.getElementById('prodStockOut').checked = !!p.stockOut;
-            document.getElementById('productFormCard').classList.add('product-edit-active');
-            document.getElementById('productEditBackdrop').style.display = 'block';
-            document.getElementById('productFormCard').scrollTop = 0;
+            ensureProductFormModalPlacement();
+            const editCard = document.getElementById('productFormCard');
+            editCard.classList.add('product-edit-active');
+            editCard.style.display = 'block';
+            editCard.style.position = 'fixed';
+            editCard.style.zIndex = '10001';
+            editCard.style.top = '50%';
+            editCard.style.left = '50%';
+            editCard.style.transform = 'translate(-50%, -50%)';
+            editCard.style.width = 'min(94vw, 700px)';
+            editCard.style.maxHeight = '90vh';
+            editCard.style.overflowY = 'auto';
+            editCard.style.background = '#fff';
+            editCard.style.boxShadow = '0 25px 80px rgba(0,0,0,.35)';
+            editCard.style.borderRadius = '18px';
+            const editBackdrop = document.getElementById('productEditBackdrop');
+            if (editBackdrop) { editBackdrop.style.display = 'block'; editBackdrop.style.zIndex = '10000'; requestAnimationFrame(() => editBackdrop.classList.add('is-visible')); }
+            editCard.scrollTop = 0;
         }
 
         function resetProductForm() {
@@ -2963,6 +3393,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             document.getElementById('prodDisplayOrder').value = '';
             closeProductEditModal();
             document.getElementById('productForm').reset();
+            const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = false;
+            const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = '4';
             selectedProductPhotoData = [];
             adminVariantGroups = [];
             adminBaseDescriptionTable = { columns: 2, rows: [['Product Size', ''], ['Material', '']] };
@@ -2982,5 +3414,30 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             }
         }
     </script>
+<script>
+// Delofia catalog safety bridge: render from the current Firestore-backed window.products
+// whenever the admin panel opens, without changing or deleting saved products.
+(function () {
+  function refreshDelofiaCatalog() {
+    if (typeof window.renderAdminProductsList === 'function') {
+      try { window.renderAdminProductsList(); }
+      catch (err) { console.error('Delofia catalog render failed:', err); }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', refreshDelofiaCatalog, { once: true });
+  } else {
+    refreshDelofiaCatalog();
+  }
+  const admin = document.getElementById('adminModal');
+  if (admin && typeof MutationObserver !== 'undefined') {
+    new MutationObserver(function () { refreshDelofiaCatalog(); })
+      .observe(admin, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
+  // Firestore may finish loading after the admin panel is opened; re-render once data arrives.
+  window.addEventListener('delofia-products-updated', refreshDelofiaCatalog);
+})();
+</script>
+
 </body>
 </html>
