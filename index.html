@@ -5031,6 +5031,28 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 }
 </style>
 
+
+<style id="delofia-mobile-logo-left-final-v74">
+/* Final targeted change: move only the mobile logo to the left; preserve all other behavior. */
+@media (max-width: 640px) {
+  header a#brandLogo {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    order: 1 !important;
+    flex: 0 1 auto !important;
+    align-self: center !important;
+    justify-self: start !important;
+    z-index: 1 !important;
+  }
+}
+</style>
+
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
@@ -6102,20 +6124,34 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 
         function updateDetailPriceFromVariants() {
             if (!selectedDetailProd) return;
-            const selected = Object.values(selectedVariantMeta || {}).reverse().find(o => o && o.price !== '' && o.price !== null && o.price !== undefined && Number.isFinite(Number(o.price)));
-            const price = selected ? Number(selected.price) : Number(selectedDetailProd.price || 0);
-            const regular = Number(selected?.originalPrice || 0) > price ? Number(selected.originalPrice) : (selected ? 0 : Number(selectedDetailProd.originalPrice || 0));
+            const choices = selectedVariantChoices || {};
+            const groups = Array.isArray(selectedDetailProd.variantGroups) ? selectedDetailProd.variantGroups : [];
+            const colorGroup = groups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const selectedColor = colorGroup && (colorGroup.options || []).find(o => String(o.name) === String(choices[colorGroup.name] || ''));
+            // Nested size/variant has priority: its own sale and regular prices must be shown.
+            let selected = null;
+            if (selectedColor && choices.__size) {
+                selected = (selectedColor.childVariants || []).find(v => String(v.name) === String(choices.__size)) || null;
+            }
+            // Otherwise use the last explicitly selected option that defines a price.
+            if (!selected) {
+                const metas = Object.entries(selectedVariantMeta || {}).filter(([key, value]) => key !== '__size' && value && value.price !== '' && value.price !== null && value.price !== undefined && Number.isFinite(Number(value.price)));
+                if (metas.length) selected = metas[metas[metas.length - 1][0]];
+            }
+            const hasSelectedSalePrice = selected && selected.price !== '' && selected.price !== null && selected.price !== undefined && Number.isFinite(Number(selected.price));
+            const price = hasSelectedSalePrice ? Math.max(0, Number(selected.price)) : Math.max(0, Number(selectedDetailProd.price) || 0);
+            const selectedRegular = selected && selected.originalPrice !== '' && selected.originalPrice !== null && selected.originalPrice !== undefined && Number.isFinite(Number(selected.originalPrice)) ? Number(selected.originalPrice) : 0;
+            const regular = selected ? selectedRegular : Math.max(0, Number(selectedDetailProd.originalPrice) || 0);
             const el = document.getElementById('detailPrice');
-            if (el) { el.innerText = selectedDetailProd.showPrice ? `৳${price.toFixed(2)}` : ''; el.classList.toggle('hidden', !selectedDetailProd.showPrice); }
+            if (el) { el.innerText = selectedDetailProd.showPrice ? `৳${price.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; el.classList.toggle('hidden', !selectedDetailProd.showPrice); }
             const oldEl = document.getElementById('detailOriginalPrice');
             const badge = document.getElementById('detailDiscountBadge');
-            const hasDiscount = selectedDetailProd.showPrice && regular > price;
+            const hasDiscount = !!selectedDetailProd.showPrice && regular > price && regular > 0;
             if (oldEl) { oldEl.textContent = hasDiscount ? `৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; oldEl.classList.toggle('hidden', !hasDiscount); }
-            if (badge) { badge.textContent = hasDiscount ? `${Math.round((regular-price)/regular*100)}% OFF · SAVE ৳${(regular-price).toLocaleString('en-BD',{maximumFractionDigits:2})}` : ''; badge.classList.toggle('hidden', !hasDiscount); }
+            if (badge) { badge.textContent = hasDiscount ? `${Math.round((regular-price)/regular*100)}% OFF · SAVE ৳${(regular-price).toLocaleString('en-BD',{minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; badge.classList.toggle('hidden', !hasDiscount); }
             const qtyEl = document.getElementById('detailAvailableQty');
             if (qtyEl) {
-                const choices = {...(selectedVariantChoices || {})};
-                const available = getAvailableStock(selectedDetailProd, choices);
+                const available = getAvailableStock(selectedDetailProd, {...choices});
                 const canShow = selectedDetailProd.showStockQuantity === true && Number.isFinite(available);
                 qtyEl.textContent = canShow ? (available > 0 ? `${available} available` : 'Out of stock') : '';
                 qtyEl.classList.toggle('hidden', !canShow);
@@ -6713,6 +6749,28 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   }, true);
 })();
 </script>
+
+
+<style id="delofia-mobile-logo-left-final-v74">
+/* Final targeted change: move only the mobile logo to the left; preserve all other behavior. */
+@media (max-width: 640px) {
+  header a#brandLogo {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    order: 1 !important;
+    flex: 0 1 auto !important;
+    align-self: center !important;
+    justify-self: start !important;
+    z-index: 1 !important;
+  }
+}
+</style>
 
 </body>
 
