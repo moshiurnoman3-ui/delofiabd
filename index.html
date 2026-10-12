@@ -86,6 +86,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bo
 body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bold.text-gray-700,
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor th,
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor td { color:#f4f4f5 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 <style>
 .product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
@@ -95,6 +121,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTab
         #productsGrid .group:hover .product-card-image { transform: scale(1.07); }
         @media (hover: none) { #productsGrid .group:hover .product-card-image { transform: none; } }
 .product-photo-drop-target { outline: 3px solid #7c3aed; outline-offset: -3px; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofiaSidebarThemeStyles">
@@ -178,6 +230,32 @@ body:not(.delofia-admin-dark) #adminModal select option { color:#111827!importan
 body:not(.delofia-admin-dark) #adminModal .text-gray-100,
 body:not(.delofia-admin-dark) #adminModal .text-gray-200,
 body:not(.delofia-admin-dark) #adminModal .text-gray-300 { color:#374151!important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-checkout-cart-summary-dark-theme-fix">
@@ -206,6 +284,32 @@ body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem img {
   background: #27272a !important;
   border-color: #52525b !important;
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-checkout-summary-background-fix-v2">
@@ -236,6 +340,32 @@ body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem p.text-gray-500
 body.delofia-dark-storefront #checkoutModal #checkoutSummaryItem .text-gray-500 {
   color: #d4d4d8 !important;
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-cart-quantity-dark-theme-fix">
@@ -263,6 +393,32 @@ body.delofia-dark-storefront #cartModal #cartItemsList button[onclick^="changeCa
 body.delofia-dark-storefront #cartModal #cartItemsList button[onclick^="changeCartQty"]:hover {
   background: #6d28d9 !important;
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-quantity-dark-theme-visibility-fix">
@@ -290,6 +446,32 @@ body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty
 body.delofia-dark-storefront #productDetailModal button[onclick="updateDetailQty(1)"]:hover {
   background: #6d28d9 !important;
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-admin-dark-contrast-comprehensive">
@@ -361,6 +543,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active input::placeholder,
 body.delofia-admin-dark #productFormCard.product-edit-active textarea::placeholder { color:#a1a1aa !important; opacity:1 !important; }
 body.delofia-admin-dark #adminModal select option,
 body.delofia-admin-dark #productFormCard.product-edit-active select option { background:#27272a !important; color:#fafafa !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -400,6 +608,32 @@ body.delofia-admin-dark #adminTabOrders .bg-white { background: #18181b !importa
 body.delofia-admin-dark #adminTabOrders thead,
 body.delofia-admin-dark #adminTabOrders thead * { background: #27272a !important; color: #f4f4f5 !important; }
 body.delofia-admin-dark #ordersTableBody tr { background: #18181b !important; border-color: #3f3f46 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-followup-visibility-fixes">
@@ -424,6 +658,32 @@ body.delofia-admin-dark .bg-emerald-100.text-emerald-800 { background-color:#064
 body.delofia-admin-dark #adminTabSessions p.bg-amber-50,
 body.delofia-admin-dark #adminTabSessions p[class*="bg-amber-50"] { background-color:#422006 !important; color:#fef3c7 !important; border-color:#92400e !important; }
 body.delofia-admin-dark #adminTabSessions p.bg-amber-50 * { color:#fef3c7 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-final-visibility-and-category-order">
@@ -437,6 +697,32 @@ body.delofia-admin-dark #productFormCard input[type=checkbox] + span { color:#f9
 body.delofia-admin-dark #adminCategoryList, body.delofia-admin-dark #adminCategoryList * { color:#f4f4f5 !important; }
 body.delofia-admin-dark #adminCategoryList .bg-purple-50\/50 { background:#27272a !important; border-color:#52525b !important; }
 body.delofia-admin-dark #adminCategoryList button { color:#fff !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -458,6 +744,32 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span.bg
 body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[class*="text-purple-800"] {
   background-color:#5b21b6 !important; color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -495,6 +807,32 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
 #productFormCard.product-edit-active #baseDescriptionTableEditor textarea,
 #productFormCard.product-edit-active #baseDescriptionTableEditor select { background:#ffffff !important; color:#272033 !important; border-color:#cbd5e1 !important; }
 #productFormCard.product-edit-active button { text-shadow:none !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -505,6 +843,32 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
 #successMemoPreview .text-purple-900, #successMemoPreview .text-purple-700 { color:#5b21b6 !important; }
 #successMemoPreview .text-gray-500, #successMemoPreview .text-gray-600 { color:#6b7280 !important; }
 #successMemoPreview [style*="color"] { color:#272033 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-product-detail-quantity-readable-fix-v4">
@@ -513,16 +877,94 @@ body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[cl
 #productDetailModal #detailQty { color: #272033 !important; background: #f9fafb !important; border: 1px solid #d1d5db !important; }
 #productDetailModal button[onclick="updateDetailQty(-1)"],
 #productDetailModal button[onclick="updateDetailQty(1)"] { color: #5b21b6 !important; background: #f3e8ff !important; border: 1px solid #ddd6fe !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-quantity-label-only-fix-v5">
 /* Fix ONLY the product detail Quantity label; leave the +/- controls and number unchanged. */
 #productDetailModal .mb-6 > label { color: #374151 !important; }
 body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 <style id="delofia-mobile-district-autocomplete-style">
 #districtSuggestions button { min-height: 44px; touch-action: manipulation; }
 #districtSuggestions { -webkit-overflow-scrolling: touch; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -612,6 +1054,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
     display: none !important;
   }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -624,6 +1092,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   header #headerWishlistButton > i,
   header #headerCartButton > i { display: inline-block !important; font-size: 17px !important; margin: 0 !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -679,6 +1173,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   #delofiaFloatingWhatsapp { display:flex !important; }
   body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display:none !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -713,6 +1233,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
     display:inline-block !important; font-size:16px !important; margin:0 !important;
   }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-mobile-header-final-layout-v28">
@@ -771,6 +1317,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   header #customerAccountHeaderBtn { min-width:39px !important; padding-left:3px !important; padding-right:3px !important; }
   header #delofiaHeaderActions > a[href*="wa.me"], header #headerWishlistButton, header #headerCartButton { flex-basis:23px !important; width:23px !important; min-width:23px !important; max-width:23px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-final-mobile-header-v30">
@@ -816,6 +1388,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   header #customerAccountHeaderBtn { min-width:48px !important; padding:0 3px !important; }
   header #headerWishlistButton, header #headerCartButton, header #delofiaHeaderActions > a[href*="wa.me"] { width:26px !important; min-width:26px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 <style id="delofia-mobile-layout-final-v31">
@@ -878,6 +1476,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   header #customerAccountHeaderBtn { flex-basis:45px !important; width:45px !important; min-width:45px !important; }
   header #headerWishlistButton, header #headerCartButton, header #delofiaHeaderActions > a[href*="wa.me"] { flex-basis:25px !important; width:25px !important; min-width:25px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -931,6 +1555,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   #delofiaFloatingWhatsapp { display:flex !important; }
   body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display:none !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -958,6 +1608,32 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
     white-space: nowrap !important; line-height: 1 !important;
   }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 </head>
@@ -3417,8 +4093,6 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
             mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
-            const sheetImage = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
-            document.getElementById('productDetailModal').style.setProperty('--delofia-sheet-product-image', sheetImage ? `url("${String(sheetImage).replace(/"/g, '%22')}")` : 'none');
             mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
@@ -4279,6 +4953,32 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 .support{margin-top:24px;padding:16px;border-radius:10px;background:#f5f0ff;font-size:13px;line-height:1.7}.foot{text-align:center;color:#777;font-size:11px;margin-top:22px}
 @media print{body{padding:0}.memo{max-width:none;border-radius:0;min-height:95vh}.no-print{display:none!important}@page{size:A4;margin:12mm}}
 @media(max-width:560px){body{padding:10px}.memo{padding:16px}.head{flex-direction:column}.watermark{font-size:42px}.grid{grid-template-columns:1fr}}
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 <style id="delofia-admin-dark-contrast-comprehensive">
 /* Comprehensive dark-admin contrast repair: cover admin panels, nested cards, editors and product edit popup. */
@@ -4349,6 +5049,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active input::placeholder,
 body.delofia-admin-dark #productFormCard.product-edit-active textarea::placeholder { color:#a1a1aa !important; opacity:1 !important; }
 body.delofia-admin-dark #adminModal select option,
 body.delofia-admin-dark #productFormCard.product-edit-active select option { background:#27272a !important; color:#fafafa !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 </head><body><main class="memo"><div class="watermark">DELOFIA</div><div class="content">
@@ -4416,6 +5142,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   #delofiaFloatingWhatsapp { display:flex !important; }
   body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display:none !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -4539,6 +5291,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   header #customerAccountHeaderBtn { min-width: 49px !important; padding: 0 4px !important; }
   header #headerWishlistButton, header #headerCartButton, header #delofiaHeaderActions > a[href*="wa.me"] { width: 25px !important; min-width: 25px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -4563,6 +5341,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
     opacity:1 !important; color:#5b21b6 !important; font-size:clamp(12px,3.5vw,16px) !important;
     font-weight:900 !important; letter-spacing:0 !important; white-space:nowrap !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 </body>
@@ -4689,6 +5493,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   header #headerWishlistButton > span:not(#wishlistCountBadge),
   header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:8px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 </html>`;
@@ -6092,6 +6922,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   #delofiaFloatingWhatsapp { display:flex !important; }
   body:has(#productDetailModal:not(.hidden)) #delofiaFloatingWhatsapp { display:none !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -6116,6 +6972,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
     opacity:1 !important; color:#5b21b6 !important; font-size:clamp(12px,3.5vw,16px) !important;
     font-weight:900 !important; letter-spacing:0 !important; white-space:nowrap !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -6344,6 +7226,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   header #headerWishlistButton > span:not(#wishlistCountBadge),
   header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:8px !important; }
 }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 </html>
@@ -6351,6 +7259,32 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 /* Keep the storefront Reset filter button readable in both themes. */
 #mainContainer button[onclick="resetProductFilters()"] { color:#374151 !important; background:#e5e7eb !important; border:1px solid #d1d5db !important; }
 body.delofia-dark-storefront #mainContainer button[onclick="resetProductFilters()"] { color:#ffffff !important; background:#4b5563 !important; border-color:#6b7280 !important; }
+
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
+@media (max-width: 767px) {
+  #productDetailModal {
+    align-items:flex-end !important; justify-content:center !important;
+    padding:0 !important; overflow:hidden !important;
+  }
+  #productDetailModal > div {
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
+    margin:0 !important; border-radius:16px 16px 0 0 !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
+    padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
+  }
+}
+
 </style>
 
 
@@ -6395,66 +7329,29 @@ html, body { max-width:100%; overflow-x:clip; }
   #delofiaMobileActionBar button, #delofiaMobileActionBar a { font-size:10px; }
 }
 
-/* Mobile product variant picker styled like a compact shopping-app bottom sheet. */
+/* Minimal mobile variant bottom-sheet: preserve Delofia's existing colors and all existing page design. */
 @media (max-width: 767px) {
   #productDetailModal {
     align-items:flex-end !important; justify-content:center !important;
-    padding:0 !important; overflow:hidden !important; background:rgba(0,0,0,.48) !important;
-    backdrop-filter:blur(1px);
+    padding:0 !important; overflow:hidden !important;
   }
   #productDetailModal > div {
-    width:100% !important; max-width:560px !important; max-height:78dvh !important;
+    width:100% !important; max-width:560px !important; max-height:82dvh !important;
     margin:0 !important; border-radius:16px 16px 0 0 !important;
-    overflow-y:auto !important; overscroll-behavior:contain; background:#fff !important;
-    box-shadow:0 -8px 30px rgba(0,0,0,.18) !important;
+    overflow-y:auto !important; overscroll-behavior:contain;
     padding-bottom:calc(8px + env(safe-area-inset-bottom)) !important;
   }
-  #productDetailModal > div > .grid {
-    display:grid !important; grid-template-columns:1fr !important; gap:0 !important;
-  }
-  #productDetailModal > div > .grid > div:first-child {
-    display:none !important;
-  }
-  #productDetailModal > div > .grid > div:nth-child(2) {
-    display:flex !important; flex-direction:column !important; gap:0 !important;
-    padding:12px 10px 10px !important;
-  }
-  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child {
-    min-height:98px; padding-left:102px !important; position:relative;
-  }
-  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child::before {
-    content:''; position:absolute; left:0; top:0; width:90px; height:90px;
-    background-image:var(--delofia-sheet-product-image, none); background-size:contain;
-    background-repeat:no-repeat; background-position:center; border:1px solid #eee; border-radius:8px;
-  }
-  #productDetailModal #detailTitle { font-size:14px !important; line-height:1.35 !important; margin:1px 34px 7px 0 !important; }
-  #productDetailModal .text-xs.font-bold.text-purple-600 { display:none !important; }
-  #productDetailModal #detailWishlistButton { display:none !important; }
-  #productDetailModal #detailPrice { font-size:17px !important; color:#f04b2b !important; }
-  #productDetailModal #detailStockBadge { font-size:10px !important; }
-  #productDetailModal #detailPriceContact { padding:7px !important; margin-bottom:7px !important; }
-  #productDetailModal #detailVariantOptions { margin:5px 0 8px !important; padding-top:8px; border-top:1px solid #f0f0f0; }
-  #productDetailModal #detailVariantOptions > div { margin-bottom:7px !important; }
-  #productDetailModal #detailVariantOptions h4,
-  #productDetailModal #detailVariantOptions label,
-  #productDetailModal #detailVariantOptions .font-bold { font-size:11px !important; }
-  #productDetailModal #detailVariantOptions button { min-height:32px !important; padding:4px 7px !important; font-size:11px !important; border-radius:5px !important; }
-  #productDetailModal > div > .grid > div:nth-child(2) > div:first-child > .mb-4:last-child { margin-bottom:6px !important; }
-  #productDetailModal #detailQty { font-size:12px !important; }
-  #productDetailModal #detailQty { width:26px !important; }
-  #productDetailModal button[onclick="updateDetailQty(-1)"],
-  #productDetailModal button[onclick="updateDetailQty(1)"] { width:29px !important; height:29px !important; border-radius:6px !important; }
-  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; margin:5px 0 8px !important; padding:7px 0 !important; border-top:1px solid #f0f0f0; }
-  #productDetailModal .mb-6:has(#detailQty) label { margin:0 !important; font-size:11px !important; }
+  #productDetailModal > div > .grid { grid-template-columns:minmax(0,1fr) !important; gap:0 !important; }
+  #productDetailModal > div > .grid > * { min-width:0; }
+  #productDetailModal > div > .grid > div:first-child { display:none !important; }
+  #productDetailModal > div > .grid > div:nth-child(2) { padding:14px 12px !important; }
+  #productDetailModal #detailTitle { margin-right:32px !important; }
+  #productDetailModal #detailVariantOptions { margin-top:8px !important; }
+  #productDetailModal .mb-6:has(#detailQty) { display:flex !important; align-items:center !important; justify-content:space-between !important; }
   #productDetailModal > div > .grid > div:nth-child(2) > .space-y-3 {
-    position:sticky; bottom:-1px; z-index:5; background:#fff; padding:7px 0 0 !important;
-    border-top:1px solid #eee !important; gap:5px !important;
+    position:sticky; bottom:-1px; z-index:5; padding-top:8px !important;
+    background:inherit;
   }
-  #productDetailModal #detailAddCartBtn { background:#f04b2b !important; color:#fff !important; border-radius:5px !important; padding:10px !important; font-size:12px !important; }
-  #productDetailModal #detailBuyBtn, #productDetailModal #detailWhatsappBtn { display:none !important; }
-  #productDetailModal > div > section { padding:10px !important; }
-  #productDetailModal > div > section .delofia-info-tab { padding:7px 9px !important; font-size:11px !important; }
-  #productDetailModal > div > button:first-child { top:7px !important; right:7px !important; width:27px !important; height:27px !important; background:transparent !important; box-shadow:none !important; }
-  #productDetailModal > div > button:first-child i { font-size:14px !important; }
 }
+
 </style>
