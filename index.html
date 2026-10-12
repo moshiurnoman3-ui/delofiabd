@@ -2226,8 +2226,16 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             try {
                 const snap = await getDoc(doc(db, 'customerProfiles', user.uid));
                 window.customerProfileCache = snap.exists() ? { ...snap.data(), uid: user.uid } : { uid: user.uid };
-                // Restore this account's cloud cart on every device after login.
-                if (typeof window.loadDelofiaAccountCart === 'function') window.loadDelofiaAccountCart(window.customerProfileCache.cart || []);
+                // On first login, restore the account's cloud data. If no cloud data exists yet,
+                // migrate this device's guest data once; otherwise never merge stale guest data.
+                const profileData = window.customerProfileCache || {};
+                if (typeof window.loadDelofiaAccountCart === 'function') {
+                    window.loadDelofiaAccountCart(Array.isArray(profileData.cart) ? profileData.cart : [], Array.isArray(profileData.cart));
+                }
+                if (typeof window.loadDelofiaAccountWishlist === 'function') {
+                    window.loadDelofiaAccountWishlist(Array.isArray(profileData.wishlist) ? profileData.wishlist : [], Array.isArray(profileData.wishlist));
+                }
+                if (typeof window.startDelofiaAccountRealtimeSync === 'function') window.startDelofiaAccountRealtimeSync(user.uid);
                 const label = document.getElementById('customerAccountHeaderLabel');
                 if (label) label.textContent = window.customerProfileCache.name ? window.customerProfileCache.name.split(/\s+/)[0] : 'Account';
                 fillCheckoutFromCustomerProfile(window.customerProfileCache);
@@ -2426,7 +2434,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         // Save cart lines in the signed-in user's own profile document (merge=true preserves profile fields).
         window.__delofiaCloudCartSync = async function(cart) {
             const user = auth.currentUser;
-            if (!user || !Array.isArray(cart)) return;
+            if (!user || !Array.isArray(cart) || window.__delofiaApplyingRemoteState) return;
             const safeCart = cart.map(item => ({
                 key: String(item.key || ''), productId: String(item.productId ?? ''), title: String(item.title || 'Product'),
                 qty: Math.max(1, Math.floor(Number(item.qty) || 1)), variants: item.variants && typeof item.variants === 'object' ? item.variants : {},
@@ -2434,7 +2442,33 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }));
             await setDoc(doc(db, 'customerProfiles', user.uid), { cart: safeCart, cartUpdatedAt: new Date().toISOString() }, { merge: true });
         };
-        onAuthStateChanged(auth, user => { if (user) loadCustomerProfile(user); else { window.customerProfileCache = null; renderCustomerAccountState(); } });
+        window.__delofiaCloudWishlistSync = async function(wishlist) {
+            const user = auth.currentUser;
+            if (!user || !Array.isArray(wishlist) || window.__delofiaApplyingRemoteState) return;
+            await setDoc(doc(db, 'customerProfiles', user.uid), { wishlist: wishlist.map(String), wishlistUpdatedAt: new Date().toISOString() }, { merge: true });
+        };
+        let delofiaProfileUnsubscribe = null;
+        let delofiaProfileSyncUid = '';
+        window.startDelofiaAccountRealtimeSync = function(uid) {
+            if (!uid || delofiaProfileSyncUid === uid) return;
+            if (delofiaProfileUnsubscribe) delofiaProfileUnsubscribe();
+            delofiaProfileSyncUid = uid;
+            delofiaProfileUnsubscribe = onSnapshot(doc(db, 'customerProfiles', uid), snap => {
+                if (!snap.exists() || auth.currentUser?.uid !== uid) return;
+                const data = snap.data() || {};
+                window.customerProfileCache = { ...(window.customerProfileCache || {}), ...data, uid };
+                if (typeof window.loadDelofiaAccountCart === 'function' && Array.isArray(data.cart)) window.loadDelofiaAccountCart(data.cart, true);
+                if (typeof window.loadDelofiaAccountWishlist === 'function' && Array.isArray(data.wishlist)) window.loadDelofiaAccountWishlist(data.wishlist, true);
+            }, error => console.warn('Delofia account realtime sync failed:', error));
+        };
+        onAuthStateChanged(auth, user => {
+            if (user) loadCustomerProfile(user);
+            else {
+                if (delofiaProfileUnsubscribe) delofiaProfileUnsubscribe();
+                delofiaProfileUnsubscribe = null; delofiaProfileSyncUid = '';
+                window.customerProfileCache = null; renderCustomerAccountState();
+            }
+        });
 
         window.db = db;
         window.fsDoc = doc;
@@ -2694,7 +2728,24 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         // Wishlist: saved on this browser/device using localStorage.
         let delofiaWishlist = [];
         try { delofiaWishlist = JSON.parse(localStorage.getItem('delofiaWishlist') || '[]').map(String); if (!Array.isArray(delofiaWishlist)) delofiaWishlist = []; } catch (_) { delofiaWishlist = []; }
-        function saveDelofiaWishlist() { try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {} }
+        function saveDelofiaWishlist() {
+            try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {}
+            if (!window.__delofiaApplyingRemoteState && window.customerAuth?.currentUser && typeof window.__delofiaCloudWishlistSync === 'function') {
+                window.__delofiaCloudWishlistSync(delofiaWishlist).catch(error => console.warn('Could not sync Delofia wishlist to account. Check Firestore Rules.', error));
+            }
+        }
+        window.loadDelofiaAccountWishlist = function(accountWishlist, cloudExists = true) {
+            if (cloudExists) {
+                delofiaWishlist = Array.isArray(accountWishlist) ? accountWishlist.map(String) : [];
+                window.__delofiaApplyingRemoteState = true;
+                try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {}
+                updateWishlistBadge(); updateDetailWishlistButton();
+                const modal = document.getElementById('wishlistModal'); if (modal && !modal.classList.contains('hidden')) renderWishlistItems();
+                window.__delofiaApplyingRemoteState = false;
+            } else {
+                saveDelofiaWishlist();
+            }
+        };
         function isInWishlist(productId) { return delofiaWishlist.includes(String(productId)); }
         function updateWishlistBadge() { const count = String(delofiaWishlist.length); ['wishlistCountBadge','mobileWishlistCountBadge'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; }); }
         function updateDetailWishlistButton() {
@@ -3391,27 +3442,31 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             try { localStorage.setItem(DELOFIA_CART_STORAGE_KEY, JSON.stringify(shoppingCart)); }
             catch (error) { console.warn('Could not save Delofia cart in this browser.', error); }
             // If signed in, also save the cart to the customer's Firebase profile so it follows their account across devices.
-            if (window.customerAuth?.currentUser && typeof window.__delofiaCloudCartSync === 'function') {
-                window.__delofiaCloudCartSync(shoppingCart).catch(error => console.warn('Could not sync Delofia cart to account.', error));
+            if (!window.__delofiaApplyingRemoteState && window.customerAuth?.currentUser && typeof window.__delofiaCloudCartSync === 'function') {
+                window.__delofiaCloudCartSync(shoppingCart).catch(error => console.warn('Could not sync Delofia cart to account. Check Firestore Rules.', error));
             }
         }
         let shoppingCart = loadPersistedShoppingCart();
-        // Called after Firebase login has loaded this account's saved cart. Merge guest-only items without duplicating existing lines.
-        window.loadDelofiaAccountCart = function(accountCart) {
+        // Restore the account's cart. Existing cloud cart is authoritative; local guest cart is
+        // migrated only when the account has never saved a cart before.
+        window.loadDelofiaAccountCart = function(accountCart, cloudExists = true) {
             const remote = Array.isArray(accountCart) ? accountCart : [];
-            const merged = remote.filter(item => item && item.productId != null && Number(item.qty) > 0).map(item => ({
+            const normalized = remote.filter(item => item && item.productId != null && Number(item.qty) > 0).map(item => ({
                 ...item, qty: Math.max(1, Math.floor(Number(item.qty) || 1)), unitPrice: Math.max(0, Number(item.unitPrice) || 0),
                 variants: item.variants && typeof item.variants === 'object' ? item.variants : {},
                 key: item.key || cartItemKey(item.productId, item.variants || {})
             }));
-            for (const local of shoppingCart) {
-                const key = local.key || cartItemKey(local.productId, local.variants || {});
-                const existing = merged.find(item => (item.key || cartItemKey(item.productId, item.variants || {})) === key);
-                if (!existing) merged.push({...local, key, variants:{...(local.variants||{})}});
-                else existing.qty = Math.max(Number(existing.qty)||1, Number(local.qty)||1);
+            if (cloudExists) {
+                shoppingCart = normalized;
+                window.__delofiaApplyingRemoteState = true;
+                try { localStorage.setItem(DELOFIA_CART_STORAGE_KEY, JSON.stringify(shoppingCart)); } catch (_) {}
+                updateCartBadge();
+                window.__delofiaApplyingRemoteState = false;
+            } else {
+                // No cloud cart field yet: keep this device's cart and upload it as initial account data.
+                updateCartBadge();
+                if (window.customerAuth?.currentUser) window.__delofiaCloudCartSync?.(shoppingCart).catch(error => console.warn('Initial cart migration failed:', error));
             }
-            shoppingCart = merged;
-            updateCartBadge();
             if (typeof renderCartItems === 'function') renderCartItems();
         };
         let cartCheckoutMode = false;
