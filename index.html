@@ -2176,8 +2176,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         let customerProfileEditMode = false;
         window.pendingLoginCheckout = null;
+        window.pendingLoginVariantBatch = null;
         window.resumePendingLoginCheckout = function() {
-            if (!window.pendingLoginCheckout || !auth.currentUser) return false;
+            if (!auth.currentUser) return false;
+            if (window.pendingLoginVariantBatch && window.pendingLoginVariantBatch.length) {
+                const lines = window.pendingLoginVariantBatch.map(line => ({...line, variants:{...(line.variants||{})}}));
+                window.pendingLoginVariantBatch = null;
+                window.closeCustomerAccount?.();
+                setTimeout(() => { window.startVariantBatchDirectCheckout?.(lines, true); }, 0);
+                return true;
+            }
+            if (!window.pendingLoginCheckout) return false;
             const pending = window.pendingLoginCheckout;
             window.pendingLoginCheckout = null;
             window.closeCustomerAccount?.();
@@ -2217,6 +2226,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             try {
                 const snap = await getDoc(doc(db, 'customerProfiles', user.uid));
                 window.customerProfileCache = snap.exists() ? { ...snap.data(), uid: user.uid } : { uid: user.uid };
+                // Restore this account's cloud cart on every device after login.
+                if (typeof window.loadDelofiaAccountCart === 'function') window.loadDelofiaAccountCart(window.customerProfileCache.cart || []);
                 const label = document.getElementById('customerAccountHeaderLabel');
                 if (label) label.textContent = window.customerProfileCache.name ? window.customerProfileCache.name.split(/\s+/)[0] : 'Account';
                 fillCheckoutFromCustomerProfile(window.customerProfileCache);
@@ -2412,6 +2423,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             });
         }
 
+        // Save cart lines in the signed-in user's own profile document (merge=true preserves profile fields).
+        window.__delofiaCloudCartSync = async function(cart) {
+            const user = auth.currentUser;
+            if (!user || !Array.isArray(cart)) return;
+            const safeCart = cart.map(item => ({
+                key: String(item.key || ''), productId: String(item.productId ?? ''), title: String(item.title || 'Product'),
+                qty: Math.max(1, Math.floor(Number(item.qty) || 1)), variants: item.variants && typeof item.variants === 'object' ? item.variants : {},
+                unitPrice: Math.max(0, Number(item.unitPrice) || 0), image: String(item.image || '')
+            }));
+            await setDoc(doc(db, 'customerProfiles', user.uid), { cart: safeCart, cartUpdatedAt: new Date().toISOString() }, { merge: true });
+        };
         onAuthStateChanged(auth, user => { if (user) loadCustomerProfile(user); else { window.customerProfileCache = null; renderCustomerAccountState(); } });
 
         window.db = db;
@@ -3342,6 +3364,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         let detailQtyVal = 1;
         let selectedVariantChoices = {};
         let pendingVariantLines = []; // multiple color/size combinations selected on one product
+        let pendingVariantDirectOriginalCart = null; // preserve the customer's existing cart during variant Direct Order
         let currentCheckoutVariants = {};
         let currentCheckoutUnitPrice = 0;
         // Persist cart locally so items survive page refreshes in the same browser/device.
@@ -3367,8 +3390,30 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function savePersistedShoppingCart() {
             try { localStorage.setItem(DELOFIA_CART_STORAGE_KEY, JSON.stringify(shoppingCart)); }
             catch (error) { console.warn('Could not save Delofia cart in this browser.', error); }
+            // If signed in, also save the cart to the customer's Firebase profile so it follows their account across devices.
+            if (window.customerAuth?.currentUser && typeof window.__delofiaCloudCartSync === 'function') {
+                window.__delofiaCloudCartSync(shoppingCart).catch(error => console.warn('Could not sync Delofia cart to account.', error));
+            }
         }
         let shoppingCart = loadPersistedShoppingCart();
+        // Called after Firebase login has loaded this account's saved cart. Merge guest-only items without duplicating existing lines.
+        window.loadDelofiaAccountCart = function(accountCart) {
+            const remote = Array.isArray(accountCart) ? accountCart : [];
+            const merged = remote.filter(item => item && item.productId != null && Number(item.qty) > 0).map(item => ({
+                ...item, qty: Math.max(1, Math.floor(Number(item.qty) || 1)), unitPrice: Math.max(0, Number(item.unitPrice) || 0),
+                variants: item.variants && typeof item.variants === 'object' ? item.variants : {},
+                key: item.key || cartItemKey(item.productId, item.variants || {})
+            }));
+            for (const local of shoppingCart) {
+                const key = local.key || cartItemKey(local.productId, local.variants || {});
+                const existing = merged.find(item => (item.key || cartItemKey(item.productId, item.variants || {})) === key);
+                if (!existing) merged.push({...local, key, variants:{...(local.variants||{})}});
+                else existing.qty = Math.max(Number(existing.qty)||1, Number(local.qty)||1);
+            }
+            shoppingCart = merged;
+            updateCartBadge();
+            if (typeof renderCartItems === 'function') renderCartItems();
+        };
         let cartCheckoutMode = false;
 
         // Detect platform & icon for Video Links
@@ -3797,8 +3842,58 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             document.getElementById('detailQty').innerText = detailQtyVal;
         }
 
+        function startVariantBatchDirectCheckout(lines, resumedAfterLogin = false) {
+            if (!Array.isArray(lines) || !lines.length) { alert('আগে অন্তত একটি Color / Size নির্বাচন করে “Add this Color / Size” চাপো।'); return; }
+            const productId = String(lines[0].productId);
+            if (lines.some(line => String(line.productId) !== productId)) { alert('একই পণ্যের ভ্যারিয়েন্টগুলো একসঙ্গে অর্ডার করা যাবে।'); return; }
+            const product = products.find(p => String(p.id) === productId);
+            if (!product || product.stockOut) { alert('এই পণ্যটি এখন স্টকে নেই।'); return; }
+            for (const line of lines) {
+                const qty = Math.max(1, Number(line.qty) || 1);
+                const available = getAvailableStock(product, line.variants || {});
+                if (qty > available) { alert(checkoutStockMessage(product, qty, available, line.variants || {})); return; }
+            }
+            if (!resumedAfterLogin && window.storeSettings?.requireLoginToOrder === true && !(window.customerAuth && window.customerAuth.currentUser)) {
+                window.pendingLoginVariantBatch = lines.map(line => ({...line, variants:{...(line.variants||{})}}));
+                window.openCustomerAccount?.();
+                window.setCustomerAccountMode?.('register');
+                const accountTitle = document.getElementById('customerAccountTitle');
+                if (accountTitle) accountTitle.textContent = 'Login or Create Account to Order';
+                return;
+            }
+            // Keep the shopper's existing cart untouched; checkout temporarily contains only the chosen variants.
+            if (pendingVariantDirectOriginalCart === null) pendingVariantDirectOriginalCart = shoppingCart.map(item => ({...item, variants:{...(item.variants||{})}}));
+            shoppingCart = lines.map(line => ({...line, qty:Math.max(1,Number(line.qty)||1), variants:{...(line.variants||{})}}));
+            updateCartBadge();
+            cartCheckoutMode = true;
+            currentCheckoutProduct = product;
+            currentCheckoutQty = 1;
+            currentCheckoutVariants = {...(shoppingCart[0].variants || {})};
+            currentCheckoutUnitPrice = shoppingCart.reduce((sum, item) => sum + Number(item.unitPrice || 0) * Number(item.qty || 0), 0);
+            appliedDiscount = 0; appliedCouponCode = '';
+            const detailModal = document.getElementById('productDetailModal');
+            if (detailModal) { detailModal.classList.add('hidden'); detailModal.classList.remove('flex'); }
+            renderCheckoutSummary();
+            closeCartModal();
+            updateShippingLabels();
+            const discountInput = document.getElementById('discountInput'); if (discountInput) discountInput.value = '';
+            const discountRow = document.getElementById('discountRow'); if (discountRow) discountRow.classList.add('hidden');
+            const codRadio = document.querySelector('input[name="paymentMethod"][value="cod"]'); if (codRadio) codRadio.checked = true;
+            const txn = document.getElementById('advanceTransactionId'); if (txn) txn.value = '';
+            const shot = document.getElementById('advanceScreenshot'); if (shot) shot.value = '';
+            updatePaymentUI(); applyDistrictShippingRule(); recalculateTotals();
+            const modal = document.getElementById('checkoutModal'); modal.classList.remove('hidden'); modal.classList.add('flex'); pushModalState('checkout');
+            if (window.customerAuth?.currentUser && window.customerProfileCache) fillCheckoutFromCustomerProfile(window.customerProfileCache);
+        }
+        window.startVariantBatchDirectCheckout = startVariantBatchDirectCheckout;
+
         function startCheckoutFromDetail() {
             if (!selectedDetailProd || selectedDetailProd.stockOut) return;
+            // If the shopper added multiple color/size combinations, Direct Order must include every one.
+            if (pendingVariantLines.length) {
+                startVariantBatchDirectCheckout(pendingVariantLines.map(line => ({...line, variants:{...(line.variants||{})}})));
+                return;
+            }
             if (selectedDetailProd.directOrderEnabled === false) return;
             const pId = selectedDetailProd.id;
             const qty = detailQtyVal;
@@ -3897,6 +3992,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function closeCheckoutModal(skipHistoryBack = false) {
             const checkoutModal = document.getElementById('checkoutModal');
             if (checkoutModal) { checkoutModal.classList.add('hidden'); checkoutModal.classList.remove('flex'); }
+            if (pendingVariantDirectOriginalCart !== null) {
+                shoppingCart = pendingVariantDirectOriginalCart.map(item => ({...item, variants:{...(item.variants||{})}}));
+                pendingVariantDirectOriginalCart = null;
+                cartCheckoutMode = false;
+                updateCartBadge();
+                renderCartItems();
+            }
             // Do not call history.back() when closing a modal. Modal state is
             // replaced in the current history entry, so back() could navigate away
             // from the storefront and break the next Direct Order attempt.
@@ -4352,7 +4454,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
 
             lastCompletedOrderMemo = { ...orderObj };
-            if (cartCheckoutMode) { shoppingCart = []; updateCartBadge(); renderCartItems(); }
+            if (cartCheckoutMode) {
+                if (pendingVariantDirectOriginalCart !== null) {
+                    shoppingCart = pendingVariantDirectOriginalCart.map(item => ({...item, variants:{...(item.variants||{})}}));
+                    pendingVariantDirectOriginalCart = null;
+                } else {
+                    shoppingCart = [];
+                }
+                updateCartBadge(); renderCartItems();
+            }
             cartCheckoutMode = false;
             closeCheckoutModal(true);
             // Clear the checkout marker without firing popstate, so the success
