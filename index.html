@@ -57,7 +57,36 @@
         @keyframes delofiaEditPopupIn { to { opacity:1; transform:translate(-50%,-50%) scale(1); } }
         @media(max-width:640px){ #productFormCard.product-edit-active { top:1vh !important; left:2vw !important; transform:none !important; width:96vw !important; max-height:98vh !important; padding:1rem !important; border-radius:14px !important; } @keyframes delofiaEditPopupIn { to { opacity:1; transform:none; } } }
         body.admin-only-mode #adminModal > div { width: 100%; max-width: none; min-height: 100vh; border-radius: 0; }
-    </style>
+    
+/* Focused fix: Product Description Builder and its table controls in dark admin mode */
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor * ,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor * {
+  color: #f4f4f5 !important;
+}
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor input,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor textarea,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor select,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor input,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor textarea,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor select {
+  color: #fafafa !important; background: #27272a !important; border-color: #52525b !important;
+}
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor input::placeholder,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor textarea::placeholder,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor input::placeholder,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor textarea::placeholder { color:#a1a1aa !important; opacity:1 !important; }
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor button,
+body.delofia-admin-dark #adminModal #baseDescriptionTableEditor button { color:#ffffff !important; }
+body.delofia-admin-dark #productFormCard.product-edit-active label[for="prodShowDescriptionTable"],
+body.delofia-admin-dark #productFormCard.product-edit-active label:has(#prodShowDescriptionTable) { color:#f4f4f5 !important; }
+/* Description Builder heading, labels and wrapper were hard-coded to light-theme colors */
+body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bold.text-purple-950,
+body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bold.text-gray-700,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor th,
+body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor td { color:#f4f4f5 !important; }
+</style>
 <style>
 .product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
 .product-photo-dragging { opacity: .58; transform: scale(.96); outline: 3px dashed #7c3aed; outline-offset: -3px; }
@@ -67,6 +96,231 @@
         @media (hover: none) { #productsGrid .group:hover .product-card-image { transform: none; } }
 .product-photo-drop-target { outline: 3px solid #7c3aed; outline-offset: -3px; }
 </style>
+
+<style id="delofiaSidebarThemeStyles">
+/* Storefront-only dark theme; admin forms retain their original appearance. */
+body.delofia-dark-storefront { background:#09090b !important; color:#f4f4f5 !important; }
+body.delofia-dark-storefront > header { background:rgba(9,9,11,.96)!important; border-color:#27272a!important; }
+body.delofia-dark-storefront #brandLogo span:first-child { color:#fafafa!important; }
+body.delofia-dark-storefront #mainContainer { color:#f4f4f5; }
+body.delofia-dark-storefront #mainContainer > div:not(:first-child), body.delofia-dark-storefront #mainContainer .bg-white, body.delofia-dark-storefront #mainContainer .bg-white\/90 { background-color:#18181b!important; border-color:#3f3f46!important; color:#f4f4f5!important; }
+body.delofia-dark-storefront #mainContainer label, body.delofia-dark-storefront #mainContainer h2, body.delofia-dark-storefront #mainContainer h3, body.delofia-dark-storefront #mainContainer p { color:inherit; }
+body.delofia-dark-storefront #mainContainer .text-gray-900, body.delofia-dark-storefront #mainContainer .text-gray-800, body.delofia-dark-storefront #mainContainer .text-gray-700, body.delofia-dark-storefront #mainContainer .text-gray-600, body.delofia-dark-storefront #mainContainer .text-gray-500 { color:#e4e4e7!important; }
+body.delofia-dark-storefront #mainContainer input, body.delofia-dark-storefront #mainContainer select, body.delofia-dark-storefront #mainContainer textarea { background:#27272a!important; color:#fafafa!important; border-color:#52525b!important; }
+body.delofia-dark-storefront #mainContainer input::placeholder, body.delofia-dark-storefront #mainContainer textarea::placeholder { color:#a1a1aa!important; }
+body.delofia-dark-storefront #mainContainer .bg-purple-50, body.delofia-dark-storefront #mainContainer .bg-purple-50\/50, body.delofia-dark-storefront #mainContainer .bg-gray-50, body.delofia-dark-storefront #mainContainer .bg-white\/90 { background-color:#27272a!important; color:#f4f4f5!important; }
+body.delofia-dark-storefront #mainContainer .text-purple-900, body.delofia-dark-storefront #mainContainer .text-purple-800 { color:#e9d5ff!important; }
+body.delofia-dark-storefront #mainContainer .bg-white { background-color:#18181b!important; }
+#delofiaSidebarOverlay { position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:10000; opacity:0; visibility:hidden; transition:opacity .22s ease,visibility .22s ease; }
+#delofiaSidebarOverlay.open { opacity:1; visibility:visible; }
+#delofiaSidebar { position:absolute; left:0; top:0; bottom:0; width:min(86vw,340px); overflow-y:auto; background:#111113; color:#fafafa; border-right:1px solid #333; padding:22px 18px 30px; transform:translateX(-102%); transition:transform .24s ease; box-shadow:20px 0 60px #0008; }
+#delofiaSidebarOverlay.open #delofiaSidebar { transform:translateX(0); }
+#delofiaSidebar button,#delofiaSidebar a { width:100%; display:flex; align-items:center; gap:12px; padding:12px 13px; border-radius:10px; color:#f4f4f5; text-align:left; font-size:14px; }
+#delofiaSidebar button:hover,#delofiaSidebar a:hover { background:#27272a; }
+#delofiaSidebar .sidebar-sub { padding-left:42px; color:#c4b5fd; font-size:13px; }
+#delofiaMenuButton { display:flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background:#18181b; color:#fff; border:1px solid #3f3f46; flex-shrink:0; }
+#delofiaFloatingWhatsapp { position:fixed; right:18px; bottom:20px; z-index:9998; width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:999px; color:#fff; background:#10b981; box-shadow:0 8px 24px #0005; font-size:26px; }
+#delofiaFloatingWhatsapp:hover { transform:translateY(-2px); background:#059669; }
+@media(max-width:640px){ #delofiaFloatingWhatsapp{right:14px;bottom:14px;width:52px;height:52px} }
+
+body.delofia-admin-dark #adminModal, body.delofia-admin-dark #adminModal > div { background:#09090b!important; color:#f4f4f5!important; }
+body.delofia-admin-dark #adminModal [class*="bg-white"], body.delofia-admin-dark #adminModal [class*="bg-purple-50"], body.delofia-admin-dark #adminModal [class*="bg-gray-50"] { background-color:#18181b!important; color:#f4f4f5!important; border-color:#3f3f46!important; }
+body.delofia-admin-dark #adminModal label, body.delofia-admin-dark #adminModal p, body.delofia-admin-dark #adminModal h3, body.delofia-admin-dark #adminModal h4, body.delofia-admin-dark #adminModal h5, body.delofia-admin-dark #adminModal span { color:inherit; }
+body.delofia-admin-dark #adminModal input:not([type="checkbox"]):not([type="radio"]), body.delofia-admin-dark #adminModal select, body.delofia-admin-dark #adminModal textarea { background:#27272a!important;color:#fafafa!important;border-color:#52525b!important; }
+body.delofia-admin-dark #adminModal input::placeholder, body.delofia-admin-dark #adminModal textarea::placeholder { color:#a1a1aa!important; }
+/* Admin light-theme contrast repair: prevent white text on pale/white surfaces. */
+body:not(.delofia-admin-dark) #adminModal { color:#1f2937!important; }
+body:not(.delofia-admin-dark) #adminModal label,
+body:not(.delofia-admin-dark) #adminModal p,
+body:not(.delofia-admin-dark) #adminModal h1,
+body:not(.delofia-admin-dark) #adminModal h2,
+body:not(.delofia-admin-dark) #adminModal h3,
+body:not(.delofia-admin-dark) #adminModal h4,
+body:not(.delofia-admin-dark) #adminModal h5,
+body:not(.delofia-admin-dark) #adminModal td,
+body:not(.delofia-admin-dark) #adminModal th,
+body:not(.delofia-admin-dark) #adminModal small { color:#1f2937; }
+body:not(.delofia-admin-dark) #adminModal .text-white:not(button):not(a):not([class*="bg-purple-"]):not([class*="bg-emerald-"]):not([class*="bg-green-"]):not([class*="bg-red-"]):not([class*="bg-blue-"]):not([class*="bg-indigo-"]):not([class*="bg-pink-"]):not([class*="bg-gray-800"]):not([class*="bg-gray-900"]) { color:#1f2937!important; }
+body:not(.delofia-admin-dark) #adminModal input:not([type="checkbox"]):not([type="radio"]),
+body:not(.delofia-admin-dark) #adminModal select,
+body:not(.delofia-admin-dark) #adminModal textarea { color:#111827!important; background-color:#fff!important; border-color:#d1d5db!important; }
+body:not(.delofia-admin-dark) #adminModal input::placeholder,
+body:not(.delofia-admin-dark) #adminModal textarea::placeholder { color:#6b7280!important; opacity:1; }
+body:not(.delofia-admin-dark) #adminModal select option { color:#111827!important; background:#fff!important; }
+body:not(.delofia-admin-dark) #adminModal .text-gray-100,
+body:not(.delofia-admin-dark) #adminModal .text-gray-200,
+body:not(.delofia-admin-dark) #adminModal .text-gray-300 { color:#374151!important; }
+</style>
+
+
+<style id="delofia-admin-dark-contrast-comprehensive">
+/* Comprehensive dark-admin contrast repair: cover admin panels, nested cards, editors and product edit popup. */
+body.delofia-admin-dark #adminModal,
+body.delofia-admin-dark #adminModal > div,
+body.delofia-admin-dark #productFormCard.product-edit-active {
+  background-color:#09090b !important; color:#f4f4f5 !important;
+}
+body.delofia-admin-dark #adminModal [class*="bg-white"],
+body.delofia-admin-dark #adminModal [class*="bg-gray-50"],
+body.delofia-admin-dark #adminModal [class*="bg-gray-100"],
+body.delofia-admin-dark #adminModal [class*="bg-purple-50"],
+body.delofia-admin-dark #adminModal [class*="bg-indigo-50"],
+body.delofia-admin-dark #adminModal [class*="bg-pink-50"],
+body.delofia-admin-dark #adminModal [class*="bg-blue-50"],
+body.delofia-admin-dark #adminModal [class*="bg-emerald-50"],
+body.delofia-admin-dark #adminModal [class*="bg-green-50"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-white"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-gray-50"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-purple-50"] {
+  background-color:#18181b !important; color:#f4f4f5 !important; border-color:#3f3f46 !important;
+}
+body.delofia-admin-dark #adminModal .text-white:not(button):not(a),
+body.delofia-admin-dark #productFormCard.product-edit-active .text-white:not(button):not(a) {
+  color:#f4f4f5 !important;
+}
+body.delofia-admin-dark #adminModal .text-gray-900,
+body.delofia-admin-dark #adminModal .text-gray-800,
+body.delofia-admin-dark #adminModal .text-gray-700,
+body.delofia-admin-dark #adminModal .text-gray-600,
+body.delofia-admin-dark #adminModal .text-gray-500,
+body.delofia-admin-dark #adminModal .text-gray-400,
+body.delofia-admin-dark #adminModal .text-slate-900,
+body.delofia-admin-dark #adminModal .text-slate-700,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-900,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-800,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-700,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-600,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-500 { color:#e4e4e7 !important; }
+body.delofia-admin-dark #adminModal label,
+body.delofia-admin-dark #adminModal p,
+body.delofia-admin-dark #adminModal h1,
+body.delofia-admin-dark #adminModal h2,
+body.delofia-admin-dark #adminModal h3,
+body.delofia-admin-dark #adminModal h4,
+body.delofia-admin-dark #adminModal h5,
+body.delofia-admin-dark #adminModal td,
+body.delofia-admin-dark #adminModal th,
+body.delofia-admin-dark #adminModal small,
+body.delofia-admin-dark #productFormCard.product-edit-active label,
+body.delofia-admin-dark #productFormCard.product-edit-active p,
+body.delofia-admin-dark #productFormCard.product-edit-active h1,
+body.delofia-admin-dark #productFormCard.product-edit-active h2,
+body.delofia-admin-dark #productFormCard.product-edit-active h3,
+body.delofia-admin-dark #productFormCard.product-edit-active h4,
+body.delofia-admin-dark #productFormCard.product-edit-active small { color:inherit; }
+body.delofia-admin-dark #adminModal input:not([type="checkbox"]):not([type="radio"]),
+body.delofia-admin-dark #adminModal select,
+body.delofia-admin-dark #adminModal textarea,
+body.delofia-admin-dark #productFormCard.product-edit-active input:not([type="checkbox"]):not([type="radio"]),
+body.delofia-admin-dark #productFormCard.product-edit-active select,
+body.delofia-admin-dark #productFormCard.product-edit-active textarea {
+  background:#27272a !important; color:#fafafa !important; border-color:#52525b !important;
+}
+body.delofia-admin-dark #adminModal input::placeholder,
+body.delofia-admin-dark #adminModal textarea::placeholder,
+body.delofia-admin-dark #productFormCard.product-edit-active input::placeholder,
+body.delofia-admin-dark #productFormCard.product-edit-active textarea::placeholder { color:#a1a1aa !important; opacity:1 !important; }
+body.delofia-admin-dark #adminModal select option,
+body.delofia-admin-dark #productFormCard.product-edit-active select option { background:#27272a !important; color:#fafafa !important; }
+</style>
+
+
+<style id="delofia-description-delivery-visibility-final-fix">
+/* Ensure every part of Product Description Builder remains readable in admin dark mode. */
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200,
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 * {
+  color: #f4f4f5 !important;
+}
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 {
+  background: #18181b !important; border-color: #52525b !important;
+}
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 input:not([type="checkbox"]),
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 textarea,
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 select,
+body.delofia-admin-dark #productFormCard #baseDescriptionTableEditor input,
+body.delofia-admin-dark #productFormCard #baseDescriptionTableEditor textarea,
+body.delofia-admin-dark #productFormCard #prodDesc {
+  background: #27272a !important; color: #fafafa !important; border-color: #52525b !important;
+}
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 input::placeholder,
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 textarea::placeholder,
+body.delofia-admin-dark #productFormCard #prodDesc::placeholder { color: #a1a1aa !important; opacity: 1 !important; }
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 label,
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 p,
+body.delofia-admin-dark #productFormCard #baseDescriptionTableEditor th,
+body.delofia-admin-dark #productFormCard #baseDescriptionTableEditor td { color: #f4f4f5 !important; }
+body.delofia-admin-dark #productFormCard .rounded-2xl.border-2.border-purple-200 label:has(input[type="checkbox"]) { background: #27272a !important; border-color: #52525b !important; }
+body.delofia-admin-dark #productFormCard #baseDescriptionTableEditor button { color: #fff !important; }
+/* Make shipping area/fee text readable in the Direct Orders table in admin dark mode. */
+body.delofia-admin-dark #ordersTableBody,
+body.delofia-admin-dark #ordersTableBody tr,
+body.delofia-admin-dark #ordersTableBody td,
+body.delofia-admin-dark #ordersTableBody td * { color: #f4f4f5 !important; }
+body.delofia-admin-dark #adminTabOrders > div.bg-white,
+body.delofia-admin-dark #adminTabOrders .bg-white { background: #18181b !important; border-color: #3f3f46 !important; }
+body.delofia-admin-dark #adminTabOrders thead,
+body.delofia-admin-dark #adminTabOrders thead * { background: #27272a !important; color: #f4f4f5 !important; }
+body.delofia-admin-dark #ordersTableBody tr { background: #18181b !important; border-color: #3f3f46 !important; }
+</style>
+
+<style id="delofia-followup-visibility-fixes">
+/* Follow-up dark-admin visibility fixes: shipping rows, action buttons, stock-out label, video badge and session note */
+body.delofia-admin-dark #ordersTableBody tr,
+body.delofia-admin-dark #ordersTableBody td,
+body.delofia-admin-dark #ordersTableBody th { color:#f4f4f5 !important; }
+body.delofia-admin-dark #ordersTableBody td { background-color:#18181b !important; border-color:#3f3f46 !important; }
+body.delofia-admin-dark #ordersTableBody tr:nth-child(even) td { background-color:#202024 !important; }
+body.delofia-admin-dark #adminTabOrders table thead,
+body.delofia-admin-dark #adminTabOrders table thead th { background-color:#27272a !important; color:#fafafa !important; border-color:#3f3f46 !important; }
+body.delofia-admin-dark #ordersTableBody button,
+body.delofia-admin-dark #ordersTableBody a { visibility:visible !important; opacity:1 !important; }
+body.delofia-admin-dark #ordersTableBody button { color:#fff !important; }
+body.delofia-admin-dark #ordersTableBody button.bg-red-100,
+body.delofia-admin-dark #ordersTableBody button[class*="text-red"] { background-color:#991b1b !important; color:#fff !important; }
+body.delofia-admin-dark #productFormCard label:has(#prodStockOut),
+body.delofia-admin-dark label:has(#prodStockOut) { background-color:#3f1518 !important; border-color:#7f1d1d !important; color:#fecaca !important; }
+body.delofia-admin-dark label:has(#prodStockOut) input#prodStockOut { accent-color:#ef4444 !important; }
+body.delofia-admin-dark span.bg-emerald-100.text-emerald-800,
+body.delofia-admin-dark .bg-emerald-100.text-emerald-800 { background-color:#064e3b !important; color:#d1fae5 !important; border:1px solid #047857 !important; }
+body.delofia-admin-dark #adminTabSessions p.bg-amber-50,
+body.delofia-admin-dark #adminTabSessions p[class*="bg-amber-50"] { background-color:#422006 !important; color:#fef3c7 !important; border-color:#92400e !important; }
+body.delofia-admin-dark #adminTabSessions p.bg-amber-50 * { color:#fef3c7 !important; }
+</style>
+
+<style id="delofia-final-visibility-and-category-order">
+/* Strong contrast for shipping area/fee and action controls in dark admin */
+body.delofia-admin-dark #ordersTableBody td, body.delofia-admin-dark #ordersTableBody td *, body.delofia-admin-dark #ordersTableBody button { color:#f9fafb !important; opacity:1 !important; }
+body.delofia-admin-dark #ordersTableBody td { background:#18181b !important; }
+body.delofia-admin-dark #ordersTableBody td button { background:#3f3f46 !important; border:1px solid #71717a !important; }
+body.delofia-admin-dark #ordersTableBody td button.bg-red-100, body.delofia-admin-dark #ordersTableBody td button.text-red-600 { background:#7f1d1d !important; color:#fff !important; }
+body.delofia-admin-dark #productFormCard label:has(input[type=checkbox]), body.delofia-admin-dark #productFormCard label:has(#prodStockOut), body.delofia-admin-dark #productFormCard #prodStockOut + span { color:#f9fafb !important; background:#27272a !important; }
+body.delofia-admin-dark #productFormCard input[type=checkbox] + span { color:#f9fafb !important; }
+body.delofia-admin-dark #adminCategoryList, body.delofia-admin-dark #adminCategoryList * { color:#f4f4f5 !important; }
+body.delofia-admin-dark #adminCategoryList .bg-purple-50\/50 { background:#27272a !important; border-color:#52525b !important; }
+body.delofia-admin-dark #adminCategoryList button { color:#fff !important; }
+</style>
+
+
+<style id="delofia-shipping-badge-final-fix">
+/* Final targeted fix: order list Shipping Area & Fee badge (Outside Dhaka) and fee in admin dark theme. */
+#adminTabOrders #ordersTableBody td:nth-child(4) span.bg-purple-100,
+#adminTabOrders #ordersTableBody td:nth-child(4) span[class*="text-purple-800"] {
+  background-color:#5b21b6 !important; color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important; opacity:1 !important;
+}
+#adminTabOrders #ordersTableBody td:nth-child(4) div {
+  color:#f4f4f5 !important; -webkit-text-fill-color:#f4f4f5 !important; opacity:1 !important;
+}
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4),
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) * {
+  color:#f4f4f5 !important; -webkit-text-fill-color:#f4f4f5 !important; opacity:1 !important;
+}
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span.bg-purple-100,
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span[class*="text-purple-800"] {
+  background-color:#5b21b6 !important; color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
@@ -78,8 +332,9 @@
     <!-- Navigation Header -->
     <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-purple-100 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <button id="delofiaMenuButton" type="button" onclick="toggleDelofiaSidebar(true)" aria-label="Open menu" title="Menu"><i class="fas fa-bars"></i></button>
             <!-- Brand Logo -->
-            <a href="#" id="brandLogo" onclick="showPage('home')" class="flex items-center gap-2 group" aria-label="Delofia home">
+            <a href="#" id="brandLogo" class="flex items-center gap-2 group" aria-label="Delofia home">
                 <div id="brandLogoMark" class="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition overflow-hidden">D</div>
                 <div>
                     <span class="text-2xl font-black tracking-wider text-purple-900 block leading-none">DELOFIA</span>
@@ -104,6 +359,32 @@
             </div>
         </div>
     </header>
+
+
+    <div id="delofiaSidebarOverlay" onclick="if(event.target===this)toggleDelofiaSidebar(false)" aria-hidden="true">
+      <aside id="delofiaSidebar" role="dialog" aria-modal="true" aria-label="Store navigation">
+        <div class="flex items-center justify-between mb-5 pb-4 border-b border-zinc-700">
+          <div><div class="font-black tracking-widest text-xl">DELOFIA</div><div class="text-xs text-violet-300">Draft · Dreamy · Delicacy</div></div>
+          <button type="button" onclick="toggleDelofiaSidebar(false)" aria-label="Close menu" style="width:38px;justify-content:center;background:#27272a"><i class="fas fa-times"></i></button>
+        </div>
+        <button type="button" onclick="delofiaSidebarHome()"><i class="fas fa-house text-violet-300"></i> Home / Show all products</button>
+        <button type="button" onclick="delofiaSidebarAllCategories()"><i class="fas fa-layer-group text-violet-300"></i> All Categories</button>
+        <div class="mt-3 mb-2 px-3 text-xs uppercase tracking-widest text-zinc-400">Categories</div>
+        <div id="delofiaSidebarCategories"></div>
+        <button type="button" onclick="toggleDelofiaSidebar(false);delofiaSidebarHome()"><i class="fas fa-house text-violet-300"></i> Home / Show all products</button>
+        <button type="button" onclick="toggleDelofiaSidebar(false);openCartModal()"><i class="fas fa-shopping-cart text-violet-300"></i> My Cart</button>
+        <div class="mt-4 pt-4 border-t border-zinc-700">
+          <div class="text-xs uppercase tracking-widest text-zinc-400 mb-2 px-1">Appearance</div>
+          <button id="delofiaCustomerThemeToggle" type="button" onclick="toggleCustomerTheme()"><i class="fas fa-sun text-amber-300"></i><span id="delofiaCustomerThemeLabel">Switch to Light Theme</span></button>
+        </div>
+        <div class="mt-4 pt-4 border-t border-zinc-700 flex gap-2">
+          <a id="delofiaSidebarFacebook" href="#" target="_blank" rel="noopener noreferrer" aria-label="Facebook" style="width:44px;justify-content:center;background:#1877f2"><i class="fab fa-facebook-f"></i></a>
+          <a id="delofiaSidebarInstagram" href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style="width:44px;justify-content:center;background:#d62976"><i class="fab fa-instagram"></i></a>
+          <a id="delofiaSidebarWhatsapp" href="https://wa.me/8801410947236" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" style="width:44px;justify-content:center;background:#10b981"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </aside>
+    </div>
+    <a id="delofiaFloatingWhatsapp" href="https://wa.me/8801410947236" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" title="Chat on WhatsApp"><i class="fab fa-whatsapp"></i></a>
 
     <main id="mainContainer" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
@@ -533,9 +814,6 @@
     <div id="adminModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
         <div class="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden my-auto relative border border-purple-200">
             
-            <button onclick="closeAdminModal()" class="absolute top-4 right-4 z-30 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition">
-                <i class="fas fa-times text-lg"></i>
-            </button>
 
             <!-- Login View -->
             <div id="adminLoginView" class="p-8 sm:p-12 max-w-md mx-auto text-center">
@@ -765,6 +1043,14 @@
                                 <div id="adminCategoryList" class="space-y-2"></div>
                             </div>
                             
+                            <div class="border-t border-purple-100 pt-4 mt-4 space-y-3">
+                                <h5 class="font-bold text-purple-900 text-sm mb-1">Theme & Appearance</h5>
+                                <p class="text-xs text-gray-500">Admin panel এবং customer website-এর default theme আলাদাভাবে নির্বাচন করো। Customer চাইলে sidebar থেকে নিজের theme বদলাতে পারবে।</p>
+                                <label class="block text-xs font-bold text-gray-700">Main website default theme</label>
+                                <select id="settingStorefrontTheme" class="w-full border rounded-xl p-3 text-sm"><option value="light">Light</option><option value="dark">Dark</option></select>
+                                <label class="block text-xs font-bold text-gray-700">Admin panel theme</label>
+                                <select id="settingAdminTheme" class="w-full border rounded-xl p-3 text-sm"><option value="light">Light</option><option value="dark">Dark</option></select>
+                            </div>
                             <div class="border-t border-purple-100 pt-4 mt-4 space-y-3">
                                 <h5 class="font-bold text-purple-900 text-sm mb-1">Main Page Product Photo Animation</h5>
                                 <p class="text-xs text-gray-500">শুধু main page-এর product card-এ ছবিগুলো নিজে নিজে বদলাবে। Product-এ click করে details খুললে auto change হবে না।</p>
@@ -1093,6 +1379,7 @@
                     window.renderSocialLinks();
                     window.applyStoreLogo();
                     window.applyStorefrontContent?.();
+                    window.applyConfiguredThemes?.();
                     window.renderProducts(document.getElementById('searchInput')?.value || '');
                 }
             });
@@ -1102,10 +1389,12 @@
                     const data = snapshot.data();
                     if (data.tree) {
                         window.categoryTree = data.tree;
+                        window.categoryOrder = Array.isArray(data.order) ? data.order.filter(c => Object.prototype.hasOwnProperty.call(data.tree, c)) : Object.keys(data.tree).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
                     } else if (data.list) {
                         const tree = {};
                         data.list.forEach(c => tree[c] = []);
                         window.categoryTree = tree;
+                        window.categoryOrder = Object.keys(tree).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
                     }
                     window.renderCategoryControls();
                 }
@@ -1166,6 +1455,7 @@
 
         window.products = [];
         window.__productsSnapshotLoaded = false;
+        window.categoryOrder = [];
         window.categoryTree = {
             'Hot Water Bags': ['Plush Water Bag', 'Velvet Water Bag', 'Electric Water Bag', 'Pocket system'],
             'Dresses': ['Casual Wear', 'Party Dress'],
@@ -1174,7 +1464,7 @@
             'Other': []
         };
         window.orders = [];
-        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
+        window.storeSettings = { whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, storefrontTheme: 'dark', adminTheme: 'light', heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
         window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {} };
         window.paymentSettings = { advanceEnabled: false, advanceAmount: 100, bkashAccount: '', nagadAccount: '', bankAccount: '' };
         window.coupons = {};
@@ -1312,6 +1602,94 @@
             }, 250);
         }
 
+
+        function toggleDelofiaSidebar(open) {
+            const overlay = document.getElementById('delofiaSidebarOverlay');
+            if (!overlay) return;
+            const shouldOpen = typeof open === 'boolean' ? open : !overlay.classList.contains('open');
+            overlay.classList.toggle('open', shouldOpen);
+            overlay.setAttribute('aria-hidden', String(!shouldOpen));
+            document.body.style.overflow = shouldOpen ? 'hidden' : '';
+            if (shouldOpen) renderDelofiaSidebarCategories();
+        }
+        function delofiaSidebarHome() {
+            toggleDelofiaSidebar(false);
+            if (typeof showPage === 'function') showPage('home');
+            const filter = document.getElementById('categoryFilter');
+            const sub = document.getElementById('subCategoryFilter');
+            if (filter) filter.value = 'all';
+            if (sub) sub.value = 'all';
+            if (typeof onCustomerCategoryChange === 'function') onCustomerCategoryChange();
+            if (typeof filterProducts === 'function') filterProducts();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function delofiaSidebarAllCategories() {
+            toggleDelofiaSidebar(false);
+            const filter = document.getElementById('categoryFilter');
+            if (filter) { filter.value = 'all'; if (typeof onCustomerCategoryChange === 'function') onCustomerCategoryChange(); }
+            const sub = document.getElementById('subCategoryFilter'); if (sub) sub.value = 'all';
+            if (typeof filterProducts === 'function') filterProducts();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+        function renderDelofiaSidebarCategories() {
+            const box = document.getElementById('delofiaSidebarCategories');
+            if (!box) return;
+            const tree = window.categoryTree || {};
+            box.innerHTML = '';
+            // Respect the order chosen in Admin Panel; alphabetize only categories
+            // that have not yet been assigned a saved position.
+            const orderedNames = typeof getOrderedCategoryNames === 'function'
+                ? getOrderedCategoryNames()
+                : Object.keys(tree).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+            orderedNames.forEach(category => {
+                const subs = tree[category] || [];
+                const wrap = document.createElement('div');
+                const btn = document.createElement('button');
+                btn.type = 'button'; btn.innerHTML = '<i class="fas fa-tag text-violet-300"></i><span class="flex-1"></span><i class="fas fa-chevron-down text-xs"></i>';
+                btn.querySelector('span').textContent = category;
+                const subBox = document.createElement('div'); subBox.className = 'hidden';
+                btn.addEventListener('click', () => {
+                    const filter = document.getElementById('categoryFilter');
+                    if (filter) { filter.value = category; if (typeof onCustomerCategoryChange === 'function') onCustomerCategoryChange(); }
+                    subBox.classList.toggle('hidden');
+                });
+                (subs || []).forEach(sub => {
+                    const sb = document.createElement('button'); sb.type='button'; sb.className='sidebar-sub'; sb.textContent=sub;
+                    sb.addEventListener('click', (ev) => { ev.stopPropagation(); const filter=document.getElementById('categoryFilter'); const sf=document.getElementById('subCategoryFilter'); if(filter){filter.value=category; if(typeof onCustomerCategoryChange==='function') onCustomerCategoryChange();} if(sf){sf.value=sub; if(typeof filterProducts==='function') filterProducts();} toggleDelofiaSidebar(false); document.getElementById('mainContainer')?.scrollIntoView({behavior:'smooth'}); });
+                    subBox.appendChild(sb);
+                });
+                wrap.appendChild(btn); wrap.appendChild(subBox); box.appendChild(wrap);
+            });
+            const fb = document.getElementById('delofiaSidebarFacebook'); const ig = document.getElementById('delofiaSidebarInstagram'); const wa = document.getElementById('delofiaSidebarWhatsapp');
+            if (fb) { fb.href = /^https?:\/\//i.test(storeSettings.facebookUrl||'') ? storeSettings.facebookUrl : '#'; fb.style.display=fb.href.endsWith('#')?'none':'flex'; }
+            if (ig) { ig.href = /^https?:\/\//i.test(storeSettings.instagramUrl||'') ? storeSettings.instagramUrl : '#'; ig.style.display=ig.href.endsWith('#')?'none':'flex'; }
+            if (wa) { wa.href = `https://wa.me/${typeof getWhatsappDigits==='function'?getWhatsappDigits():'8801410947236'}`; wa.style.display = storeSettings.whatsappEnabled===false?'none':'flex'; }
+            const floating = document.getElementById('delofiaFloatingWhatsapp'); if (floating) { floating.href=`https://wa.me/${typeof getWhatsappDigits==='function'?getWhatsappDigits():'8801410947236'}`; floating.style.display=storeSettings.whatsappEnabled===false?'none':'flex'; }
+        }
+        window.toggleDelofiaSidebar = toggleDelofiaSidebar;
+        window.renderDelofiaSidebarCategories = renderDelofiaSidebarCategories;
+
+        function getOrderedCategoryNames() {
+            const tree = window.categoryTree || {};
+            const names = Object.keys(tree);
+            const saved = Array.isArray(window.categoryOrder) ? window.categoryOrder.filter(c => names.includes(c)) : [];
+            const missing = names.filter(c => !saved.includes(c)).sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
+            return [...saved, ...missing];
+        }
+        async function moveCategoryOrder(cat, delta) {
+            const names = getOrderedCategoryNames();
+            const i = names.indexOf(cat), j = i + delta;
+            if (i < 0 || j < 0 || j >= names.length) return;
+            [names[i], names[j]] = [names[j], names[i]];
+            window.categoryOrder = names;
+            if (window.db) {
+                try { await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: window.categoryTree, order: names }); }
+                catch (e) { console.error(e); alert('Category order save failed. Please try again.'); return; }
+            }
+            renderCategoryControls();
+            if (typeof renderDelofiaSidebarCategories === 'function') renderDelofiaSidebarCategories();
+        }
+
         function renderCategoryControls() {
             const filter = document.getElementById('categoryFilter');
             const parentSelect = document.getElementById('parentCategoryForSub');
@@ -1319,7 +1697,7 @@
             const adminList = document.getElementById('adminCategoryList');
 
             const tree = window.categoryTree || {};
-            const categories = Object.keys(tree);
+            const categories = getOrderedCategoryNames();
 
             if (filter) {
                 const oldValue = filter.value || 'all';
@@ -1353,9 +1731,13 @@
                     `).join(' ');
 
                     wrap.innerHTML = `
-                        <div class="flex items-center justify-between mb-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <strong class="text-sm text-purple-900">${escapeHtml(cat)}</strong>
-                            <button type="button" onclick="removeMainCategory('${escapeHtml(cat)}')" class="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-md font-bold">Delete Category</button>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="moveCategoryOrder('${escapeHtml(cat)}', -1)" title="Move up" class="text-xs bg-zinc-700 text-white px-2 py-1 rounded-md font-bold">↑ Up</button>
+                                <button type="button" onclick="moveCategoryOrder('${escapeHtml(cat)}', 1)" title="Move down" class="text-xs bg-zinc-700 text-white px-2 py-1 rounded-md font-bold">↓ Down</button>
+                                <button type="button" onclick="removeMainCategory('${escapeHtml(cat)}')" class="text-xs bg-red-700 text-white px-2 py-1 rounded-md font-bold">Delete Category</button>
+                            </div>
                         </div>
                         <div class="flex flex-wrap gap-1">
                             ${subsHtml || '<span class="text-xs text-gray-400">No sub-categories</span>'}
@@ -1418,10 +1800,11 @@
             if (!name) return alert('Enter category name.');
             if (categoryTree[name]) return alert('Already exists.');
             categoryTree[name] = [];
+            window.categoryOrder = [...new Set([...(window.categoryOrder || []), name])].sort((a,b)=>a.localeCompare(b, undefined, {sensitivity:'base'}));
             input.value = '';
             
             if (window.db) {
-                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree });
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree, order: getOrderedCategoryNames() });
             }
             renderCategoryControls();
         }
@@ -1438,7 +1821,7 @@
             input.value = '';
 
             if (window.db) {
-                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree });
+                await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree, order: getOrderedCategoryNames() });
             }
             renderCategoryControls();
         }
@@ -1447,7 +1830,7 @@
             if (confirm(`Delete category "${cat}"?`)) {
                 delete categoryTree[cat];
                 if (window.db) {
-                    await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree });
+                    await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree, order: getOrderedCategoryNames() });
                 }
                 renderCategoryControls();
             }
@@ -1457,7 +1840,7 @@
             if (categoryTree[cat]) {
                 categoryTree[cat] = categoryTree[cat].filter(s => s !== sub);
                 if (window.db) {
-                    await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree });
+                    await window.fsSetDoc(window.fsDoc(window.db, "settings", "categories"), { tree: categoryTree, order: getOrderedCategoryNames() });
                 }
                 renderCategoryControls();
             }
@@ -1532,6 +1915,8 @@
                 storeSettings.otherSocialUrl = document.getElementById('settingOtherSocialUrl')?.value.trim() || '';
                 storeSettings.productPhotoAutoRotate = !!document.getElementById('settingProductPhotoAutoRotate')?.checked;
                 storeSettings.productPhotoInterval = Math.max(2, Math.min(10, Number(document.getElementById('settingProductPhotoInterval')?.value) || 4));
+                storeSettings.storefrontTheme = document.getElementById('settingStorefrontTheme')?.value === 'dark' ? 'dark' : 'light';
+                storeSettings.adminTheme = document.getElementById('settingAdminTheme')?.value === 'dark' ? 'dark' : 'light';
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
                 Object.entries(settingTextFields).forEach(([key, id]) => { const field = document.getElementById(id); if (field) storeSettings[key] = field.value.trim(); });
                 if (!window.db || typeof window.fsSetDoc !== 'function' || typeof window.fsDoc !== 'function') {
@@ -1539,6 +1924,7 @@
                 }
                 if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
                 await window.fsSetDoc(window.fsDoc(window.db, 'settings', 'store'), storeSettings);
+                applyConfiguredThemes();
                 pendingStoreLogo = null;
                 applyStoreLogo(); updateWhatsappUI(); renderSocialLinks(); applyStorefrontContent();
                 renderProducts(document.getElementById('searchInput')?.value || '');
@@ -1570,6 +1956,28 @@
             Object.entries(fields).forEach(([id, pair]) => { const el = document.getElementById(id); if (el) el.textContent = String(storeSettings[pair[0]] ?? pair[1]); });
         }
         window.applyStorefrontContent = applyStorefrontContent;
+        function applyStorefrontTheme(theme) {
+            document.body.classList.toggle('delofia-dark-storefront', theme === 'dark');
+            const label = document.getElementById('delofiaCustomerThemeLabel');
+            if (label) label.textContent = theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+            const icon = document.querySelector('#delofiaCustomerThemeToggle i');
+            if (icon) icon.className = theme === 'dark' ? 'fas fa-sun text-amber-300' : 'fas fa-moon text-violet-300';
+        }
+        function applyConfiguredThemes() {
+            let customerTheme = storeSettings.storefrontTheme === 'dark' ? 'dark' : 'light';
+            try { const saved = localStorage.getItem('delofiaCustomerTheme'); if (saved === 'dark' || saved === 'light') customerTheme = saved; } catch (_) {}
+            applyStorefrontTheme(customerTheme);
+            document.body.classList.toggle('delofia-admin-dark', storeSettings.adminTheme === 'dark');
+        }
+        function toggleCustomerTheme() {
+            const next = document.body.classList.contains('delofia-dark-storefront') ? 'light' : 'dark';
+            try { localStorage.setItem('delofiaCustomerTheme', next); } catch (_) {}
+            applyStorefrontTheme(next);
+        }
+        window.toggleCustomerTheme = toggleCustomerTheme;
+        window.applyConfiguredThemes = applyConfiguredThemes;
+        applyConfiguredThemes();
+        renderDelofiaSidebarCategories();
 
         function renderSocialLinks() {
             const container = document.getElementById('socialMediaLinks');
@@ -1595,6 +2003,7 @@
         }
 
         function updateWhatsappUI() {
+            const floatingWhatsApp = document.getElementById("delofiaFloatingWhatsapp"); if (floatingWhatsApp) { floatingWhatsApp.href = `https://wa.me/${getWhatsappDigits()}`; floatingWhatsApp.classList.toggle("hidden", !storeSettings.whatsappEnabled); }
             const enabled = !!storeSettings.whatsappEnabled;
             document.querySelectorAll('a[href*="wa.me/"]').forEach(a => {
                 a.classList.toggle('hidden', !enabled);
@@ -2350,7 +2759,79 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 .support{margin-top:24px;padding:16px;border-radius:10px;background:#f5f0ff;font-size:13px;line-height:1.7}.foot{text-align:center;color:#777;font-size:11px;margin-top:22px}
 @media print{body{padding:0}.memo{max-width:none;border-radius:0;min-height:95vh}.no-print{display:none!important}@page{size:A4;margin:12mm}}
 @media(max-width:560px){body{padding:10px}.memo{padding:16px}.head{flex-direction:column}.watermark{font-size:42px}.grid{grid-template-columns:1fr}}
-</style></head><body><main class="memo"><div class="watermark">DELOFIA</div><div class="content">
+</style>
+<style id="delofia-admin-dark-contrast-comprehensive">
+/* Comprehensive dark-admin contrast repair: cover admin panels, nested cards, editors and product edit popup. */
+body.delofia-admin-dark #adminModal,
+body.delofia-admin-dark #adminModal > div,
+body.delofia-admin-dark #productFormCard.product-edit-active {
+  background-color:#09090b !important; color:#f4f4f5 !important;
+}
+body.delofia-admin-dark #adminModal [class*="bg-white"],
+body.delofia-admin-dark #adminModal [class*="bg-gray-50"],
+body.delofia-admin-dark #adminModal [class*="bg-gray-100"],
+body.delofia-admin-dark #adminModal [class*="bg-purple-50"],
+body.delofia-admin-dark #adminModal [class*="bg-indigo-50"],
+body.delofia-admin-dark #adminModal [class*="bg-pink-50"],
+body.delofia-admin-dark #adminModal [class*="bg-blue-50"],
+body.delofia-admin-dark #adminModal [class*="bg-emerald-50"],
+body.delofia-admin-dark #adminModal [class*="bg-green-50"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-white"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-gray-50"],
+body.delofia-admin-dark #productFormCard.product-edit-active [class*="bg-purple-50"] {
+  background-color:#18181b !important; color:#f4f4f5 !important; border-color:#3f3f46 !important;
+}
+body.delofia-admin-dark #adminModal .text-white:not(button):not(a),
+body.delofia-admin-dark #productFormCard.product-edit-active .text-white:not(button):not(a) {
+  color:#f4f4f5 !important;
+}
+body.delofia-admin-dark #adminModal .text-gray-900,
+body.delofia-admin-dark #adminModal .text-gray-800,
+body.delofia-admin-dark #adminModal .text-gray-700,
+body.delofia-admin-dark #adminModal .text-gray-600,
+body.delofia-admin-dark #adminModal .text-gray-500,
+body.delofia-admin-dark #adminModal .text-gray-400,
+body.delofia-admin-dark #adminModal .text-slate-900,
+body.delofia-admin-dark #adminModal .text-slate-700,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-900,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-800,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-700,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-600,
+body.delofia-admin-dark #productFormCard.product-edit-active .text-gray-500 { color:#e4e4e7 !important; }
+body.delofia-admin-dark #adminModal label,
+body.delofia-admin-dark #adminModal p,
+body.delofia-admin-dark #adminModal h1,
+body.delofia-admin-dark #adminModal h2,
+body.delofia-admin-dark #adminModal h3,
+body.delofia-admin-dark #adminModal h4,
+body.delofia-admin-dark #adminModal h5,
+body.delofia-admin-dark #adminModal td,
+body.delofia-admin-dark #adminModal th,
+body.delofia-admin-dark #adminModal small,
+body.delofia-admin-dark #productFormCard.product-edit-active label,
+body.delofia-admin-dark #productFormCard.product-edit-active p,
+body.delofia-admin-dark #productFormCard.product-edit-active h1,
+body.delofia-admin-dark #productFormCard.product-edit-active h2,
+body.delofia-admin-dark #productFormCard.product-edit-active h3,
+body.delofia-admin-dark #productFormCard.product-edit-active h4,
+body.delofia-admin-dark #productFormCard.product-edit-active small { color:inherit; }
+body.delofia-admin-dark #adminModal input:not([type="checkbox"]):not([type="radio"]),
+body.delofia-admin-dark #adminModal select,
+body.delofia-admin-dark #adminModal textarea,
+body.delofia-admin-dark #productFormCard.product-edit-active input:not([type="checkbox"]):not([type="radio"]),
+body.delofia-admin-dark #productFormCard.product-edit-active select,
+body.delofia-admin-dark #productFormCard.product-edit-active textarea {
+  background:#27272a !important; color:#fafafa !important; border-color:#52525b !important;
+}
+body.delofia-admin-dark #adminModal input::placeholder,
+body.delofia-admin-dark #adminModal textarea::placeholder,
+body.delofia-admin-dark #productFormCard.product-edit-active input::placeholder,
+body.delofia-admin-dark #productFormCard.product-edit-active textarea::placeholder { color:#a1a1aa !important; opacity:1 !important; }
+body.delofia-admin-dark #adminModal select option,
+body.delofia-admin-dark #productFormCard.product-edit-active select option { background:#27272a !important; color:#fafafa !important; }
+</style>
+
+</head><body><main class="memo"><div class="watermark">DELOFIA</div><div class="content">
 <div class="head"><div><h1>DELOFIA</h1><small>Premium Fashion & Lifestyle Store</small><br><small>Customer Order Memo</small></div><div><span class="tag">${escapeHtml(o.paymentMethod === 'advance' ? 'ADVANCE PAYMENT' : 'CASH ON DELIVERY')}</span><p><strong>Order ID:</strong> ${escapeHtml(o.orderId)}<br><strong>Date:</strong> ${escapeHtml(o.date)}</p></div></div>
 <h2>Customer Information</h2><div class="grid">
 <div class="field"><strong>Name</strong><br>${escapeHtml(o.customerName)}</div>
@@ -2417,15 +2898,20 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
             const brandLogo = document.getElementById('brandLogo');
             if (!brandLogo) return;
             brandLogo.addEventListener('click', function(event) {
+                event.preventDefault();
                 adminLogoTapCount++;
                 clearTimeout(adminLogoTapTimer);
-                adminLogoTapTimer = setTimeout(() => { adminLogoTapCount = 0; }, 2200);
                 if (adminLogoTapCount >= 5) {
-                    event.preventDefault();
                     adminLogoTapCount = 0;
-                    clearTimeout(adminLogoTapTimer);
                     openAdminModal();
+                    return;
                 }
+                // Wait briefly: a single tap refreshes, five quick taps open admin.
+                adminLogoTapTimer = setTimeout(() => {
+                    const taps = adminLogoTapCount;
+                    adminLogoTapCount = 0;
+                    if (taps > 0 && taps < 5) window.location.reload();
+                }, 900);
             });
         });
         document.addEventListener('keydown', function(event) {
@@ -2588,6 +3074,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 const textSettingsMap = { settingHeroBadge: ['heroBadge', 'Exclusive Offers'], settingHeroTitle: ['heroTitle', '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .'], settingHeroDescription: ['heroDescription', 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.'], settingHeroShopText: ['heroShopText', 'Shop Now'], settingHeroWhatsappText: ['heroWhatsappText', 'Instant WhatsApp Order'], settingFooterBrand: ['footerBrand', 'DELOFIA'], settingFooterDescription: ['footerDescription', 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.'], settingFooterContactHeading: ['footerContactHeading', 'Quick Contact'], settingFooterDeliveryHeading: ['footerDeliveryHeading', 'Delivery Information'], settingFooterInsideDelivery: ['footerInsideDelivery', 'Inside Dhaka: Fast Delivery'], settingFooterOutsideDelivery: ['footerOutsideDelivery', 'Outside Dhaka: Cash on delivery nationwide'], settingFooterFollowHeading: ['footerFollowHeading', 'Follow Delofia'], settingFooterCopyright: ['footerCopyright', '© 2026 Delofia E-Commerce Store. All rights reserved.'] }; Object.entries(textSettingsMap).forEach(([id, pair]) => { const field = document.getElementById(id); if (field) field.value = storeSettings[pair[0]] ?? pair[1]; });
                 const autoRotateField = document.getElementById('settingProductPhotoAutoRotate'); if (autoRotateField) autoRotateField.checked = !!storeSettings.productPhotoAutoRotate;
                 const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
+                const sfTheme = document.getElementById('settingStorefrontTheme'); if (sfTheme) sfTheme.value = storeSettings.storefrontTheme || 'dark';
+                const adTheme = document.getElementById('settingAdminTheme'); if (adTheme) adTheme.value = storeSettings.adminTheme || 'light';
                 pendingStoreLogo = null; applyStoreLogo();
             }
         }
@@ -2608,6 +3096,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
                 const textSettingsMap = { settingHeroBadge: ['heroBadge', 'Exclusive Offers'], settingHeroTitle: ['heroTitle', '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .'], settingHeroDescription: ['heroDescription', 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.'], settingHeroShopText: ['heroShopText', 'Shop Now'], settingHeroWhatsappText: ['heroWhatsappText', 'Instant WhatsApp Order'], settingFooterBrand: ['footerBrand', 'DELOFIA'], settingFooterDescription: ['footerDescription', 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.'], settingFooterContactHeading: ['footerContactHeading', 'Quick Contact'], settingFooterDeliveryHeading: ['footerDeliveryHeading', 'Delivery Information'], settingFooterInsideDelivery: ['footerInsideDelivery', 'Inside Dhaka: Fast Delivery'], settingFooterOutsideDelivery: ['footerOutsideDelivery', 'Outside Dhaka: Cash on delivery nationwide'], settingFooterFollowHeading: ['footerFollowHeading', 'Follow Delofia'], settingFooterCopyright: ['footerCopyright', '© 2026 Delofia E-Commerce Store. All rights reserved.'] }; Object.entries(textSettingsMap).forEach(([id, pair]) => { const field = document.getElementById(id); if (field) field.value = storeSettings[pair[0]] ?? pair[1]; });
                 const autoRotateField = document.getElementById('settingProductPhotoAutoRotate'); if (autoRotateField) autoRotateField.checked = !!storeSettings.productPhotoAutoRotate;
                 const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
+                const sfTheme = document.getElementById('settingStorefrontTheme'); if (sfTheme) sfTheme.value = storeSettings.storefrontTheme || 'dark';
+                const adTheme = document.getElementById('settingAdminTheme'); if (adTheme) adTheme.value = storeSettings.adminTheme || 'light';
             pendingStoreLogo = null; applyStoreLogo();
 
             renderOrdersTable();
@@ -3441,3 +3931,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}th,td{p
 
 </body>
 </html>
+<style id="delofia-reset-visibility-fix">
+/* Keep the storefront Reset filter button readable in both themes. */
+#mainContainer button[onclick="resetProductFilters()"] { color:#374151 !important; background:#e5e7eb !important; border:1px solid #d1d5db !important; }
+body.delofia-dark-storefront #mainContainer button[onclick="resetProductFilters()"] { color:#ffffff !important; background:#4b5563 !important; border-color:#6b7280 !important; }
+</style>
