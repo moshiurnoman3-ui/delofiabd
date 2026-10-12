@@ -933,6 +933,33 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
 }
 </style>
 
+
+<style id="delofia-restore-mobile-brand-logo-v34">
+/* Restore the original Delofia D mark and brand name on mobile only. */
+@media (max-width: 640px) {
+  header a#brandLogo {
+    display: flex !important; visibility: visible !important; opacity: 1 !important;
+    flex: 0 1 auto !important; min-width: 0 !important; width: auto !important;
+    overflow: visible !important; gap: 5px !important; margin-right: 4px !important;
+  }
+  header #brandLogoMark {
+    display: flex !important; visibility: visible !important; opacity: 1 !important;
+    flex: 0 0 28px !important; width: 28px !important; min-width: 28px !important;
+    height: 28px !important; font-size: 15px !important; border-radius: 8px !important;
+  }
+  header #brandLogo > div:last-child {
+    display: block !important; visibility: visible !important; opacity: 1 !important;
+    flex: 0 1 auto !important; min-width: 0 !important; width: auto !important;
+    overflow: visible !important;
+  }
+  header #brandLogo > div:last-child span:first-child {
+    display: block !important; visibility: visible !important; opacity: 1 !important;
+    font-size: clamp(12px, 3.7vw, 16px) !important; letter-spacing: 0 !important;
+    white-space: nowrap !important; line-height: 1 !important;
+  }
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
