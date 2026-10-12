@@ -714,6 +714,65 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
   }
 }
 </style>
+
+<style id="delofia-mobile-header-final-layout-v28">
+@media (max-width: 640px) {
+  header > div.max-w-7xl {
+    width:100% !important; max-width:100% !important; box-sizing:border-box !important;
+    height:58px !important; min-height:58px !important; padding:6px 8px !important;
+    display:flex !important; flex-flow:row nowrap !important; align-items:center !important;
+    justify-content:flex-start !important; gap:6px !important; overflow:hidden !important;
+  }
+  header #delofiaMenuButton {
+    display:flex !important; flex:0 0 26px !important; width:26px !important; min-width:26px !important;
+    height:30px !important; padding:0 !important; align-items:center !important; justify-content:center !important;
+  }
+  header #brandLogo {
+    display:flex !important; flex:0 1 86px !important; width:86px !important; min-width:70px !important;
+    max-width:86px !important; gap:4px !important; align-items:center !important; overflow:hidden !important;
+  }
+  header #brandLogoMark { flex:0 0 23px !important; width:23px !important; height:23px !important; font-size:13px !important; border-radius:7px !important; }
+  header #brandLogo > div { min-width:0 !important; overflow:hidden !important; }
+  header #brandLogo span:first-child { font-size:clamp(11px, 3.5vw, 14px) !important; letter-spacing:0 !important; white-space:nowrap !important; }
+  header #brandLogo span:last-child { display:none !important; }
+  header #delofiaHeaderActions {
+    display:flex !important; flex:1 1 auto !important; width:auto !important; min-width:0 !important;
+    max-width:none !important; flex-flow:row nowrap !important; align-items:center !important;
+    justify-content:flex-end !important; gap:3px !important; margin-left:auto !important; overflow:visible !important;
+  }
+  header #customerAccountHeaderBtn {
+    display:flex !important; flex:0 0 auto !important; width:auto !important; min-width:42px !important;
+    height:28px !important; padding:3px 5px !important; gap:3px !important; border-radius:9px !important;
+    align-items:center !important; justify-content:center !important; white-space:nowrap !important; font-size:10px !important;
+  }
+  header #customerAccountHeaderBtn i { font-size:11px !important; }
+  header #customerAccountHeaderLabel { display:inline !important; }
+  header #delofiaHeaderActions > a[href*="wa.me"] {
+    display:flex !important; flex:0 0 25px !important; width:25px !important; min-width:25px !important;
+    height:28px !important; padding:0 !important; margin:0 !important; border-radius:8px !important;
+    align-items:center !important; justify-content:center !important; font-size:0 !important;
+  }
+  header #delofiaHeaderActions > a[href*="wa.me"] i { font-size:16px !important; margin:0 !important; }
+  header #headerWishlistButton, header #headerCartButton {
+    display:flex !important; flex:0 0 25px !important; width:25px !important; min-width:25px !important;
+    max-width:25px !important; height:28px !important; padding:0 !important; margin:0 !important;
+    border-radius:8px !important; gap:0 !important; align-items:center !important; justify-content:center !important;
+  }
+  header #headerWishlistButton > span, header #headerCartButton > span { display:none !important; }
+  header #headerWishlistButton > i, header #headerCartButton > i { display:inline-block !important; font-size:15px !important; margin:0 !important; }
+  header #wishlistCountBadge, header #cartCountBadge, header #cartValueLabel { display:none !important; }
+}
+@media (max-width: 360px) {
+  header > div.max-w-7xl { gap:4px !important; padding-left:5px !important; padding-right:5px !important; }
+  header #brandLogo { flex-basis:74px !important; width:74px !important; min-width:64px !important; }
+  header #brandLogoMark { display:none !important; }
+  header #brandLogo span:first-child { font-size:12px !important; }
+  header #delofiaHeaderActions { gap:2px !important; }
+  header #customerAccountHeaderBtn { min-width:39px !important; padding-left:3px !important; padding-right:3px !important; }
+  header #delofiaHeaderActions > a[href*="wa.me"], header #headerWishlistButton, header #headerCartButton { flex-basis:23px !important; width:23px !important; min-width:23px !important; max-width:23px !important; }
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 
