@@ -1242,7 +1242,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             </div>
             <div id="customerAccountAuthArea">
               <div class="grid grid-cols-2 gap-2 mb-5"><button id="customerRegisterTab" type="button" onclick="setCustomerAccountMode('register')" class="rounded-xl bg-purple-700 text-white py-2.5 font-bold">Create Account</button><button id="customerLoginTab" type="button" onclick="setCustomerAccountMode('login')" class="rounded-xl bg-gray-100 text-gray-700 py-2.5 font-bold">Login</button></div>
-              <form id="customerAccountForm" novalidate onsubmit="submitCustomerAccount(event)" class="space-y-3">
+              <form id="customerAccountForm" novalidate class="space-y-3">
                 <div id="customerRegisterFields" class="space-y-3">
                   <input id="customerProfileName" type="text" autocomplete="name" placeholder="Full name *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
                   <input id="customerProfileAddress" type="text" autocomplete="street-address" placeholder="Full address *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -2199,10 +2199,13 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             if (btn) { btn.disabled = true; btn.textContent = 'Sending reset link…'; }
             try {
                 const matches = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
-                if (matches.empty) throw new Error('এই ফোন নম্বরের customer profile পাওয়া যায়নি। নম্বরটি ঠিক আছে কি না দেখো।');
-                const profile = matches.docs[0].data() || {};
-                const email = String(profile.email || '').trim().toLowerCase();
-                if (!email) throw new Error('এই account-এ email সংরক্ষিত নেই। Admin-এর সাহায্য নাও।');
+                let email = !matches.empty ? String((matches.docs[0].data() || {}).email || '').trim().toLowerCase() : '';
+                // If an admin deleted only the Firestore profile, the Auth account may still exist.
+                // Let the customer enter that account's email so they can recover access.
+                if (!email) {
+                    email = String(window.prompt('এই ফোন নম্বরের profile পাওয়া যায়নি। Firebase account-এর email address লিখো, যাতে password reset link পাঠানো যায়:') || '').trim().toLowerCase();
+                    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('সঠিক email address দেওয়া হয়নি। আবার চেষ্টা করো।');
+                }
                 // Explicit continue URL helps Firebase build a reset email for the current storefront.
                 const actionCodeSettings = { url: window.location.origin, handleCodeInApp: false };
                 await sendPasswordResetEmail(auth, email, actionCodeSettings);
@@ -2279,6 +2282,13 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 let credential;
                 if (customerAccountMode === 'register') {
                     if (!password || password.length < 6) { setCustomerAccountError('Password কমপক্ষে ৬ অক্ষরের হতে হবে।'); return; }
+                    // A phone number is considered in use only while a customer profile with that
+                    // phone exists. After Admin deletes the profile, the phone can be registered again.
+                    const existingPhoneProfile = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
+                    if (!existingPhoneProfile.empty) {
+                        setCustomerAccountError('এই ফোন নম্বর দিয়ে account আগে থেকেই আছে। নতুন account না খুলে Login করো। Password ভুলে গেলে Forgot Password ব্যবহার করো।');
+                        return;
+                    }
                     credential = await createUserWithEmailAndPassword(auth, email, password);
                     await setDoc(doc(db, 'customerProfiles', credential.user.uid), { ...profile, createdAt: new Date().toISOString() });
                     window.customerProfileCache = { ...profile, uid: credential.user.uid };
@@ -2302,8 +2312,8 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 console.error('Customer account error:', error);
                 const code = error?.code || '';
                 const messages = {
-                    'auth/email-already-in-use': 'এই নম্বর দিয়ে account আগে থেকেই আছে। Login অপশন ব্যবহার করো।',
-                    'auth/invalid-credential': 'ফোন নম্বর বা পাসওয়ার্ড সঠিক নয়।',
+                    'auth/email-already-in-use': 'এই email দিয়ে Firebase account আগে থেকেই আছে। Login করো। Password মনে না থাকলে Forgot Password থেকে reset email পাঠাও। Admin শুধু profile delete করে থাকলে একই email দিয়ে নতুন account খোলা যাবে না।',
+                    'auth/invalid-credential': 'ফোন নম্বর/email বা password সঠিক নয়।',
                     'auth/weak-password': 'আরও শক্তিশালী পাসওয়ার্ড দাও (কমপক্ষে ৬ অক্ষর)।',
                     'auth/operation-not-allowed': 'Firebase Console-এ Email/Password sign-in চালু করতে হবে।',
                     'auth/network-request-failed': 'ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করো.'
@@ -2313,6 +2323,21 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
                 if (submit) { submit.disabled = false; submit.textContent = customerProfileEditMode ? 'Save Profile' : (customerAccountMode === 'login' ? 'Login' : 'Create Account'); }
             }
         };
+        // Bind the customer account form directly from the module. Inline HTML handlers
+        // cannot reliably resolve module-scoped functions; this guarantees submit clicks
+        // reach Firebase auth and errors are shown in the account modal.
+        const customerAccountForm = document.getElementById('customerAccountForm');
+        if (customerAccountForm) {
+            customerAccountForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (typeof window.submitCustomerAccount === 'function') {
+                    window.submitCustomerAccount(event);
+                } else {
+                    setCustomerAccountError('Login system এখনও প্রস্তুত হয়নি। Page refresh করে আবার চেষ্টা করো।');
+                }
+            });
+        }
+
         onAuthStateChanged(auth, user => { if (user) loadCustomerProfile(user); else { window.customerProfileCache = null; renderCustomerAccountState(); } });
 
         window.db = db;
@@ -4779,13 +4804,13 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         };
         window.deleteAdminCustomerProfile = async function(uid) {
             if (!uid) return;
-            const confirmed = confirm(`Delete this customer profile data?\n\nThis removes their Firestore customer profile and discount details. Firebase Authentication login credentials are NOT deleted by this browser-only action. For full account deletion, a secure Firebase Admin SDK/Cloud Function is required. Continue?`);
+            const confirmed = confirm(`Delete this customer profile data?\n\nThis deletes the Firestore customer profile and discount details. The phone number can then be used for another account if no other profile uses it. IMPORTANT: Firebase Authentication login credentials are NOT deleted by this browser-only action, so the old email cannot be registered again until that Auth account is securely deleted server-side. Continue?`);
             if (!confirmed) return;
             try {
                 await window.fsDeleteDoc(window.fsDoc(window.db, 'customerProfiles', uid));
                 adminCustomerRowsCache = adminCustomerRowsCache.filter(c => String(c.uid) !== String(uid));
                 await window.renderAdminCustomers();
-                alert('Customer profile data deleted. Note: Firebase Authentication account still exists until securely deleted server-side.');
+                alert('Customer profile deleted. The phone number can be registered again if no other customer profile uses it. The old Firebase Authentication account still exists, so its email cannot be used for a new account; use Login/Forgot Password or delete the Auth account through a secure server-side function.');
             } catch (error) {
                 console.error('Customer profile delete failed:', error);
                 alert('Profile delete failed. Check Firestore permissions and try again. ' + (error?.message || ''));
