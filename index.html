@@ -1242,7 +1242,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             </div>
             <div id="customerAccountAuthArea">
               <div class="grid grid-cols-2 gap-2 mb-5"><button id="customerRegisterTab" type="button" onclick="setCustomerAccountMode('register')" class="rounded-xl bg-purple-700 text-white py-2.5 font-bold">Create Account</button><button id="customerLoginTab" type="button" onclick="setCustomerAccountMode('login')" class="rounded-xl bg-gray-100 text-gray-700 py-2.5 font-bold">Login</button></div>
-              <form id="customerAccountForm" onsubmit="submitCustomerAccount(event)" class="space-y-3">
+              <form id="customerAccountForm" novalidate onsubmit="submitCustomerAccount(event)" class="space-y-3">
                 <div id="customerRegisterFields" class="space-y-3">
                   <input id="customerProfileName" type="text" autocomplete="name" placeholder="Full name *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
                   <input id="customerProfileAddress" type="text" autocomplete="street-address" placeholder="Full address *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -2101,11 +2101,11 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             window.customerProfileCache = null;
         }
         let customerProfileEditMode = false;
-        let pendingLoginCheckout = null;
+        window.pendingLoginCheckout = null;
         window.resumePendingLoginCheckout = function() {
-            if (!pendingLoginCheckout || !auth.currentUser) return false;
-            const pending = pendingLoginCheckout;
-            pendingLoginCheckout = null;
+            if (!window.pendingLoginCheckout || !auth.currentUser) return false;
+            const pending = window.pendingLoginCheckout;
+            window.pendingLoginCheckout = null;
             window.closeCustomerAccount?.();
             setTimeout(() => { window.openDirectCheckout?.(pending.prodId, pending.qty, pending.variantChoices, pending.variantMeta); }, 0);
             return true;
@@ -2184,7 +2184,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             const forgot = document.getElementById('customerForgotPasswordBtn');
             if (forgot) forgot.classList.toggle('hidden', customerAccountMode !== 'login' || customerProfileEditMode);
             if (fields) fields.classList.toggle('hidden', customerAccountMode === 'login');
-            ['customerProfileName','customerProfileAddress','customerProfileDistrict'].forEach(id => { const el = document.getElementById(id); if (el) el.required = customerAccountMode === 'register'; });
+            ['customerProfileName','customerProfileAddress','customerProfileDistrict','customerProfileEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.required = customerAccountMode === 'register'; });
             if (register) register.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'register' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
             if (login) login.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'login' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
             if (submit) submit.textContent = customerAccountMode === 'login' ? 'Login' : 'Create Account';
@@ -2260,7 +2260,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
             const password = passwordEl.value;
             const name = document.getElementById('customerProfileName').value.trim();
             const email = document.getElementById('customerProfileEmail').value.trim().toLowerCase();
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setCustomerAccountError('সঠিক email address দিতে হবে। Password reset link এই email-এ যাবে।'); return; }
+            if ((customerAccountMode === 'register' || customerProfileEditMode) && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) { setCustomerAccountError('সঠিক email address দিতে হবে। Password reset link এই email-এ যাবে।'); return; }
             if (customerProfileEditMode && window.customerProfileCache?.email && email !== String(window.customerProfileCache.email).toLowerCase()) { setCustomerAccountError('Account-এর email বদলাতে হলে নিরাপদ verification প্রয়োজন। আপাতত আগের email-টাই রাখো।'); return; }
             const profile = { name, phone, address: document.getElementById('customerProfileAddress').value.trim(), district: document.getElementById('customerProfileDistrict').value.trim(), postalCode: document.getElementById('customerProfilePostal').value.trim(), email, updatedAt: new Date().toISOString() };
             const submit = document.getElementById('customerAccountSubmitBtn');
@@ -3521,7 +3521,7 @@ body.delofia-dark-storefront #productDetailModal .mb-6 > label { color: #374151 
         function openDirectCheckout(prodId, qty = 1, variantChoices = {}, variantMeta = {}) {
             // Optional store-wide login gate. Preserve the exact item/quantity/variants so checkout resumes after auth.
             if (window.storeSettings?.requireLoginToOrder === true && !(window.customerAuth && window.customerAuth.currentUser)) {
-                pendingLoginCheckout = { prodId, qty, variantChoices: { ...(variantChoices || {}) }, variantMeta: { ...(variantMeta || {}) } };
+                window.pendingLoginCheckout = { prodId, qty, variantChoices: { ...(variantChoices || {}) }, variantMeta: { ...(variantMeta || {}) } };
                 window.openCustomerAccount?.();
                 window.setCustomerAccountMode?.('register');
                 const accountTitle = document.getElementById('customerAccountTitle');
@@ -5980,6 +5980,58 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
       }
       safeCall(window.openDirectCheckout, [match[1]], 'openDirectCheckout');
     }
+  }, true);
+})();
+</script>
+
+
+<script id="delofia-direct-order-universal-fix-v47">
+(function () {
+  if (window.__delofiaDirectOrderUniversalFixV47) return;
+  window.__delofiaDirectOrderUniversalFixV47 = true;
+
+  function callHandler(name, args) {
+    const fn = window[name];
+    if (typeof fn !== 'function') {
+      console.error('Delofia Direct Order: handler unavailable:', name);
+      alert('Direct Order চালু হয়নি। পেজটি Refresh করুন। সমস্যা থাকলে Console-এর error দেখুন।');
+      return;
+    }
+    try {
+      fn.apply(window, args);
+    } catch (error) {
+      console.error('Delofia Direct Order error (' + name + '):', error);
+      alert('Direct Order-এ সমস্যা হয়েছে: ' + (error && error.message ? error.message : error));
+    }
+  }
+
+  document.addEventListener('click', function (event) {
+    const target = event.target;
+    if (!target || typeof target.closest !== 'function') return;
+
+    const detailBuy = target.closest('#detailBuyBtn');
+    if (detailBuy) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!detailBuy.disabled && !detailBuy.classList.contains('hidden')) {
+        callHandler('startCheckoutFromDetail', []);
+      }
+      return;
+    }
+
+    // Handle Direct Order / Choose Options buttons anywhere on the page, not only
+    // inside #productsGrid. This also works if the product cards are re-rendered.
+    const orderButton = target.closest('button[onclick*="openDirectCheckout("], button[onclick*="openProductDetail("]');
+    if (!orderButton) return;
+    if (orderButton.disabled || orderButton.getAttribute('aria-disabled') === 'true') return;
+
+    const inline = orderButton.getAttribute('onclick') || '';
+    const match = inline.match(/\b(openDirectCheckout|openProductDetail)\s*\(\s*(['"])(.*?)\2/);
+    if (!match) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    callHandler(match[1], [match[3]]);
   }, true);
 })();
 </script>
