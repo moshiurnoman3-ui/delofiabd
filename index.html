@@ -1204,7 +1204,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                             <span id="detailStockBadge" class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded-full">In Stock</span><span id="detailAvailableQty" class="hidden text-xs text-gray-600 font-semibold"></span>
                         </div>
                         <div id="detailPriceContact" class="hidden mb-4 rounded-xl border border-purple-100 bg-purple-50 p-3">
-                            <p class="text-sm font-semibold text-gray-800 mb-3">Price জানতে আমাদের সাথে যোগাযোগ করুন</p>
+                            <p class="text-sm font-semibold text-gray-800 mb-3">For price, contact us</p>
                             <div id="detailPriceSocialLinks" class="flex flex-wrap gap-2"></div>
                         </div>
                         <div id="detailVariantOptions" class="hidden mb-6 space-y-4"></div>
@@ -1218,17 +1218,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                 <button onclick="updateDetailQty(1)" class="w-10 h-10 rounded-xl bg-purple-100 text-purple-800 font-bold hover:bg-purple-200 transition text-lg flex items-center justify-center">+</button>
                             </div>
                         </div>
-                        <div id="multiVariantPicker" class="mb-5 rounded-xl border border-purple-100 bg-white p-3">
-                            <button type="button" onclick="addCurrentVariantLine()" class="w-full rounded-xl border border-purple-300 bg-purple-50 text-purple-800 font-bold py-2.5 px-3 text-sm"><i class="fas fa-plus-circle mr-1"></i> Add this Color / Size</button>
-                            <div id="pendingVariantLinesBox" class="mt-3 space-y-2"></div>
-                            <button type="button" id="addAllVariantsToCartBtn" onclick="addAllVariantLinesToCart()" class="hidden mt-3 w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-3 text-sm"><i class="fas fa-cart-plus mr-1"></i> Add all selected to Cart</button>
-                            <p class="mt-2 text-[11px] text-gray-500">Different colors and sizes? Add each combination with its own quantity, then add them all together.</p>
-                        </div>
+                        <div id="pendingVariantLinesBox" class="hidden mb-4 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2 text-xs text-purple-900"></div>
                     </div>
 
                     <!-- Direct Order Action Buttons -->
                     <div class="space-y-3 pt-4 border-t border-purple-100">
-                        <button id="detailAddCartBtn" onclick="addCurrentVariantLine()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                        <button id="detailAddCartBtn" onclick="addSelectedVariantsToCart()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                         <button type="button" id="detailBuyBtn" onclick="startCheckoutFromDetail()" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-purple-200 transition flex items-center justify-center gap-2">
                             <i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)
                         </button>
@@ -2751,12 +2746,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         });
 
         function getPriceContactLinksHTML(productTitle = '') {
-            const title = encodeURIComponent(productTitle);
             const links = [];
-            const wa = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, price জানতে চাই: ' + productTitle)}`;
-            if (storeSettings.whatsappEnabled !== false && storeSettings.whatsappNumber) links.push(`<a href="${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 text-xs font-bold"><i class="fab fa-whatsapp"></i> WhatsApp</a>`);
-            if (storeSettings.facebookUrl) links.push(`<a href="${storeSettings.facebookUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-bold"><i class="fab fa-facebook-f"></i> Facebook</a>`);
-            if (storeSettings.instagramUrl) links.push(`<a href="${storeSettings.instagramUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-pink-600 hover:bg-pink-700 text-white px-3 py-2 text-xs font-bold"><i class="fab fa-instagram"></i> Instagram</a>`);
+            const wa = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, please tell me the price of: ' + productTitle)}`;
+            const base = 'inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm shadow-sm transition-transform hover:scale-105';
+            if (storeSettings.whatsappEnabled !== false && storeSettings.whatsappNumber) links.push(`<a href="${wa}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on WhatsApp" title="WhatsApp" class="${base} bg-emerald-500 hover:bg-emerald-600"><i class="fab fa-whatsapp"></i></a>`);
+            if (storeSettings.facebookUrl) links.push(`<a href="${storeSettings.facebookUrl}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on Facebook" title="Facebook" class="${base} bg-blue-600 hover:bg-blue-700"><i class="fab fa-facebook-f"></i></a>`);
+            if (storeSettings.instagramUrl) links.push(`<a href="${storeSettings.instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on Instagram" title="Instagram" class="${base} bg-pink-600 hover:bg-pink-700"><i class="fab fa-instagram"></i></a>`);
             return links.join('');
         }
 
@@ -2899,12 +2894,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         <div>
                             <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${subCategoryDisplay ? ' • ' + subCategoryDisplay : ''}</span>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
-                            ${product.showPrice ? (() => { const sale = Math.max(0, Number(product.price) || 0); const regular = Number(product.originalPrice) || 0; const hasDiscount = regular > sale && sale >= 0; const pct = hasDiscount ? Math.round((regular - sale) / regular * 100) : 0; return `<div class="mb-3"><div class="flex flex-wrap items-center gap-2"><span class="text-purple-700 font-extrabold text-lg">৳${sale.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>${hasDiscount ? `<span class="text-xs text-gray-400 line-through">৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>` : ''}</div>${hasDiscount ? `<span class="inline-flex mt-1 bg-pink-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">${pct}% OFF · SAVE ৳${(regular-sale).toLocaleString('en-BD', {maximumFractionDigits:2})}</span>` : ''}</div>`; })() : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">Price জানতে আমাদের Facebook, Instagram বা WhatsApp-এ যোগাযোগ করুন</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
+                            ${product.showPrice ? (() => { const sale = Math.max(0, Number(product.price) || 0); const regular = Number(product.originalPrice) || 0; const hasDiscount = regular > sale && sale >= 0; const pct = hasDiscount ? Math.round((regular - sale) / regular * 100) : 0; return `<div class="mb-3"><div class="flex flex-wrap items-center gap-2"><span class="text-purple-700 font-extrabold text-lg">৳${sale.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>${hasDiscount ? `<span class="text-xs text-gray-400 line-through">৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>` : ''}</div>${hasDiscount ? `<span class="inline-flex mt-1 bg-pink-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">${pct}% OFF · SAVE ৳${(regular-sale).toLocaleString('en-BD', {maximumFractionDigits:2})}</span>` : ''}</div>`; })() : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">For price, contact us</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product.title)}</div></div>`}
                         </div>
                         
                         <div class="space-y-2">
-                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas ${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'fa-sliders-h' : 'fa-cart-plus'}"></i> ${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Color / Size' : 'Add to Cart'}</button>`}
-                            ${product.directOrderEnabled === false ? '' : `<button ${product.stockOut ? 'disabled' : ''} onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `openDirectCheckout('${product.id}')`}" class="w-full ${product.stockOut ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-purple-700 hover:bg-purple-800 text-white'} font-bold py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"><i class="fas fa-shopping-bag text-xs"></i> ${product.stockOut ? 'Stock Out' : (product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? 'Choose Options' : 'Direct Order')}</button>`}
+                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + (product.title || ''))}" target="_blank" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
                         </div>
                     </div>
@@ -3592,6 +3586,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function openProductDetail(prodId) {
             selectedDetailProd = products.find(p => p.id === prodId);
+            pendingVariantLines = [];
+            const pendingBox = document.getElementById('pendingVariantLinesBox');
+            if (pendingBox) { pendingBox.innerHTML = ''; pendingBox.classList.add('hidden'); }
             if (!selectedDetailProd) return;
 
             detailQtyVal = 1;
@@ -3796,17 +3793,56 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             return { key: cartItemKey(prod.id, variants), productId: prod.id, title: prod.title || 'Product', qty: Math.max(1, Number(detailQtyVal) || 1), variants, unitPrice, image };
         }
+        // Preserve each fully selected variant combination when the shopper changes Color/Size.
+        // This keeps multi-variant cart ordering without needing a separate "Add this Color / Size" button.
+        function captureCurrentVariantLineSilently() {
+            const prod = selectedDetailProd;
+            if (!prod || !prod.variantEnabled || !Array.isArray(prod.variantGroups)) return null;
+            const groups = prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim()));
+            if (!groups.length) return null;
+            if (groups.some(g => !selectedVariantChoices[g.name])) return null;
+            const colorGroup = groups.find(g => /color|colour|রং/i.test(g.name || ''));
+            const color = colorGroup && colorGroup.options.find(o => o.name === selectedVariantChoices[colorGroup.name]);
+            if (color && Array.isArray(color.childVariants) && color.childVariants.some(v => String(v.name || '').trim()) && !selectedVariantChoices['__size']) return null;
+            const line = getCurrentDetailVariantLine();
+            if (!line) return null;
+            const existing = pendingVariantLines.find(x => x.key === line.key);
+            if (existing) {
+                existing.qty = line.qty;
+                existing.unitPrice = line.unitPrice;
+                existing.variants = {...line.variants};
+                existing.image = line.image;
+            } else pendingVariantLines.push(line);
+            renderPendingVariantLines();
+            return line;
+        }
+
+        function addSelectedVariantsToCart() {
+            const prod = selectedDetailProd;
+            if (!prod || prod.stockOut) return;
+            const hasVariants = !!(prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.some(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())));
+            if (!hasVariants) { addDetailProductToCart(); return; }
+            // For variant products, the main Add to Cart button saves the current combination
+            // into the selection list. Shopper can choose another combination and repeat.
+            // The separate batch button then adds every saved combination to the real cart.
+            addCurrentVariantLine();
+        }
+
         function renderPendingVariantLines() {
             const box = document.getElementById('pendingVariantLinesBox');
-            const btn = document.getElementById('addAllVariantsToCartBtn');
-            if (!box || !btn) return;
-            if (!pendingVariantLines.length) { box.innerHTML = ''; btn.classList.add('hidden'); return; }
-            box.innerHTML = '<p class="text-xs font-extrabold text-gray-800">Selected combinations (' + pendingVariantLines.length + ')</p>' + pendingVariantLines.map((line, i) => {
-                const optionText = Object.entries(line.variants || {}).filter(([k,v]) => v && !k.startsWith('__')).map(([k,v]) => k + ': ' + v).concat(line.variants?.__size ? ['Size: ' + line.variants.__size] : []).join(' · ') || 'Standard';
-                return '<div class="flex items-center gap-2 rounded-lg border border-purple-100 bg-purple-50/60 p-2"><div class="min-w-0 flex-1"><p class="text-xs font-bold text-gray-800">' + escapeHtml(optionText) + '</p><p class="text-[11px] text-gray-600">৳' + Number(line.unitPrice).toFixed(2) + ' × ' + line.qty + ' = ৳' + (Number(line.unitPrice)*Number(line.qty)).toFixed(2) + '</p></div><button type="button" onclick="changePendingVariantQty(' + i + ',-1)" class="w-7 h-7 rounded bg-white border border-purple-200">−</button><span class="text-xs font-bold">' + line.qty + '</span><button type="button" onclick="changePendingVariantQty(' + i + ',1)" class="w-7 h-7 rounded bg-white border border-purple-200">+</button><button type="button" onclick="removePendingVariantLine(' + i + ')" class="text-red-600 font-bold px-1" aria-label="Remove combination">×</button></div>';
+            if (!box) return;
+            if (!pendingVariantLines.length) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+            const rows = pendingVariantLines.map((line, index) => {
+                const names = Object.entries(line.variants || {}).filter(([k,v]) => v && !k.startsWith('__')).map(([k,v]) => String(v));
+                if (line.variants && line.variants.__size) names.push(String(line.variants.__size));
+                const label = names.length ? names.join(' / ') : 'Standard';
+                const qty = Math.max(1, Number(line.qty) || 1);
+                const amount = (Number(line.unitPrice) || 0) * qty;
+                return '<div class="flex items-center gap-2 rounded-lg border border-purple-100 bg-white px-2 py-2 mt-2"><div class="min-w-0 flex-1"><div class="font-semibold text-gray-800">' + escapeHtml(label) + '</div><div class="text-gray-500">৳' + (Number(line.unitPrice)||0).toFixed(2) + ' × ' + qty + ' = ৳' + amount.toFixed(2) + '</div></div><button type="button" onclick="changePendingVariantQty(' + index + ',-1)" class="w-7 h-7 rounded border border-purple-200 font-bold" aria-label="Decrease quantity">−</button><span class="font-bold min-w-4 text-center">' + qty + '</span><button type="button" onclick="changePendingVariantQty(' + index + ',1)" class="w-7 h-7 rounded border border-purple-200 font-bold" aria-label="Increase quantity">+</button><button type="button" onclick="removePendingVariantLine(' + index + ')" class="ml-1 text-red-600 font-bold px-1" aria-label="Remove variant">×</button></div>';
             }).join('');
-            btn.classList.remove('hidden');
-            btn.innerHTML = '<i class="fas fa-cart-plus mr-1"></i> Add all ' + pendingVariantLines.reduce((n,x)=>n+Number(x.qty||0),0) + ' items to Cart · ৳' + pendingVariantLines.reduce((n,x)=>n+Number(x.qty||0)*Number(x.unitPrice||0),0).toFixed(2);
+            const total = pendingVariantLines.reduce((sum, line) => sum + (Number(line.unitPrice)||0) * (Number(line.qty)||0), 0);
+            box.innerHTML = '<div class="font-bold text-gray-800">Selected combinations (' + pendingVariantLines.length + ')</div>' + rows + '<button type="button" onclick="addAllVariantLinesToCart()" class="w-full mt-3 bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 px-3 rounded-xl"><i class="fas fa-cart-plus mr-1"></i> Add all ' + pendingVariantLines.length + ' item(s) to Cart · ৳' + total.toFixed(2) + '</button><p class="mt-2 text-gray-500">Choose another Color / Size and press Add to Cart again to add it here. When finished, add all selected combinations to your cart.</p>';
+            box.classList.remove('hidden');
         }
         function addCurrentVariantLine() {
             const line = getCurrentDetailVariantLine(); if (!line) return;
@@ -4044,6 +4080,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             openDirectCheckout(pId, qty, choices, meta);
         }
 
+        window.addSelectedVariantsToCart = addSelectedVariantsToCart;
         window.addCurrentVariantLine = addCurrentVariantLine;
         window.addAllVariantLinesToCart = addAllVariantLinesToCart;
         window.changePendingVariantQty = changePendingVariantQty;
@@ -4628,6 +4665,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             document.getElementById('discountRow').classList.add('hidden');
             updatePaymentUI();
         }
+
+        // This page uses a module script, so inline form onsubmit cannot see module-scoped functions unless exposed on window.
+        window.handlePlaceOrder = handlePlaceOrder;
 
         function downloadOrderMemo() {
             let o = lastCompletedOrderMemo;
