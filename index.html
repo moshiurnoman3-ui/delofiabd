@@ -1171,6 +1171,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             <!-- Dynamic products will be rendered here -->
         </div>
+        <nav id="productPagination" class="hidden mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:justify-between" aria-label="Product pages"></nav>
 
     </main>
 
@@ -2549,7 +2550,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function setupRealtimeSync() {
             const isAdminUrl = new URLSearchParams(window.location.search).get('admin') === '1';
-            const productCacheKey = 'delofia_products_cache_v2';
+            const productCacheKey = 'delofia_products_cache_v1';
             const productCacheTtlMs = 5 * 60 * 1000; // public storefront cache: 5 minutes
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
@@ -2569,8 +2570,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const readFreshProductCache = () => {
                 try {
                     const cached = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                    if (cached && Array.isArray(cached.products) && cached.products.length === 0) localStorage.removeItem(productCacheKey);
-                    if (cached && Array.isArray(cached.products) && cached.products.length > 0 && Number.isFinite(Number(cached.savedAt)) && Date.now() - Number(cached.savedAt) >= 0 && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
+                    if (cached && Array.isArray(cached.products) && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
                 } catch (e) { /* Ignore malformed or unavailable cache. */ }
                 return null;
             };
@@ -2608,7 +2608,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         // If the network read fails, use stale cache only as a fallback, if available.
                         try {
                             const stale = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                            if (Array.isArray(stale?.products) && stale.products.length > 0) applyProductList(stale.products);
+                            if (Array.isArray(stale?.products)) applyProductList(stale.products);
                         } catch (_) {}
                     });
                 }
@@ -2947,7 +2947,34 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); }
         function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); }
 
+        const DELOFIA_PRODUCTS_PER_PAGE = 30;
+        let delofiaCurrentProductPage = 1;
+        let delofiaCurrentProductFilterText = '';
+        let delofiaProductTotalPages = 1;
+        function renderProductPagination(totalItems) {
+            const nav = document.getElementById('productPagination');
+            if (!nav) return;
+            delofiaProductTotalPages = Math.max(1, Math.ceil(totalItems / DELOFIA_PRODUCTS_PER_PAGE));
+            if (delofiaCurrentProductPage > delofiaProductTotalPages) delofiaCurrentProductPage = delofiaProductTotalPages;
+            if (delofiaProductTotalPages <= 1 || totalItems === 0) { nav.innerHTML = ''; nav.classList.add('hidden'); return; }
+            const first = (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE + 1;
+            const last = Math.min(totalItems, delofiaCurrentProductPage * DELOFIA_PRODUCTS_PER_PAGE);
+            nav.classList.remove('hidden');
+            nav.innerHTML = `<span class="text-xs font-semibold text-gray-600">Showing ${first}–${last} of ${totalItems} products</span><div class="flex items-center gap-2"><button type="button" onclick="changeDelofiaProductPage(-1)" ${delofiaCurrentProductPage<=1?'disabled':''} class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-bold text-purple-800 hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-40">← Previous</button><span class="min-w-20 text-center text-sm font-extrabold text-purple-900">Page ${delofiaCurrentProductPage} / ${delofiaProductTotalPages}</span><button type="button" onclick="changeDelofiaProductPage(1)" ${delofiaCurrentProductPage>=delofiaProductTotalPages?'disabled':''} class="rounded-xl border border-purple-700 bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-40">Next →</button></div>`;
+        }
+        function changeDelofiaProductPage(delta) {
+            const next = Math.max(1, Math.min(delofiaProductTotalPages, delofiaCurrentProductPage + Number(delta || 0)));
+            if (next === delofiaCurrentProductPage) return;
+            delofiaCurrentProductPage = next;
+            renderProducts(delofiaCurrentProductFilterText);
+            const target = document.getElementById('productGrid');
+            if (target) window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - 145), behavior: 'smooth' });
+        }
+        window.changeDelofiaProductPage = changeDelofiaProductPage;
+
         function renderProducts(filterText = '') {
+            filterText = String(filterText || '');
+            if (filterText !== delofiaCurrentProductFilterText) { delofiaCurrentProductPage = 1; delofiaCurrentProductFilterText = filterText; }
             const grid = document.getElementById('productsGrid');
             if(!grid) return;
             grid.innerHTML = '';
@@ -2974,18 +3001,25 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const matchesMax = maxPrice === null || !isProductPriceVisible(p) || Number(p.price) <= maxPrice;
                 return matchesText && matchesCategory && matchesSubCategory && matchesMin && matchesMax;
             });
+            const totalPages = Math.max(1, Math.ceil(filtered.length / DELOFIA_PRODUCTS_PER_PAGE));
+            delofiaProductTotalPages = totalPages;
+            delofiaCurrentProductPage = Math.max(1, Math.min(delofiaCurrentProductPage, totalPages));
+            const firstVisible = filtered.length ? (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE : 0;
+            const pageProducts = filtered.slice(firstVisible, firstVisible + DELOFIA_PRODUCTS_PER_PAGE);
+            renderProductPagination(filtered.length);
 
             const countEl = document.getElementById('productCount');
             if (countEl) {
-                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : `Showing ${filtered.length} items`;
+                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : (filtered.length === 0 ? 'No matching products' : `Showing ${firstVisible + 1}–${Math.min(filtered.length, firstVisible + DELOFIA_PRODUCTS_PER_PAGE)} of ${filtered.length} items`);
             }
 
             if (filtered.length === 0) {
                 grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400 font-semibold">No products found.</div>`;
+                renderProductPagination(0);
                 return;
             }
 
-            filtered.forEach(product => {
+            pageProducts.forEach(product => {
                 const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
@@ -3615,6 +3649,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function filterProducts() {
+            delofiaCurrentProductPage = 1;
             const desktopInput = document.getElementById('searchInput');
             const mobileInput = document.getElementById('mobileSearchInput');
             const source = (window.matchMedia && window.matchMedia('(max-width: 767px)').matches) ? mobileInput : desktopInput;
@@ -6753,6 +6788,26 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             updateDetailPriceFromVariants();
         }
 
+        function syncAdminVariantNamesFromEditor() {
+            const editor = document.getElementById('adminVariantsEditor');
+            if (!editor || !Array.isArray(adminVariantGroups)) return;
+            Array.from(editor.children).forEach((section, gi) => {
+                const group = adminVariantGroups[gi];
+                if (!group) return;
+                const groupName = section.querySelector('input[placeholder="Group name (Color, Size, Style)"]');
+                if (groupName) group.name = groupName.value;
+                const optionRows = Array.from(section.children).filter(node => node.querySelector && node.querySelector('input[placeholder^="Option name"]'));
+                optionRows.forEach((row, oi) => {
+                    const option = group.options?.[oi];
+                    if (!option) return;
+                    const optionName = row.querySelector('input[placeholder^="Option name"]');
+                    if (optionName) option.name = optionName.value;
+                    const childNames = row.querySelectorAll('input[placeholder="e.g. 100 ml"]');
+                    childNames.forEach((input, ci) => { if (option.childVariants?.[ci]) option.childVariants[ci].name = input.value; });
+                });
+            });
+        }
+
         async function handleProductSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('productForm');
@@ -6787,6 +6842,9 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
                 const prodId = editId || ('p-' + Date.now());
 
+                // Read names directly from the visible editor at save time so a just-edited
+                // option cannot be omitted because of a stale UI state.
+                syncAdminVariantNamesFromEditor();
                 const productDoc = {
                     id: prodId,
                     title,
@@ -6808,19 +6866,20 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     videoUrl,
                     videoApproved,
                     variantEnabled: document.getElementById('prodVariantsEnabled').checked,
-                    variantGroups: document.getElementById('prodVariantsEnabled').checked ? adminVariantGroups.map(g => ({
+                    variantGroups: adminVariantGroups.map(g => ({
                         name: String(g.name || '').trim(),
                         options: (g.options || []).map(o => ({
                             name: String(o.name || '').trim(),
                             image: o.image || '',
                             price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
+                            originalPrice: o.originalPrice === '' || o.originalPrice === undefined || o.originalPrice === null ? null : (Number(o.originalPrice) || 0),
                             stockQty: Math.max(0, parseInt(o.stockQty ?? 0, 10) || 0),
                             descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
                             showDescriptionTable: o.showDescriptionTable !== false,
                             availableWith: Array.isArray(o.availableWith) ? o.availableWith : [],
                             childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), originalPrice: cv.originalPrice === '' || cv.originalPrice === undefined || cv.originalPrice === null ? null : (Number(cv.originalPrice) || 0), stockQty: Math.max(0, parseInt(cv.stockQty ?? 0, 10) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
                         })).filter(o => o.name)
-                    })).filter(g => g.name && g.options.length) : [],
+                    })).filter(g => g.name && g.options.length),
                     stockOut: document.getElementById('prodStockOut').checked,
                     stockQty: Math.max(0, parseInt(document.getElementById('prodStockQty')?.value || '0', 10) || 0),
                     displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
@@ -7657,4 +7716,9 @@ body.delofia-product-detail-open #productDetailModal { z-index:110 !important; }
 #minPriceRange{z-index:3}#maxPriceRange{z-index:2}
 #customerSubCategoryChips button{max-width:100%;white-space:normal}
 @media(max-width:640px){#priceRangeSlider{touch-action:pan-y}#priceRangeSlider input[type="range"]::-webkit-slider-thumb{width:22px;height:22px}}
+</style>
+<style id="delofia-product-pagination-style">
+#productGrid{scroll-margin-top:150px}
+#productPagination button{min-height:42px}
+@media(max-width:640px){#productPagination{padding-bottom:1rem}#productPagination button{min-width:112px}}
 </style>
