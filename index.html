@@ -1185,8 +1185,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 <div class="p-6 bg-purple-50/50 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-purple-100">
                     <div class="w-full flex-1 flex flex-col justify-center items-center">
                         <div class="w-full aspect-square bg-white rounded-2xl overflow-hidden shadow-sm mb-4 relative border border-purple-100">
-                            <img id="detailMainImage" src="" alt="Product" onclick="openCustomerImageZoom(this.src)" title="Tap to zoom" class="w-full h-full object-contain bg-white cursor-zoom-in">
-                            <span class="absolute bottom-2 right-2 bg-black/65 text-white text-xs px-2.5 py-1.5 rounded-full pointer-events-none"><i class="fas fa-search-plus mr-1"></i> Tap to zoom</span>
+                            <img id="detailMainImage" src="" alt="Product" class="w-full h-full object-contain bg-white cursor-default">
                             <div id="detailStockOverlay" class="hidden absolute inset-0 flex items-center justify-center pointer-events-none"><span class="bg-black/45 text-white font-black text-2xl sm:text-3xl px-5 py-3 rounded-xl -rotate-12 border-2 border-white/70">STOCK OUT</span></div>
                         </div>
                         <!-- Thumbnails list -->
@@ -1303,20 +1302,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         <div id="wishlistItemsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
         <div class="mt-4 text-right"><button type="button" onclick="closeWishlistModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 px-5 py-3 font-bold text-sm">Continue Shopping</button></div>
       </div></div>
-    </div>
-
-    <!-- CUSTOMER IMAGE ZOOM / FULLSCREEN VIEW -->
-    <div id="customerImageZoom" class="fixed inset-0 z-[100] bg-black/95 hidden items-center justify-center" onclick="if(event.target===this) closeCustomerImageZoom()">
-        <button type="button" onclick="closeCustomerImageZoom()" aria-label="Close image zoom" class="absolute top-4 right-4 z-20 w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl">&times;</button>
-        <div class="absolute top-4 left-4 z-20 flex gap-2">
-            <button type="button" onclick="changeCustomerImageZoom(-0.5)" aria-label="Zoom out" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-xl font-bold">−</button>
-            <button type="button" onclick="changeCustomerImageZoom(0.5)" aria-label="Zoom in" class="w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-xl font-bold">+</button>
-            <button type="button" onclick="resetCustomerImageZoom()" class="px-3 h-11 rounded-full bg-white/15 hover:bg-white/25 text-white text-sm font-semibold">Reset</button>
-        </div>
-        <div class="w-full h-full overflow-auto flex items-center justify-center p-3 sm:p-8" id="customerImageZoomViewport">
-            <img id="customerImageZoomTarget" src="" alt="Zoomed product image" class="max-w-full max-h-full object-contain select-none" style="transform:scale(1);transform-origin:center center;transition:transform .15s ease;" draggable="false">
-        </div>
-        <p class="absolute bottom-4 left-0 right-0 text-center text-white/75 text-xs pointer-events-none">Use + / − to zoom • Tap outside or × to close</p>
     </div>
 
     <!-- CUSTOMER ACCOUNT MODAL -->
@@ -3864,49 +3849,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
             return { platform: 'Video', icon: 'fas fa-play-circle', bg: 'bg-purple-700 hover:bg-purple-800 text-white' };
         }
-
-        let customerImageZoomScale = 1;
-        function openCustomerImageZoom(src) {
-            if (!src) return;
-            const modal = document.getElementById('customerImageZoom');
-            const img = document.getElementById('customerImageZoomTarget');
-            if (!modal || !img) return;
-            img.src = src;
-            customerImageZoomScale = 1;
-            img.style.transform = 'scale(1)';
-            img.style.maxWidth = '100%';
-            img.style.maxHeight = '100%';
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            document.body.style.overflow = 'hidden';
-        }
-        function changeCustomerImageZoom(delta) {
-            const img = document.getElementById('customerImageZoomTarget');
-            if (!img) return;
-            customerImageZoomScale = Math.max(1, Math.min(4, customerImageZoomScale + delta));
-            img.style.maxWidth = customerImageZoomScale > 1 ? 'none' : '100%';
-            img.style.maxHeight = customerImageZoomScale > 1 ? 'none' : '100%';
-            img.style.transform = `scale(${customerImageZoomScale})`;
-        }
-        function resetCustomerImageZoom() {
-            customerImageZoomScale = 1;
-            const img = document.getElementById('customerImageZoomTarget');
-            if (img) { img.style.transform = 'scale(1)'; img.style.maxWidth = '100%'; img.style.maxHeight = '100%'; }
-            const viewport = document.getElementById('customerImageZoomViewport');
-            if (viewport) { viewport.scrollTop = 0; viewport.scrollLeft = 0; }
-        }
-        function closeCustomerImageZoom() {
-            const modal = document.getElementById('customerImageZoom');
-            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-            document.body.style.overflow = '';
-        }
-        document.addEventListener('keydown', function(event) {
-            const modal = document.getElementById('customerImageZoom');
-            if (!modal || modal.classList.contains('hidden')) return;
-            if (event.key === 'Escape') closeCustomerImageZoom();
-            if (event.key === '+' || event.key === '=') changeCustomerImageZoom(0.5);
-            if (event.key === '-') changeCustomerImageZoom(-0.5);
-        });
 
         function openProductDetail(prodId) {
             selectedDetailProd = products.find(p => p.id === prodId);
