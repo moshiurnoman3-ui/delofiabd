@@ -2829,28 +2829,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         });
 
-        function buildProductWhatsAppLink(product, intent = 'I want to ask about this product', variants = {}, quantity = 1) {
-            if (!product) return `https://web.whatsapp.com/send?phone=${getWhatsappDigits()}`;
-            const variantParts = Object.entries(variants || {})
-                .filter(([key, value]) => value && !key.startsWith('__'))
-                .map(([key, value]) => `${key}: ${value}`);
-            if (variants && variants.__size) variantParts.push(`Size: ${variants.__size}`);
-            const messageLines = [
-                `Hi Delofia, ${intent}.`,
-                `Product: ${String(product.title || 'Product')}`,
-                `Product ID: ${String(product.id || 'N/A')}`,
-                ...(variantParts.length ? [`Selected option(s): ${variantParts.join(' / ')}`] : []),
-                `Quantity: ${Math.max(1, Math.floor(Number(quantity) || 1))}`,
-                `Store page: ${window.location.href.split('#')[0]}`
-            ];
-            return `https://web.whatsapp.com/send?phone=${getWhatsappDigits()}?text=${encodeURIComponent(messageLines.join('\n'))}`;
-        }
-
-        function getPriceContactLinksHTML(product = {}) {
+        function getPriceContactLinksHTML(productOrTitle = '') {
             const links = [];
-            const wa = buildProductWhatsAppLink(product, 'please tell me the price of this product');
+            const product = productOrTitle && typeof productOrTitle === 'object' ? productOrTitle : { title: String(productOrTitle || '') };
+            const productTitle = product.title || 'Product';
+            const productId = product.id || product.productId || 'N/A';
+            const message = 'Hi Delofia! I want to know the price and details of this product.\nProduct: ' + productTitle + '\nProduct ID: ' + productId + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.';
+            const wa = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent(message)}`;
             const base = 'inline-flex items-center justify-center w-8 h-8 rounded-full text-white text-sm shadow-sm transition-transform hover:scale-105';
-            if (storeSettings.whatsappEnabled !== false && storeSettings.whatsappNumber) links.push(`<a href="${wa}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on WhatsApp" title="WhatsApp" class="${base} bg-emerald-500 hover:bg-emerald-600"><i class="fab fa-whatsapp"></i></a>`);
+            if (storeSettings.whatsappEnabled !== false && storeSettings.whatsappNumber) links.push(`<a href="${wa}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on WhatsApp" title="Ask price on WhatsApp" class="${base} bg-emerald-500 hover:bg-emerald-600"><i class="fab fa-whatsapp"></i></a>`);
             if (storeSettings.facebookUrl) links.push(`<a href="${storeSettings.facebookUrl}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on Facebook" title="Facebook" class="${base} bg-blue-600 hover:bg-blue-700"><i class="fab fa-facebook-f"></i></a>`);
             if (storeSettings.instagramUrl) links.push(`<a href="${storeSettings.instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="Ask price on Instagram" title="Instagram" class="${base} bg-pink-600 hover:bg-pink-700"><i class="fab fa-instagram"></i></a>`);
             return links.join('');
@@ -3000,7 +2987,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         
                         <div class="space-y-2">
                             ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
-                            ${product.stockOut ? '' : `<a href="${buildProductWhatsAppLink(product, 'I want to order this product')}" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> WhatsApp Order</a>`}
+                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Ask Price on WhatsApp</a>`}
                         </div>
                     </div>
                 `;
@@ -3783,7 +3770,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             renderCustomerVariantOptions(selectedDetailProd);
 
             const waBtn = document.getElementById('detailWhatsappBtn');
-            waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia, I want to order ' + selectedDetailProd.title)}`;
+            waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (selectedDetailProd.title || 'Product') + '\nProduct ID: ' + (selectedDetailProd.id || selectedDetailProd.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.')}`;
             updateDetailWhatsappVariantLink();
             waBtn.classList.toggle('hidden', isStockOut);
             waBtn.setAttribute('aria-disabled', isStockOut ? 'true' : 'false');
@@ -4142,7 +4129,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function updateDetailQty(delta) {
             detailQtyVal = Math.max(1, detailQtyVal + delta);
             document.getElementById('detailQty').innerText = detailQtyVal;
-            updateDetailWhatsappVariantLink();
         }
 
         function startVariantBatchDirectCheckout(lines, resumedAfterLogin = false) {
@@ -6344,12 +6330,13 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         function updateDetailWhatsappVariantLink() {
             const waBtn = document.getElementById('detailWhatsappBtn');
             if (!waBtn || !selectedDetailProd) return;
-            waBtn.href = buildProductWhatsAppLink(
-                selectedDetailProd,
-                'I want to ask about the price or order this product',
-                selectedVariantChoices || {},
-                detailQtyVal || 1
-            );
+            const choices = Object.entries(selectedVariantChoices || {}).filter(([k, v]) => v).map(([k, v]) => k + ': ' + v).join(', ');
+            const text = 'Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (selectedDetailProd.title || 'Product') +
+                '\nProduct ID: ' + (selectedDetailProd.id || selectedDetailProd.productId || 'N/A') +
+                (choices ? '\nSelected option(s): ' + choices : '') +
+                '\nWebsite: ' + window.location.href +
+                '\nPlease share the price and availability.';
+            waBtn.href = `https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent(text)}`;
         }
 
         function updateDetailPriceFromVariants() {
