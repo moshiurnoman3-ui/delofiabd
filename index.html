@@ -4025,6 +4025,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             currentCheckoutUnitPrice = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
             appliedDiscount = 0; appliedCouponCode = '';
             renderCheckoutSummary();
+            // Prevent closeCartModal() from reopening the product-detail modal over checkout.
+            window.__cartReturnProductId = null;
             closeCartModal();
             updateShippingLabels();
             const discountInput = document.getElementById('discountInput'); if (discountInput) discountInput.value = '';
@@ -4564,7 +4566,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
 
             const requestedItemsNow = cartCheckoutMode
-                ? shoppingCart.map(item => ({ product: products.find(p => p.id === item.productId), quantity: Number(item.qty) || 1, variants: item.variants || {} }))
+                ? shoppingCart.map(item => ({ product: products.find(p => String(p.id) === String(item.productId)), quantity: Number(item.qty) || 1, variants: item.variants || {} }))
                 : [{ product: currentCheckoutProduct, quantity: Number(currentCheckoutQty) || 1, variants: currentCheckoutVariants || {} }];
             for (const requested of requestedItemsNow) {
                 if (!requested.product || requested.product.stockOut) { alert(`“${requested.product?.title || 'একটি পণ্য'}” এখন স্টকে নেই। অনুগ্রহ করে পণ্যটি বাদ দিন বা অন্য পণ্য নির্বাচন করুন।`); return; }
@@ -4612,8 +4614,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             try {
                 if (!window.db) throw new Error('Database connection is not ready. Please try again.');
                 const orderItems = cartCheckoutMode
-                    ? shoppingCart.map(i => ({ productId:i.productId, variants:i.variants || {}, quantity:Number(i.qty)||1 }))
-                    : [{ productId:currentCheckoutProduct.id, variants:currentCheckoutVariants || {}, quantity:Number(currentCheckoutQty)||1 }];
+                    ? shoppingCart.map(i => ({ productId:String(i.productId), variants:i.variants || {}, quantity:Number(i.qty)||1 }))
+                    : [{ productId:String(currentCheckoutProduct.id), variants:currentCheckoutVariants || {}, quantity:Number(currentCheckoutQty)||1 }];
                 // Use a Firestore transaction so stock checks and deductions are atomic across simultaneous orders.
                 if (typeof window.fsRunTransaction === 'function') {
                     await window.fsRunTransaction(window.db, async (tx) => {
@@ -4659,11 +4661,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 console.error('Could not save order:', { code: error?.code || 'unknown', message: error?.message || String(error), error });
                 const errorCode = String(error?.code || '');
                 const errorMessage = String(error?.message || '');
-                if (/quota|resource-exhausted/i.test(errorCode + ' ' + errorMessage)) {
-                    alert('Firebase-এর কোনো quota/limit-এর কারণে অর্ডার সেভ হয়নি। Cart বা Checkout UI-এর সমস্যা নয়—Firebase Console-এর Firestore/Storage usage ও billing/limit পরীক্ষা করতে হবে।\n\nDetails: ' + errorMessage);
-                } else {
-                    alert('অর্ডারটি সংরক্ষণ করা যায়নি। আবার চেষ্টা করার আগে error দেখুন।\n\n' + (errorCode ? errorCode + ': ' : '') + errorMessage);
-                }
+                alert('অর্ডারটি Firebase-এ সেভ হয়নি। Error code: ' + (errorCode || 'unknown') + '\nDetails: ' + (errorMessage || 'No error message returned') + '\n\nএটা quota, permission, network বা অন্য Firebase সমস্যাও হতে পারে—এই error details দিয়েই সঠিক কারণ বোঝা যাবে।');
                 return;
             }
 
