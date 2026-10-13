@@ -3057,7 +3057,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         </div>
                         
                         <div class="space-y-2">
-                            ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
+                            <button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>
                             <a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Order via WhatsApp</a>
                         
                             <div class="flex justify-center gap-2 pt-1">
@@ -4106,12 +4106,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function addProductToCart(productId) {
             const previousScrollY = window.scrollY;
             const prod = products.find(p => p.id === productId);
-            if (!prod || prod.stockOut) { alert('এই পণ্যটি এখন স্টকে নেই।'); return; }
+            if (!prod) return;
             if (prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.length) { openProductDetail(productId); return; }
             const variants = {}, unitPrice = Number(prod.price || 0), key = cartItemKey(productId, variants);
             const old = shoppingCart.find(i => i.key === key);
             const requestedQty = (old ? Number(old.qty || 0) : 0) + 1;
-            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
+            if (!prod.stockOut && requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
             updateCartBadge(); renderCartItems(); showDelofiaCartToast();
             requestAnimationFrame(() => { if (Math.abs(window.scrollY - previousScrollY) > 8) window.scrollTo({ top: previousScrollY, behavior: 'auto' }); });
@@ -4120,7 +4120,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         function getCurrentDetailVariantLine() {
             const prod = selectedDetailProd;
-            if (!prod || prod.stockOut) return null;
+            if (!prod) return null;
             const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
             const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
             if (missing) { alert('Please choose ' + missing.name + ' before adding this combination.'); return null; }
@@ -4160,14 +4160,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function addSelectedVariantsToCart() {
-            const prod = selectedDetailProd;
-            if (!prod || prod.stockOut) return;
-            const hasVariants = !!(prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.some(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())));
-            if (!hasVariants) { addDetailProductToCart(); return; }
-            // For variant products, the main Add to Cart button saves the current combination
-            // into the selection list. Shopper can choose another combination and repeat.
-            // The separate batch button then adds every saved combination to the real cart.
-            addCurrentVariantLine();
+            // Add the currently selected Color / Size combination to the real cart immediately.
+            // addDetailProductToCart validates required options, updates the cart and shows the success toast.
+            addDetailProductToCart();
         }
 
         function renderPendingVariantLines() {
@@ -4191,7 +4186,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const prod = products.find(p => String(p.id) === String(line.productId));
             const existing = pendingVariantLines.find(x => x.key === line.key);
             const newQty = Number(line.qty) + (existing ? Number(existing.qty) : 0);
-            if (prod && newQty > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
+            if (prod && !prod.stockOut && newQty > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
             if (existing) existing.qty = newQty; else pendingVariantLines.push(line);
             renderPendingVariantLines();
             const btn = document.getElementById('detailAddCartBtn');
@@ -4211,7 +4206,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const prod = products.find(p => String(p.id) === String(line.productId));
                 const existing = shoppingCart.find(x => x.key === line.key);
                 const totalQty = Number(line.qty || 0) + (existing ? Number(existing.qty || 0) : 0);
-                if (prod && totalQty > getAvailableStock(prod, line.variants || {})) { alert('Stock Out — ' + Object.values(line.variants || {}).filter(Boolean).join(' / ') + ' এর পর্যাপ্ত stock নেই।'); return; }
+                if (prod && !prod.stockOut && totalQty > getAvailableStock(prod, line.variants || {})) { alert('Stock Out — ' + Object.values(line.variants || {}).filter(Boolean).join(' / ') + ' এর পর্যাপ্ত stock নেই।'); return; }
             }
             pendingVariantLines.forEach(line => {
                 const existing = shoppingCart.find(x => x.key === line.key);
@@ -4223,7 +4218,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function addDetailProductToCart() {
-            const prod = selectedDetailProd; if (!prod || prod.stockOut) return;
+            const prod = selectedDetailProd; if (!prod) return;
             const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
             const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
             if (missing) { alert('Please choose ' + missing.name + ' before adding to cart.'); return; }
@@ -4238,7 +4233,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
             const requestedQty = (old ? Number(old.qty || 0) : 0) + detailQtyVal;
-            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
+            if (!prod.stockOut && requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
 
             updateCartBadge(); renderCartItems();
