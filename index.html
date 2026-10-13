@@ -3525,6 +3525,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         };
         let cartCheckoutMode = false;
+        // Cart checkout selection: unchecked keys are excluded; new cart lines are selected by default.
+        const cartCheckoutExcludedKeys = new Set();
+        let pendingSelectedCartOriginal = null;
+        let pendingSelectedCartKeys = null;
 
         // Detect platform & icon for Video Links
         function getVideoPlatformInfo(url) {
@@ -3903,12 +3907,40 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         function renderCartItems() {
             const box = document.getElementById('cartItemsList'); if (!box) return;
-            if (!shoppingCart.length) { box.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty.</p>'; }
-            else box.innerHTML = shoppingCart.map((item, index) => `<div class="flex gap-3 border border-purple-100 rounded-xl p-3 items-center"><button type="button" onclick="openCartProductDetail(${index})" class="w-16 h-16 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(item.image || '')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openCartProductDetail(${index})" class="font-bold text-sm text-left hover:text-purple-700 cursor-pointer">${escapeHtml(item.title)} · View Details</button><p class="text-xs text-gray-500">${escapeHtml(Object.values(item.variants || {}).filter(Boolean).join(' / ') || 'Standard')}</p><p class="text-sm font-bold text-purple-800">৳${(Number(item.unitPrice)||0).toFixed(2)} each · ৳${((Number(item.unitPrice)||0)*(Number(item.qty)||0)).toFixed(2)}</p><div class="flex items-center gap-2 mt-2"><button onclick="changeCartQty(${index},-1)" class="w-7 h-7 rounded bg-purple-100 font-bold">−</button><span class="text-sm font-bold">${item.qty}</span><button onclick="changeCartQty(${index},1)" class="w-7 h-7 rounded bg-purple-100 font-bold">+</button><button onclick="removeCartItem(${index})" class="ml-auto text-red-600 text-xs font-bold">Remove</button></div></div></div>`).join('');
-            const subtotal = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
-            const label = document.getElementById('cartSubtotalLabel'); if (label) label.textContent = '৳' + subtotal.toFixed(2);
+            // Remove stale selection exclusions for lines no longer in the cart.
+            const liveKeys = new Set(shoppingCart.map(item => String(item.key || cartItemKey(item.productId, item.variants || {}))));
+            for (const key of Array.from(cartCheckoutExcludedKeys)) if (!liveKeys.has(key)) cartCheckoutExcludedKeys.delete(key);
+            if (!shoppingCart.length) {
+                box.innerHTML = '<p class="text-center text-gray-500 py-8">Your cart is empty.</p>';
+            } else {
+                box.innerHTML = shoppingCart.map((item, index) => {
+                    const key = String(item.key || cartItemKey(item.productId, item.variants || {}));
+                    const checked = !cartCheckoutExcludedKeys.has(key);
+                    const lineTotal = (Number(item.unitPrice)||0) * (Number(item.qty)||0);
+                    return `<div class="flex gap-3 border border-purple-100 rounded-xl p-3 items-center"><input type="checkbox" aria-label="Select ${escapeHtml(item.title)} for checkout" ${checked ? 'checked' : ''} onchange="toggleCartCheckoutItem(${index}, this.checked)" class="w-5 h-5 accent-purple-700 flex-shrink-0 cursor-pointer"><button type="button" onclick="openCartProductDetail(${index})" class="w-16 h-16 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(item.image || '')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openCartProductDetail(${index})" class="font-bold text-sm text-left hover:text-purple-700 cursor-pointer">${escapeHtml(item.title)} · View Details</button><p class="text-xs text-gray-500">${escapeHtml(Object.values(item.variants || {}).filter(Boolean).join(' / ') || 'Standard')}</p><p class="text-sm font-bold text-purple-800">৳${(Number(item.unitPrice)||0).toFixed(2)} each · ৳${lineTotal.toFixed(2)}</p><div class="flex items-center gap-2 mt-2"><button type="button" onclick="changeCartQty(${index},-1)" class="w-7 h-7 rounded bg-purple-100 font-bold">−</button><span class="text-sm font-bold">${Number(item.qty)||1}</span><button type="button" onclick="changeCartQty(${index},1)" class="w-7 h-7 rounded bg-purple-100 font-bold">+</button><button type="button" onclick="removeCartItem(${index})" class="ml-auto text-red-600 text-xs font-bold">Remove</button></div></div></div>`;
+                }).join('');
+            }
+            const selected = shoppingCart.filter(item => !cartCheckoutExcludedKeys.has(String(item.key || cartItemKey(item.productId, item.variants || {}))));
+            const selectedSubtotal = selected.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
+            const allSubtotal = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
+            const label = document.getElementById('cartSubtotalLabel');
+            if (label) label.textContent = '৳' + selectedSubtotal.toFixed(2) + (selected.length !== shoppingCart.length ? ' selected' : '');
+            const checkoutBtn = document.getElementById('cartCheckoutBtn');
+            if (checkoutBtn) {
+                checkoutBtn.disabled = selected.length === 0;
+                checkoutBtn.style.opacity = selected.length === 0 ? '.55' : '1';
+                checkoutBtn.style.cursor = selected.length === 0 ? 'not-allowed' : 'pointer';
+                checkoutBtn.textContent = selected.length === shoppingCart.length ? 'Checkout · ৳' + allSubtotal.toFixed(2) : 'Checkout selected (' + selected.length + ') · ৳' + selectedSubtotal.toFixed(2);
+            }
             updateCartBadge();
         }
+        function toggleCartCheckoutItem(index, checked) {
+            const item = shoppingCart[index]; if (!item) return;
+            const key = String(item.key || cartItemKey(item.productId, item.variants || {}));
+            if (checked) cartCheckoutExcludedKeys.delete(key); else cartCheckoutExcludedKeys.add(key);
+            renderCartItems();
+        }
+        window.toggleCartCheckoutItem = toggleCartCheckoutItem;
         function openCartProductDetail(index) {
             const item = shoppingCart[index];
             if (!item) return;
@@ -3917,8 +3949,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             closeCartModal();
             openProductDetail(product.id);
         }
-        function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => p.id === item.productId); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; renderCartItems(); }
-        function removeCartItem(index) { shoppingCart.splice(index,1); renderCartItems(); }
+        function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => String(p.id) === String(item.productId)); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; savePersistedShoppingCart(); renderCartItems(); }
+        function removeCartItem(index) { const removed = shoppingCart[index]; if (removed) cartCheckoutExcludedKeys.delete(String(removed.key || cartItemKey(removed.productId, removed.variants || {}))); shoppingCart.splice(index,1); savePersistedShoppingCart(); renderCartItems(); }
         function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); }
         function closeCartModal() {
             const m = document.getElementById('cartModal');
@@ -3981,8 +4013,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function checkoutCart() {
             if (window.customerAuth?.currentUser && window.customerProfileCache) fillCheckoutFromCustomerProfile(window.customerProfileCache);
             if (!shoppingCart.length) { alert('Your cart is empty.'); return; }
-            const first = shoppingCart[0], prod = products.find(p => p.id === first.productId);
-            if (!prod) { alert('A product in your cart is no longer available. Please remove it and try again.'); return; }
+            const selectedItems = shoppingCart.filter(item => !cartCheckoutExcludedKeys.has(String(item.key || cartItemKey(item.productId, item.variants || {}))));
+            if (!selectedItems.length) { alert('Checkout করার জন্য Cart থেকে অন্তত একটি পণ্য select করো।'); return; }
+            const first = selectedItems[0], prod = products.find(p => String(p.id) === String(first.productId));
+            if (!prod) { alert('A product in your selected cart items is no longer available. Please remove it and try again.'); return; }
+            // Keep the full cart safe while checkout operates only on selected lines.
+            pendingSelectedCartOriginal = shoppingCart.map(item => ({...item, variants:{...(item.variants||{})}}));
+            pendingSelectedCartKeys = new Set(selectedItems.map(item => String(item.key || cartItemKey(item.productId, item.variants || {}))));
+            shoppingCart = selectedItems.map(item => ({...item, variants:{...(item.variants||{})}}));
             cartCheckoutMode = true; currentCheckoutProduct = prod; currentCheckoutQty = 1; currentCheckoutVariants = {...(first.variants || {})};
             currentCheckoutUnitPrice = shoppingCart.reduce((sum, i) => sum + Number(i.unitPrice || 0) * Number(i.qty || 0), 0);
             appliedDiscount = 0; appliedCouponCode = '';
@@ -3995,7 +4033,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const txn = document.getElementById('advanceTransactionId'); if (txn) txn.value = '';
             const shot = document.getElementById('advanceScreenshot'); if (shot) shot.value = '';
             updatePaymentUI(); applyDistrictShippingRule(); recalculateTotals();
-            const modal = document.getElementById('checkoutModal'); modal.classList.remove('hidden'); pushModalState('checkout');
+            const modal = document.getElementById('checkoutModal'); if (modal) modal.classList.remove('hidden'); pushModalState('checkout');
             if (window.customerAuth?.currentUser && window.customerProfileCache) fillCheckoutFromCustomerProfile(window.customerProfileCache);
         }
 
@@ -4158,6 +4196,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (pendingVariantDirectOriginalCart !== null) {
                 shoppingCart = pendingVariantDirectOriginalCart.map(item => ({...item, variants:{...(item.variants||{})}}));
                 pendingVariantDirectOriginalCart = null;
+                cartCheckoutMode = false;
+                updateCartBadge();
+                renderCartItems();
+            } else if (pendingSelectedCartOriginal !== null) {
+                shoppingCart = pendingSelectedCartOriginal.map(item => ({...item, variants:{...(item.variants||{})}}));
+                pendingSelectedCartOriginal = null;
+                pendingSelectedCartKeys = null;
                 cartCheckoutMode = false;
                 updateCartBadge();
                 renderCartItems();
@@ -4611,8 +4656,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     await window.fsSetDoc(window.fsDoc(window.db, "orders", orderId), orderObj);
                 }
             } catch (error) {
-                console.error('Could not save order:', error);
-                alert(error?.message || 'অর্ডারটি সংরক্ষণ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।');
+                console.error('Could not save order:', { code: error?.code || 'unknown', message: error?.message || String(error), error });
+                const errorCode = String(error?.code || '');
+                const errorMessage = String(error?.message || '');
+                if (/quota|resource-exhausted/i.test(errorCode + ' ' + errorMessage)) {
+                    alert('Firebase-এর কোনো quota/limit-এর কারণে অর্ডার সেভ হয়নি। Cart বা Checkout UI-এর সমস্যা নয়—Firebase Console-এর Firestore/Storage usage ও billing/limit পরীক্ষা করতে হবে।\n\nDetails: ' + errorMessage);
+                } else {
+                    alert('অর্ডারটি সংরক্ষণ করা যায়নি। আবার চেষ্টা করার আগে error দেখুন।\n\n' + (errorCode ? errorCode + ': ' : '') + errorMessage);
+                }
                 return;
             }
 
@@ -4621,6 +4672,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 if (pendingVariantDirectOriginalCart !== null) {
                     shoppingCart = pendingVariantDirectOriginalCart.map(item => ({...item, variants:{...(item.variants||{})}}));
                     pendingVariantDirectOriginalCart = null;
+                } else if (pendingSelectedCartOriginal !== null && pendingSelectedCartKeys instanceof Set) {
+                    // Only remove the items that were actually checked out; keep unchecked cart lines.
+                    shoppingCart = pendingSelectedCartOriginal
+                        .filter(item => !pendingSelectedCartKeys.has(String(item.key || cartItemKey(item.productId, item.variants || {}))))
+                        .map(item => ({...item, variants:{...(item.variants||{})}}));
+                    pendingSelectedCartOriginal = null;
+                    pendingSelectedCartKeys = null;
                 } else {
                     shoppingCart = [];
                 }
