@@ -1195,6 +1195,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                             <button type="button" id="detailWishlistButton" onclick="toggleDetailWishlist()" class="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-pink-50 hover:bg-pink-100 text-pink-700 px-4 py-2 font-bold text-sm transition" aria-label="Add product to wishlist">
                                 <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel">Add to Wishlist</span>
                             </button>
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" data-delofia-share-current="1" class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 font-bold text-xs"><i class="fas fa-share-alt"></i> Share product</button>
+                                <button type="button" data-delofia-copy-current="1" class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 font-bold text-xs"><i class="fas fa-link"></i> Copy link</button>
+                            </div>
                         </div>
                         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
                             <span id="detailPrice" class="text-3xl font-extrabold text-purple-700"></span>
@@ -2192,8 +2196,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         // Use a second named Firebase app for Admin auth so an Admin sign-in never appears as a Customer account.
         const adminApp = initializeApp(firebaseConfig, 'delofiaAdmin');
         const adminAuth = getAuth(adminApp);
-        // Admin Firestore must use the same named Firebase app as Admin Auth;
-        // the customer Firestore instance is intentionally kept separate.
         const adminDb = getFirestore(adminApp);
         window.delofiaAdminDb = adminDb;
         window.delofiaAdminFs = {
@@ -3000,7 +3002,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         <div class="space-y-2">
                             ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Ask Price on WhatsApp</a>`}
-                        </div>
+                        
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" class="rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 text-[11px] font-bold"><i class="fas fa-share-alt mr-1"></i>Share</button>
+                                <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" class="rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 text-[11px] font-bold"><i class="fas fa-link mr-1"></i>Copy link</button>
+                            </div>
+</div>
                     </div>
                 `;
                 grid.appendChild(card);
@@ -3552,6 +3559,59 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         let selectedDetailProd = null;
         let detailQtyVal = 1;
+        let delofiaSharedUrlProductOpened = '';
+        function delofiaProductShareUrl(productId) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('admin');
+            url.searchParams.delete('product');
+            url.searchParams.set('product', String(productId));
+            url.hash = '';
+            return url.toString();
+        }
+        async function delofiaCopyText(text) {
+            if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return; }
+            const field = document.createElement('textarea');
+            field.value = text; field.setAttribute('readonly', '');
+            field.style.position = 'fixed'; field.style.opacity = '0';
+            document.body.appendChild(field); field.select();
+            const copied = document.execCommand('copy'); field.remove();
+            if (!copied) throw new Error('Clipboard is not available in this browser.');
+        }
+        window.copyDelofiaProductLink = async function(productId) {
+            if (productId == null || String(productId) === '') return;
+            try { await delofiaCopyText(delofiaProductShareUrl(productId)); alert('এই পণ্যের লিংক কপি হয়েছে। এখন Paste করে পাঠাতে পারো।'); }
+            catch (error) { console.error('Product link copy failed:', error); alert('লিংক কপি করা যায়নি। আবার চেষ্টা করো।'); }
+        };
+        window.shareDelofiaProduct = async function(productId) {
+            if (productId == null || String(productId) === '') return;
+            const product = (window.products || []).find(p => String(p.id) === String(productId));
+            const url = delofiaProductShareUrl(productId);
+            if (navigator.share) {
+                try { await navigator.share({ title: product?.title || 'Delofia Product', text: 'এই Delofia পণ্যটি দেখুন', url }); return; }
+                catch (error) { if (error?.name === 'AbortError') return; }
+            }
+            await window.copyDelofiaProductLink(productId);
+        };
+        window.shareCurrentDelofiaProduct = function() { if (selectedDetailProd) window.shareDelofiaProduct(selectedDetailProd.id); };
+        window.copyCurrentDelofiaProductLink = function() { if (selectedDetailProd) window.copyDelofiaProductLink(selectedDetailProd.id); };
+        function openDelofiaProductFromSharedUrl() {
+            const productId = new URLSearchParams(window.location.search).get('product');
+            if (!productId || !(window.products || []).length) return;
+            const product = window.products.find(p => String(p.id) === String(productId));
+            if (!product || delofiaSharedUrlProductOpened === String(product.id)) return;
+            delofiaSharedUrlProductOpened = String(product.id);
+            openProductDetail(product.id);
+        }
+        window.addEventListener('delofia-products-updated', openDelofiaProductFromSharedUrl);
+        document.addEventListener('DOMContentLoaded', openDelofiaProductFromSharedUrl);
+        document.addEventListener('click', function(event) {
+            const shareButton = event.target.closest('[data-delofia-share-product]');
+            if (shareButton) { window.shareDelofiaProduct(shareButton.dataset.delofiaShareProduct); return; }
+            const copyButton = event.target.closest('[data-delofia-copy-product]');
+            if (copyButton) { window.copyDelofiaProductLink(copyButton.dataset.delofiaCopyProduct); return; }
+            if (event.target.closest('[data-delofia-share-current]')) { window.shareCurrentDelofiaProduct(); return; }
+            if (event.target.closest('[data-delofia-copy-current]')) window.copyCurrentDelofiaProductLink();
+        });
         let selectedVariantChoices = {};
         let pendingVariantLines = []; // multiple color/size combinations selected on one product
         let pendingVariantDirectOriginalCart = null; // preserve the customer's existing cart during variant Direct Order
@@ -5457,10 +5517,11 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         const ADMIN_SESSION_KEY = 'delofia_admin_session_v1';
         const ADMIN_SESSIONS_KEY = 'delofia_admin_sessions_v1';
         const ADMIN_DURATION_KEY = 'delofia_admin_session_duration_minutes';
+        const ADMIN_SESSION_DURATION_MINUTES = 120;
         let adminSessionHeartbeat = null;
         let thisAdminSessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 
-        function getAdminDurationMinutes() { return 120; }
+        function getAdminDurationMinutes() { return ADMIN_SESSION_DURATION_MINUTES; }
         function getAdminSessions() { try { return JSON.parse(localStorage.getItem(ADMIN_SESSIONS_KEY) || '{}') || {}; } catch (_) { return {}; } }
         function saveAdminSessions(sessions) { localStorage.setItem(ADMIN_SESSIONS_KEY, JSON.stringify(sessions)); }
         function writeCurrentAdminSession() {
@@ -5484,14 +5545,12 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         }
         function getCurrentAdminSession() {
             try {
-                // localStorage keeps the Admin session through reloads and browser tabs.
-                // Migrate a session created by the previous version from sessionStorage.
+                // localStorage survives reloads and browser tabs; migrate the previous tab-only session once.
                 const stored = localStorage.getItem(ADMIN_SESSION_KEY) || sessionStorage.getItem(ADMIN_SESSION_KEY);
                 if (!stored) return null;
                 const session = JSON.parse(stored);
                 if (!session || !session.id || !Number.isFinite(Number(session.createdAt))) return null;
-                // Fixed two-hour expiry measured from successful Admin sign-in.
-                session.expiresAt = Number(session.createdAt) + 120 * 60000;
+                session.expiresAt = Number(session.createdAt) + getAdminDurationMinutes() * 60000;
                 localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
                 sessionStorage.removeItem(ADMIN_SESSION_KEY);
                 const sessions = getAdminSessions();
@@ -5504,16 +5563,27 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         const DELOFIA_ADMIN_UIDS = ['zA65kcr4P2WiddUfkg0osrLtsjd2'];
         function isAuthorizedDelofiaAdmin(user) { return !!user && DELOFIA_ADMIN_UIDS.includes(user.uid); }
         function restoreAdminSession() {
-            // Do not trust a locally stored session by itself. Require a Firebase-authenticated allowlisted user.
+            // Firebase may still be restoring its local login at page startup. Do not erase the saved session yet.
+            const user = window.delofiaAdminAuth?.currentUser;
+            if (!user) return false;
             const session = getCurrentAdminSession();
-            if (!window.delofiaAdminAuth?.currentUser || !isAuthorizedDelofiaAdmin(window.delofiaAdminAuth?.currentUser) || !session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
-                if (session) { sessionStorage.removeItem(ADMIN_SESSION_KEY); localStorage.removeItem(ADMIN_SESSION_KEY); }
+            if (!isAuthorizedDelofiaAdmin(user)) {
+                localStorage.removeItem(ADMIN_SESSION_KEY);
+                sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                return false;
+            }
+            if (!session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
+                localStorage.removeItem(ADMIN_SESSION_KEY);
+                sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                window.delofiaFirebaseAuthMethods.signOut(window.delofiaAdminAuth).catch(() => {});
                 return false;
             }
             thisAdminSessionId = session.id;
             document.getElementById('adminLoginView').classList.add('hidden');
             document.getElementById('adminDashboardView').classList.remove('hidden');
-            loadAdminData(); startAdminSessionHeartbeat(); return true;
+            loadAdminData();
+            startAdminSessionHeartbeat();
+            return true;
         }
         window.tryRestoreDelofiaAdminSession = restoreAdminSession;
         async function resetDelofiaAdminPassword() {
@@ -5545,7 +5615,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             error.textContent = 'Signing in…'; error.classList.remove('hidden');
             if (button) button.disabled = true;
             try {
-                await window.delofiaFirebaseAuthMethods.setPersistence(window.delofiaAdminAuth, window.delofiaFirebaseAuthMethods.browserLocalPersistence);
                 await window.delofiaFirebaseAuthMethods.setPersistence(window.delofiaAdminAuth, window.delofiaFirebaseAuthMethods.browserLocalPersistence);
                 const credential = await window.delofiaFirebaseAuthMethods.signInWithEmailAndPassword(window.delofiaAdminAuth, email, pwd);
                 if (!isAuthorizedDelofiaAdmin(credential.user)) {
@@ -5581,7 +5650,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         window.logoutAdmin = logoutAdmin;
         function saveSessionSettings(e) {
             e.preventDefault();
-            const mins = 120;
+            const mins = getAdminDurationMinutes();
             localStorage.setItem(ADMIN_DURATION_KEY, String(mins));
             const duration = document.getElementById('adminSessionDuration');
             if (duration) duration.value = String(mins);
@@ -5623,7 +5692,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const err = document.getElementById('adminAuthError');
                 if (err) { err.textContent = ''; err.classList.add('hidden'); }
                 // Wait briefly for Firebase to restore its persisted Admin auth state after reload.
-                setTimeout(() => window.tryRestoreDelofiaAdminSession?.(), 250);
+                setTimeout(() => { if (window.delofiaAdminAuth?.currentUser) window.tryRestoreDelofiaAdminSession?.(); }, 1000);
             }
         });
 
@@ -5835,58 +5904,27 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             if (count) count.textContent = String((window.orders || []).length);
             if (!tbody) return;
             tbody.innerHTML = '';
-
             if (!(window.orders || []).length) {
                 tbody.innerHTML = '<tr><td colspan="8" class="p-6 text-center text-gray-400">No direct orders placed yet.</td></tr>';
                 return;
             }
-
             (window.orders || []).forEach((o) => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-purple-50/50 transition';
                 const safeDocId = String(o.id || '').replace(/[^a-zA-Z0-9_-]/g, '');
                 const isAdvance = o.paymentMethod === 'advance';
-                const safeScreenshot = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(String(o.paymentScreenshot || ''))
-                    ? `<a href="${o.paymentScreenshot}" target="_blank" rel="noopener noreferrer" class="inline-block mt-1 text-purple-700 underline">View screenshot</a>`
-                    : '';
+                const screenshotData = String(o.paymentScreenshot || '');
+                const safeScreenshot = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(screenshotData)
+                    ? `<a href="${screenshotData}" target="_blank" rel="noopener noreferrer" class="inline-block mt-1 text-purple-700 underline">View screenshot</a>` : '';
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold">
-                        <span class="text-purple-800 font-bold block">${adminSafeText(o.orderId || '')}</span>
-                        <span class="text-[10px] text-gray-400">${adminSafeText(o.date || '')}</span>
-                    </td>
-                    <td class="p-3">
-                        <strong class="block text-gray-900">${adminSafeText(o.customerName || '')}</strong>
-                        <span class="text-emerald-700 font-semibold block"><i class="fab fa-whatsapp"></i> ${adminSafeText(o.phone || '')}</span>
-                        <span class="text-[11px] text-gray-500 block">${adminSafeText(o.address || '')}</span>
-                    </td>
-                    <td class="p-3">
-                        <span class="font-bold text-gray-800">${adminSafeText(o.productTitle || '')}</span>
-                        ${o.variantSelection ? `<span class="text-[11px] text-blue-700 block font-semibold">${adminSafeText(o.variantSelection)}</span>` : ''}
-                        <span class="text-xs text-purple-700 block font-semibold">Qty: ${adminSafeText(o.quantity ?? '')}</span>
-                    </td>
-                    <td class="p-3">
-                        <span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${adminSafeText(o.shippingArea || '')}</span>
-                        <div class="text-gray-600">৳${Number(o.shippingFee || 0).toFixed(2)}</div>
-                    </td>
+                    <td class="p-3 font-semibold"><span class="text-purple-800 font-bold block">${adminSafeText(o.orderId || '')}</span><span class="text-[10px] text-gray-400">${adminSafeText(o.date || '')}</span></td>
+                    <td class="p-3"><strong class="block text-gray-900">${adminSafeText(o.customerName || '')}</strong><span class="text-emerald-700 font-semibold block"><i class="fab fa-whatsapp"></i> ${adminSafeText(o.phone || '')}</span><span class="text-[11px] text-gray-500 block">${adminSafeText(o.address || '')}</span></td>
+                    <td class="p-3"><span class="font-bold text-gray-800">${adminSafeText(o.productTitle || '')}</span>${o.variantSelection ? `<span class="text-[11px] text-blue-700 block font-semibold">${adminSafeText(o.variantSelection)}</span>` : ''}<span class="text-xs text-purple-700 block font-semibold">Qty: ${adminSafeText(o.quantity ?? '')}</span></td>
+                    <td class="p-3"><span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${adminSafeText(o.shippingArea || '')}</span><div class="text-gray-600">৳${Number(o.shippingFee || 0).toFixed(2)}</div></td>
                     <td class="p-3 font-black text-purple-900 text-sm">৳${Number(o.grandTotal || 0).toFixed(2)}</td>
-                    <td class="p-3 min-w-[150px]">
-                        <strong class="block">${isAdvance ? 'Advance · ' + adminSafeText(o.paymentProvider || '') : 'Cash on Delivery'}</strong>
-                        ${isAdvance ? `<span class="block text-[11px] text-gray-600">Advance: ৳${Number(o.advanceAmount || 0).toFixed(2)}</span><span class="block text-[11px] break-all">Txn: ${adminSafeText(o.transactionId || 'Not provided')}</span>${safeScreenshot}` : ''}
-                    </td>
-                    <td class="p-3 min-w-[145px]">
-                        <select onchange="updateOrderStatus('${safeDocId}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status">
-                            <option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                            <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                            <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                    </td>
-                    <td class="p-3">
-                        <button onclick="deleteOrder('${safeDocId}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order">
-                            <i class="fas fa-trash"></i> <span class="ml-1">Delete</span>
-                        </button>
-                    </td>
-                `;
+                    <td class="p-3 min-w-[150px]"><strong class="block">${isAdvance ? 'Advance · ' + adminSafeText(o.paymentProvider || '') : 'Cash on Delivery'}</strong>${isAdvance ? `<span class="block text-[11px] text-gray-600">Advance: ৳${Number(o.advanceAmount || 0).toFixed(2)}</span><span class="block text-[11px] break-all">Txn: ${adminSafeText(o.transactionId || 'Not provided')}</span>${safeScreenshot}` : ''}</td>
+                    <td class="p-3 min-w-[145px]"><select onchange="updateOrderStatus('${safeDocId}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status"><option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option><option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option><option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option><option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option></select></td>
+                    <td class="p-3"><button onclick="deleteOrder('${safeDocId}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order"><i class="fas fa-trash"></i> <span class="ml-1">Delete</span></button></td>`;
                 tbody.appendChild(tr);
             });
         }
