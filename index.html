@@ -1128,7 +1128,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         <!-- Compact category picker with inline subcategory chips and purple dual price slider -->
         <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
-                <div class="col-span-2 sm:col-span-4 min-w-0">
+                <div class="col-span-2 sm:col-span-2 min-w-0">
                     <label for="categoryFilter" class="block text-xs font-bold text-gray-600 mb-1">Browse Category</label>
                     <select id="categoryFilter" onchange="onCustomerCategoryChange()" class="w-full bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"><option value="all">All categories</option></select>
                     <div id="customerSubCategoryPanel" class="hidden mt-2">
@@ -1137,9 +1137,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     </div>
                     <select id="subCategoryFilter" class="hidden" aria-hidden="true" tabindex="-1"><option value="all">All sub-categories</option></select>
                 </div>
-                <div class="hidden" aria-hidden="true"><input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"></div>
-                <div class="hidden" aria-hidden="true"><input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"></div>
-                <button type="button" onclick="resetProductFilters()" class="col-span-2 sm:col-span-2 px-4 py-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-sm font-bold">Reset</button>
+                <div class="min-w-0">
+                    <label for="minPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Min (৳)</label>
+                    <input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                </div>
+                <div class="min-w-0">
+                    <label for="maxPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Max (৳)</label>
+                    <input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
+                </div>
+                <button type="button" onclick="resetProductFilters()" class="col-span-2 sm:col-span-1 px-4 py-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-sm font-bold">Reset</button>
                 <div class="col-span-2 sm:col-span-6 rounded-xl border border-purple-100 bg-purple-50/40 px-3 py-2.5">
                     <div class="flex items-center justify-between gap-3 text-xs font-bold text-purple-900"><span>Price range</span><span id="priceRangeReadout">৳0 – ৳0</span></div>
                     <div class="relative mt-2 h-7" id="priceRangeSlider">
@@ -2192,6 +2198,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         // Use a second named Firebase app for Admin auth so an Admin sign-in never appears as a Customer account.
         const adminApp = initializeApp(firebaseConfig, 'delofiaAdmin');
         const adminAuth = getAuth(adminApp);
+        // Prepare persistent Admin Auth in the background while the login page loads.
+        window.delofiaAdminPersistenceReady = setPersistence(adminAuth, browserLocalPersistence).catch(error => {
+            console.warn('Could not prepare persistent Admin sign-in:', error);
+            return false;
+        });
         const adminDb = getFirestore(adminApp);
         window.delofiaAdminDb = adminDb;
         window.delofiaAdminFs = {
@@ -2305,11 +2316,18 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         window.openCustomerAccount = function() {
             const modal = document.getElementById('customerAccountModal');
+            document.body.classList.add('delofia-customer-account-open');
+            document.getElementById('mobileSearchInput')?.blur();
+            document.getElementById('desktopSearchInput')?.blur();
+            document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
             if (modal) modal.classList.remove('hidden');
             setCustomerAccountError('');
             renderCustomerAccountState();
         };
-        window.closeCustomerAccount = function() { document.getElementById('customerAccountModal')?.classList.add('hidden'); };
+        window.closeCustomerAccount = function() {
+            document.getElementById('customerAccountModal')?.classList.add('hidden');
+            document.body.classList.remove('delofia-customer-account-open');
+        };
         window.setCustomerAccountMode = function(mode) {
             customerAccountMode = mode === 'login' ? 'login' : 'register';
             customerProfileEditMode = false;
@@ -2544,7 +2562,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function setupRealtimeSync() {
             const isAdminUrl = new URLSearchParams(window.location.search).get('admin') === '1';
-            const productCacheKey = 'delofia_products_cache_v1';
+            const productCacheKey = 'delofia_products_cache_v3';
             const productCacheTtlMs = 5 * 60 * 1000; // public storefront cache: 5 minutes
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
@@ -2564,7 +2582,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const readFreshProductCache = () => {
                 try {
                     const cached = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                    if (cached && Array.isArray(cached.products) && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
+                    if (cached && Array.isArray(cached.products) && cached.products.length > 0 && Number.isFinite(Number(cached.savedAt)) && Date.now() - Number(cached.savedAt) >= 0 && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
                 } catch (e) { /* Ignore malformed or unavailable cache. */ }
                 return null;
             };
@@ -2584,28 +2602,29 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     if (list) list.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-sm">Products load হয়নি: ' + String(error?.message || error).replace(/[<>]/g, '') + '</div>';
                 });
             } else {
-                // Public visitors reuse a fresh local cache for up to 5 minutes, avoiding repeated product reads on quick revisits.
+                // Display a useful local cache immediately, then revalidate from Firestore on every page load.
+                // Each device has its own cache, so a phone must not keep an old catalog after reload.
                 const cachedProducts = readFreshProductCache();
-                if (cachedProducts) {
-                    applyProductList(cachedProducts);
-                } else {
-                    getDocs(collection(db, "products")).then((snapshot) => {
-                        const list = [];
-                        snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
-                        saveProductCache(list);
-                        applyProductList(list);
-                    }).catch((error) => {
-                        console.error('Products load failed:', error);
-                        window.__productsLoadError = String(error?.message || error);
-                        window.__productsSnapshotLoaded = true;
-                        window.dispatchEvent(new Event('delofia-products-updated'));
-                        // If the network read fails, use stale cache only as a fallback, if available.
-                        try {
-                            const stale = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                            if (Array.isArray(stale?.products)) applyProductList(stale.products);
-                        } catch (_) {}
-                    });
-                }
+                if (cachedProducts) applyProductList(cachedProducts);
+                getDocs(collection(db, "products")).then((snapshot) => {
+                    const list = [];
+                    snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
+                    saveProductCache(list);
+                    applyProductList(list);
+                }).catch((error) => {
+                    console.error('Products load failed:', error);
+                    window.__productsLoadError = String(error?.message || error);
+                    window.__productsSnapshotLoaded = true;
+                    window.dispatchEvent(new Event('delofia-products-updated'));
+                    try {
+                        const stale = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
+                        if (Array.isArray(stale?.products) && stale.products.length > 0) applyProductList(stale.products);
+                        else {
+                            const grid = document.getElementById('productsGrid');
+                            if (grid) grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">Products could not load. Check your connection and refresh.</div>';
+                        }
+                    } catch (_) {}
+                });
             }
 
             // IMPORTANT: Do not read the entire orders collection on every customer's storefront visit.
@@ -2925,7 +2944,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const saved = delofiaWishlist.map(id => (products || []).find(p => String(p.id) === id)).filter(Boolean);
             if (!saved.length) { box.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="far fa-heart text-4xl text-pink-300 mb-3"></i><p class="font-semibold">Your wishlist is empty.</p><p class="text-sm mt-1">প্রোডাক্টের ❤️ চিহ্নে চাপ দিয়ে এখানে সেভ করুন।</p></div>'; updateWishlistBadge(); return; }
             box.innerHTML = saved.map(product => {
-                const image = (Array.isArray(product.images) ? product.images.find(src => src && !isAutoDelofiaPlaceholderImage(src)) : '') || '';
+                const image = (Array.isArray(product.images) ? product.images[0] : '') || '';
                 const price = isProductPriceVisible(product) ? `<p class="text-purple-700 font-extrabold mt-1">৳${Number(product.price || 0).toFixed(2)}</p>` : '<p class="text-xs text-gray-500 mt-1">Price জানতে যোগাযোগ করুন</p>';
                 const pid = String(product.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 return `<div class="border border-pink-100 rounded-xl p-3 flex gap-3 items-center"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="w-20 h-20 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.title || 'Product')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="font-bold text-sm text-gray-900 text-left hover:text-purple-700 cursor-pointer">${escapeHtml(product.title || 'Product')} · View Details</button>${price}<div class="flex flex-wrap gap-2 mt-3"><button type="button" onclick="addProductToCart('${pid}')" class="rounded-lg bg-purple-700 hover:bg-purple-800 text-white px-3 py-2 text-xs font-bold" ${product.stockOut ? 'disabled' : ''}>Add to Cart</button><button type="button" onclick="toggleWishlist('${pid}')" class="rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 px-3 py-2 text-xs font-bold">Remove ❤️</button></div></div></div>`;
@@ -3014,7 +3033,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
 
             pageProducts.forEach(product => {
-                const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src)) : [];
+                const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
@@ -3039,7 +3058,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         
                         <div class="space-y-2">
                             ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
-                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Ask Price on WhatsApp</a>`}
+                            <a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Order via WhatsApp</a>
                         
                             <div class="flex justify-center gap-2 pt-1">
                                 <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
@@ -3675,7 +3694,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const price = isProductPriceVisible(p) && Number.isFinite(Number(p.price))
                     ? `<span class="block mt-0.5 text-xs font-bold text-pink-600">৳${Number(p.price).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
                     : '<span class="block mt-0.5 text-xs font-semibold text-pink-600">Price জানতে যোগাযোগ করুন</span>';
-                const photo = Array.isArray(p.images) ? p.images.find(src => src && !isAutoDelofiaPlaceholderImage(src)) : '';
+                const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
                 return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
             }).join('');
             box.classList.remove('hidden');
@@ -3956,14 +3975,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 ? '<i class="fas fa-lock"></i> Stock Out'
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
-            const detailImages = (selectedDetailProd.images || []).filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src));
-            mainImg.src = detailImages[0] || '';
-            mainImg.alt = detailImages.length ? 'Product' : 'No product photo uploaded';
+            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
+            mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
             thumbsContainer.innerHTML = '';
-            if (detailImages.length) {
-                detailImages.forEach((img, idx) => {
+            if (selectedDetailProd.images) {
+                selectedDetailProd.images.forEach((img, idx) => {
                     const thumb = document.createElement('img');
                     thumb.src = img;
                     thumb.className = `w-14 h-14 rounded-lg object-contain bg-white cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
@@ -5746,9 +5764,11 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 return false;
             }
             thisAdminSessionId = session.id;
+            const dashboard = document.getElementById('adminDashboardView');
+            const alreadyVisible = dashboard && !dashboard.classList.contains('hidden');
             document.getElementById('adminLoginView').classList.add('hidden');
-            document.getElementById('adminDashboardView').classList.remove('hidden');
-            loadAdminData();
+            if (dashboard) dashboard.classList.remove('hidden');
+            if (!alreadyVisible) loadAdminData();
             startAdminSessionHeartbeat();
             return true;
         }
@@ -5782,7 +5802,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             error.textContent = 'Signing in…'; error.classList.remove('hidden');
             if (button) button.disabled = true;
             try {
-                await window.delofiaFirebaseAuthMethods.setPersistence(window.delofiaAdminAuth, window.delofiaFirebaseAuthMethods.browserLocalPersistence);
+                await window.delofiaAdminPersistenceReady;
                 const credential = await window.delofiaFirebaseAuthMethods.signInWithEmailAndPassword(window.delofiaAdminAuth, email, pwd);
                 if (!isAuthorizedDelofiaAdmin(credential.user)) {
                     await window.delofiaFirebaseAuthMethods.signOut(window.delofiaAdminAuth);
@@ -6803,12 +6823,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             });
         }
 
-        function isAutoDelofiaPlaceholderImage(src) {
-            const value = String(src || '').toLowerCase();
-            return value.includes('placehold.co/400x400/8b5cf6/ffffff?text=delofia')
-                || (value.includes('placehold.co/') && value.includes('text=delofia'));
-        }
-
         async function handleProductSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('productForm');
@@ -6837,11 +6851,10 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const videoApproved = document.getElementById('prodVideoApproved').checked;
                 const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
                 const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
-                const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src));
+                const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean);
                 const existing = editId ? products.find(p => p.id === editId) : null;
-                const imagesArr = [...selectedProductPhotoData.filter(src => !isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
-                // Leave the product photo list empty when no photo is selected; never save a fake Delofia tile.
-                const finalImages = imagesArr;
+                const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
+                const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
                 const prodId = editId || ('p-' + Date.now());
 
                 // Read names directly from the visible editor at save time so a just-edited
@@ -7023,7 +7036,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('prodVideoUrl').value = p.videoUrl || '';
             document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
 
-            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/') && !isAutoDelofiaPlaceholderImage(src)).join(', ');
+            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = p.photoAutoRotate === true;
             const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = String(p.photoInterval || 4);
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
@@ -7723,4 +7736,10 @@ body.delofia-product-detail-open #productDetailModal { z-index:110 !important; }
 #productGrid{scroll-margin-top:150px}
 #productPagination button{min-height:42px}
 @media(max-width:640px){#productPagination{padding-bottom:1rem}#productPagination button{min-width:112px}}
+</style>
+<style id="delofia-account-modal-mobile-search-layer-fix">
+@media(max-width:767px){
+ body.delofia-customer-account-open #mobileProductSearchBar{display:none!important;visibility:hidden!important;pointer-events:none!important}
+ body.delofia-customer-account-open #customerAccountModal{z-index:2147483000!important}
+}
 </style>
