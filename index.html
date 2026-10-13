@@ -86,32 +86,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bo
 body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bold.text-gray-700,
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor th,
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor td { color:#f4f4f5 !important; }
-
-/* Delofia offer slider: responsive, uncropped banner images with touch support */
-#delofiaOfferSlider { margin-top: -1.25rem; margin-bottom: 2.5rem; }
-#delofiaOfferSlider .offer-slider-frame { position:relative; width:100%; overflow:hidden; border-radius:1.25rem; background:linear-gradient(135deg,#f5f3ff,#eef2ff); aspect-ratio: 16 / 6; touch-action: pan-y; }
-#delofiaOfferSlider .offer-slide-image { display:block; width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; }
-#delofiaOfferSlider .offer-slider-control { position:absolute; top:50%; transform:translateY(-50%); z-index:3; width:40px; height:40px; border-radius:999px; background:rgba(17,24,39,.62); color:white; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.55); cursor:pointer; }
-#delofiaOfferSlider .offer-slider-control:hover { background:rgba(91,33,182,.9); }
-#delofiaOfferSlider .offer-slider-prev { left:10px; }
-#delofiaOfferSlider .offer-slider-next { right:10px; }
-#delofiaOfferSlider .offer-slider-dots { position:absolute; bottom:10px; left:0; right:0; display:flex; gap:7px; justify-content:center; z-index:3; }
-#delofiaOfferSlider .offer-slider-dot { width:8px; height:8px; border-radius:999px; border:0; padding:0; background:rgba(75,85,99,.45); cursor:pointer; }
-#delofiaOfferSlider .offer-slider-dot.active { width:22px; background:#7c3aed; }
-#delofiaOfferSlider .offer-slider-caption { position:absolute; left:0; right:0; bottom:0; padding:26px 12px 28px; background:linear-gradient(transparent,rgba(17,24,39,.22)); pointer-events:none; }
-.offer-slide-admin-preview { width:100%; max-height:130px; object-fit:contain; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:10px; }
-@media(max-width:640px) {
-  #delofiaOfferSlider { margin-top:-.5rem; margin-bottom:1.5rem; }
-  #delofiaOfferSlider .offer-slider-frame { aspect-ratio: 4 / 3; border-radius:1rem; }
-  #delofiaOfferSlider .offer-slider-control { width:34px; height:34px; }
-  #delofiaOfferSlider .offer-slider-prev { left:6px; } #delofiaOfferSlider .offer-slider-next { right:6px; }
-}
-#delofiaOfferSliderStage, #delofiaOfferSliderStage > a { width:100%; height:100%; display:block; }
-#delofiaOfferSlider .offer-slide-image { min-height:100%; }
-.delofia-product-link-btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; border:1px solid #ddd6fe; border-radius:999px; background:#fff; color:#6d28d9; font-size:11px; font-weight:800; padding:7px 10px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-.delofia-product-link-btn:hover { background:#f5f3ff; }
-.delofia-product-link-btn:active { transform:scale(.97); }
-#productDetailShareActions { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
 </style>
 <style>
 .product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
@@ -1142,16 +1116,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             </div>
         </div>
 
-        <!-- Admin-managed offer image slider (the fixed brand hero above remains unchanged) -->
-        <section id="delofiaOfferSlider" class="hidden" aria-label="Exclusive offer banners">
-          <div class="offer-slider-frame" id="delofiaOfferSliderFrame">
-            <div id="delofiaOfferSliderStage" class="w-full h-full"></div>
-            <button type="button" class="offer-slider-control offer-slider-prev" id="delofiaOfferPrev" aria-label="Previous offer"><i class="fas fa-chevron-left"></i></button>
-            <button type="button" class="offer-slider-control offer-slider-next" id="delofiaOfferNext" aria-label="Next offer"><i class="fas fa-chevron-right"></i></button>
-            <div class="offer-slider-dots" id="delofiaOfferDots" aria-label="Choose offer slide"></div>
-          </div>
-        </section>
-
         <!-- Customer product filters -->
         <section class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
             <div class="flex flex-col sm:flex-row sm:items-end gap-3">
@@ -1227,10 +1191,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     <div>
                         <span class="text-xs font-bold text-purple-600 uppercase tracking-widest mb-2 block">DELOFIA</span>
                         <h2 id="detailTitle" class="text-2xl font-bold text-gray-900 mb-2"></h2>
-                        <div id="productDetailShareActions">
-                            <button type="button" class="delofia-product-link-btn" onclick="shareDelofiaProduct(selectedDetailProd?.id)" aria-label="Share this product"><i class="fas fa-share-nodes"></i> Share</button>
-                            <button type="button" class="delofia-product-link-btn" onclick="copyDelofiaProductLink(selectedDetailProd?.id)" aria-label="Copy product link"><i class="fas fa-copy"></i> Copy link</button>
-                        </div>
                         <div class="mb-4">
                             <button type="button" id="detailWishlistButton" onclick="toggleDetailWishlist()" class="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-pink-50 hover:bg-pink-100 text-pink-700 px-4 py-2 font-bold text-sm transition" aria-label="Add product to wishlist">
                                 <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel">Add to Wishlist</span>
@@ -1907,23 +1867,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                 <label class="block text-xs font-bold text-gray-700">Banner description</label><textarea id="settingHeroDescription" rows="3" maxlength="500" class="w-full border rounded-xl p-3 text-sm" placeholder="Fast delivery across Bangladesh..."></textarea>
                                 <label class="block text-xs font-bold text-gray-700">Shop button text</label><input id="settingHeroShopText" type="text" maxlength="60" class="w-full border rounded-xl p-3 text-sm" placeholder="Shop Now">
                                 <label class="block text-xs font-bold text-gray-700">Hero WhatsApp button text</label><input id="settingHeroWhatsappText" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Instant WhatsApp Order">
-                                <div class="border border-purple-200 bg-purple-50/50 rounded-2xl p-4 mt-4 space-y-4">
-                                  <div>
-                                    <h5 class="font-bold text-purple-900 text-sm">Exclusive Offer Image Slider (up to 5 images)</h5>
-                                    <p class="text-xs text-gray-600 mt-1">এখান থেকে সর্বোচ্চ ৫টি ছবি Gallery/Computer থেকে upload করবে। ছবি পুরো দেখা যাবে—কেটে যাবে না। চাইলে প্রতিটি ছবিতে Product বা যেকোনো link যুক্ত করতে পারবে।</p>
-                                  </div>
-                                  <label class="flex items-center gap-3 p-3 bg-white rounded-xl border">
-                                    <input id="settingOfferSliderEnabled" type="checkbox" checked class="h-5 w-5 rounded text-purple-600">
-                                    <span><strong class="block text-sm text-gray-800">Enable automatic sliding</strong><span class="text-xs text-gray-500">বন্ধ করলে ছবি নিজে নিজে বদলাবে না; customer arrow/swipe দিয়ে বদলাতে পারবে।</span></span>
-                                  </label>
-                                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div><label for="settingOfferSliderInterval" class="block text-xs font-bold text-gray-700 mb-1">Auto-slide interval (seconds)</label><input id="settingOfferSliderInterval" type="number" min="1" max="60" value="4" class="w-full border rounded-xl p-3 text-sm"><p class="text-[11px] text-gray-500 mt-1">১ থেকে ৬০ সেকেন্ড।</p></div>
-                                    <div><label for="settingOfferSliderEnabledOnSite" class="block text-xs font-bold text-gray-700 mb-1">Show slider on website</label><select id="settingOfferSliderEnabledOnSite" class="w-full border rounded-xl p-3 text-sm"><option value="true">Show</option><option value="false">Hide</option></select><p class="text-[11px] text-gray-500 mt-1">Hide করলে slider customer-দের দেখাবে না।</p></div>
-                                  </div>
-                                  <div id="offerSlideAdminSlots" class="space-y-4"></div>
-                                  <p class="text-[11px] text-gray-500">Tip: ছবি সর্বোচ্চ ১০০০px-এর মধ্যে resize/compress হবে যাতে Firestore-এর storage limit অতিক্রম না করে। বড় ছবি হলে ৫টি একসাথে save নাও হতে পারে; তখন ছোট ছবি ব্যবহার করবে।</p>
-                                </div>
-
                                 <label class="block text-xs font-bold text-gray-700">Footer brand name</label><input id="settingFooterBrand" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="DELOFIA">
                                 <label class="block text-xs font-bold text-gray-700">Footer brand description</label><textarea id="settingFooterDescription" rows="3" maxlength="500" class="w-full border rounded-xl p-3 text-sm"></textarea>
                                 <label class="block text-xs font-bold text-gray-700">Quick Contact heading</label><input id="settingFooterContactHeading" type="text" maxlength="80" class="w-full border rounded-xl p-3 text-sm" placeholder="Quick Contact">
@@ -2604,7 +2547,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 if (typeof window.renderProducts === 'function') {
                     window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 }
-                if (!isAdminUrl && typeof window.openDelofiaProductFromLink === 'function') window.openDelofiaProductFromLink();
                 if (isAdminUrl && typeof window.renderAdminProductsList === 'function') window.renderAdminProductsList();
             };
             const saveProductCache = (list) => {
@@ -2721,7 +2663,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     window.renderSocialLinks();
                     window.applyStoreLogo();
                     window.applyStorefrontContent?.();
-                    window.renderOfferSlider?.();
                     window.applyConfiguredThemes?.();
                     window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 }
@@ -2864,7 +2805,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             'Other': []
         };
         window.orders = [];
-        window.storeSettings = { requireLoginToOrder: false, globalDirectOrderEnabled: true, globalShowPrice: true, whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, storefrontTheme: 'dark', adminTheme: 'light', heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', offerSliderEnabled: true, offerSliderInterval: 4, offerSliderShow: true, offerSlides: [], footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
+        window.storeSettings = { requireLoginToOrder: false, globalDirectOrderEnabled: true, globalShowPrice: true, whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, storefrontTheme: 'dark', adminTheme: 'light', heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
         window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {}, districtRatesEnabled: {} };
         window.paymentSettings = { advanceEnabled: false, advanceAmount: 100, bkashAccount: '', nagadAccount: '', bankAccount: '' };
         window.coupons = {};
@@ -2879,7 +2820,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         window.addEventListener('DOMContentLoaded', () => {
             renderCategoryControls();
             renderProducts();
-            if (typeof window.openDelofiaProductFromLink === 'function') window.openDelofiaProductFromLink();
             renderSocialLinks();
             applyStorefrontContent();
             updateShippingLabels();
@@ -2986,59 +2926,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); }
         function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); }
 
-        function getDelofiaProductUrl(productId) {
-            const url = new URL(window.location.href);
-            url.searchParams.delete('admin');
-            url.searchParams.set('product', String(productId || ''));
-            url.hash = '';
-            return url.toString();
-        }
-        async function copyDelofiaProductLink(productId) {
-            if (!productId) { alert('Product link পাওয়া যায়নি।'); return; }
-            const link = getDelofiaProductUrl(productId);
-            try {
-                if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(link);
-                else {
-                    const box = document.createElement('textarea'); box.value = link; box.setAttribute('readonly','');
-                    box.style.position='fixed'; box.style.opacity='0'; box.style.left='-9999px'; document.body.appendChild(box); box.select();
-                    const ok = document.execCommand('copy'); box.remove(); if (!ok) throw new Error('Copy failed');
-                }
-                showDelofiaLinkNotice('Product link copied! এখন যেখানে চান paste করুন।');
-            } catch (error) {
-                window.prompt('এই product link-টি copy করুন:', link);
-            }
-        }
-        async function shareDelofiaProduct(productId) {
-            if (!productId) { alert('Product link পাওয়া যায়নি।'); return; }
-            const product = (window.products || []).find(p => String(p.id) === String(productId));
-            const link = getDelofiaProductUrl(productId);
-            const shareData = { title: product?.title || 'Delofia Product', text: `Delofia-তে এই product-টি দেখুন: ${product?.title || ''}`, url: link };
-            try {
-                if (navigator.share) await navigator.share(shareData);
-                else await copyDelofiaProductLink(productId);
-            } catch (error) {
-                if (error?.name !== 'AbortError') await copyDelofiaProductLink(productId);
-            }
-        }
-        function showDelofiaLinkNotice(message) {
-            let notice = document.getElementById('delofiaLinkNotice');
-            if (!notice) { notice=document.createElement('div'); notice.id='delofiaLinkNotice'; notice.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20000;background:#18181b;color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;text-align:center'; document.body.appendChild(notice); }
-            notice.textContent=message; notice.style.display='block'; clearTimeout(window.__delofiaNoticeTimer); window.__delofiaNoticeTimer=setTimeout(()=>{notice.style.display='none';},2400);
-        }
-        window.copyDelofiaProductLink = copyDelofiaProductLink;
-        window.shareDelofiaProduct = shareDelofiaProduct;
-        let delofiaDeepLinkOpened = false;
-        function openDelofiaProductFromLink() {
-            if (delofiaDeepLinkOpened) return;
-            const id = new URLSearchParams(window.location.search).get('product');
-            if (!id || !Array.isArray(window.products) || !window.products.length) return;
-            const product = window.products.find(p => String(p.id) === String(id));
-            if (!product) return;
-            delofiaDeepLinkOpened = true;
-            setTimeout(() => { if (typeof openProductDetail === 'function') openProductDetail(String(id)); }, 120);
-        }
-        window.openDelofiaProductFromLink = openDelofiaProductFromLink;
-
         function renderProducts(filterText = '') {
             const grid = document.getElementById('productsGrid');
             if(!grid) return;
@@ -3091,11 +2978,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
-                        <div class="absolute top-2 right-2 z-10 flex flex-col gap-1.5">
-                          <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
-                          <button type="button" onclick="event.stopPropagation(); shareDelofiaProduct('${String(product.id).replace("'", "\\'")}')" aria-label="Share product" title="Share product" class="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center text-purple-700 hover:bg-purple-50"><i class="fas fa-share-nodes text-xs"></i></button>
-                          <button type="button" onclick="event.stopPropagation(); copyDelofiaProductLink('${String(product.id).replace("'", "\\'")}')" aria-label="Copy product link" title="Copy product link" class="w-8 h-8 rounded-full bg-white/95 shadow-md flex items-center justify-center text-purple-700 hover:bg-purple-50"><i class="fas fa-copy text-xs"></i></button>
-                        </div>
+                        <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
                         ${product.stockOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/10 pointer-events-none"><span class="bg-black/50 text-white font-black text-lg sm:text-xl px-3 py-2 rounded-lg -rotate-12 border-2 border-white/70">STOCK OUT</span></div>' : ''}
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
@@ -3466,33 +3349,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 storeSettings.adminTheme = document.getElementById('settingAdminTheme')?.value === 'dark' ? 'dark' : 'light';
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
                 Object.entries(settingTextFields).forEach(([key, id]) => { const field = document.getElementById(id); if (field) storeSettings[key] = field.value.trim(); });
-                storeSettings.offerSliderEnabled = !!document.getElementById('settingOfferSliderEnabled')?.checked;
-                storeSettings.offerSliderInterval = Math.max(1, Math.min(60, Number(document.getElementById('settingOfferSliderInterval')?.value) || 4));
-                storeSettings.offerSliderShow = document.getElementById('settingOfferSliderEnabledOnSite')?.value !== 'false';
-                const priorSlides = Array.isArray(storeSettings.offerSlides) ? storeSettings.offerSlides : [];
-                const newSlides = [];
-                for (let i = 0; i < 5; i++) {
-                    const fileInput = document.getElementById('settingOfferSlideFile' + i);
-                    const file = fileInput?.files?.[0];
-                    let image = priorSlides[i]?.image || '';
-                    if (file) image = await resizeOfferBanner(file);
-                    const linkType = document.getElementById('settingOfferSlideLinkType' + i)?.value || 'none';
-                    const productId = document.getElementById('settingOfferSlideProduct' + i)?.value || '';
-                    const linkUrl = document.getElementById('settingOfferSlideUrl' + i)?.value.trim() || '';
-                    const enabled = document.getElementById('settingOfferSlideActive' + i)?.checked !== false;
-                    newSlides.push({ image, linkType, productId, linkUrl, enabled });
-                }
-                storeSettings.offerSlides = newSlides;
                 if (!window.db || typeof window.fsSetDoc !== 'function' || typeof window.fsDoc !== 'function') {
                     throw new Error('Firebase settings connection is not ready. Please refresh and try again.');
                 }
-                const storeSettingsBytes = new Blob([JSON.stringify(storeSettings)]).size;
-                if (storeSettingsBytes > 900000) throw new Error('Banner photos make Store Settings too large (' + Math.round(storeSettingsBytes/1024) + ' KB). Use smaller/lower-resolution pictures, then save again.');
                 if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
                 await window.fsSetDoc(window.fsDoc(window.db, 'settings', 'store'), storeSettings);
                 applyConfiguredThemes();
                 pendingStoreLogo = null;
-                applyStoreLogo(); updateWhatsappUI(); renderSocialLinks(); applyStorefrontContent(); renderOfferSlider(true);
+                applyStoreLogo(); updateWhatsappUI(); renderSocialLinks(); applyStorefrontContent();
                 renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
                 alert('Store settings saved successfully!');
             } catch (err) {
@@ -3502,121 +3366,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = oldBtnText || 'Save Store & Social Settings'; }
             }
         }
-
-
-        function resizeOfferBanner(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onerror = () => reject(new Error('Could not read banner image.'));
-                reader.onload = () => {
-                    const img = new Image();
-                    img.onerror = () => reject(new Error('This banner image could not be opened.'));
-                    img.onload = () => {
-                        const maxSide = 1000;
-                        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-                        const canvas = document.createElement('canvas');
-                        canvas.width = Math.max(1, Math.round(img.width * scale));
-                        canvas.height = Math.max(1, Math.round(img.height * scale));
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.58));
-                    };
-                    img.src = reader.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Admin-managed 5-slot offer slider. Images are resized before saving into settings/store.
-        let delofiaOfferCurrentIndex = 0;
-        let delofiaOfferTimer = null;
-        let delofiaOfferTouchStartX = null;
-        function populateOfferSlideAdminSettings() {
-            const host = document.getElementById('offerSlideAdminSlots');
-            if (!host) return;
-            const slides = Array.isArray(storeSettings.offerSlides) ? storeSettings.offerSlides : [];
-            const productList = Array.isArray(window.products) ? window.products : (Array.isArray(products) ? products : []);
-            const productOptions = '<option value="">-- Choose a product --</option>' + productList.map(p => `<option value="${String(p.id || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}">${String(p.title || 'Untitled product').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</option>`).join('');
-            host.innerHTML = '';
-            for (let i=0; i<5; i++) {
-                const slide = slides[i] || {};
-                const card = document.createElement('div');
-                card.className = 'bg-white border border-purple-100 rounded-xl p-3 space-y-3';
-                card.innerHTML = `<div class="flex items-center justify-between gap-2"><strong class="text-sm text-purple-900">Slide ${i+1}</strong><label class="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" id="settingOfferSlideActive${i}" ${slide.enabled === false ? '' : 'checked'} class="rounded"> Use this slide</label></div>
-                  <input type="file" id="settingOfferSlideFile${i}" accept="image/*" class="block w-full text-xs" aria-label="Upload image for slide ${i+1}">
-                  <img id="settingOfferSlidePreview${i}" class="offer-slide-admin-preview ${slide.image ? '' : 'hidden'}" src="${slide.image || ''}" alt="Slide ${i+1} preview">
-                  <p class="text-[11px] text-gray-500">${slide.image ? 'Current image saved. Choose a new image to replace it.' : 'Choose a picture from phone Gallery or computer.'}</p>
-                  <label class="block text-xs font-bold text-gray-700">Click action</label>
-                  <select id="settingOfferSlideLinkType${i}" class="w-full border rounded-lg p-2.5 text-sm"><option value="none">Image only (no link)</option><option value="product">Open a product</option><option value="url">Open a URL</option></select>
-                  <div id="settingOfferSlideProductWrap${i}" class="hidden"><label class="block text-xs font-semibold text-gray-600 mb-1">Product to open</label><select id="settingOfferSlideProduct${i}" class="w-full border rounded-lg p-2.5 text-sm">${productOptions}</select></div>
-                  <div id="settingOfferSlideUrlWrap${i}" class="hidden"><label class="block text-xs font-semibold text-gray-600 mb-1">Destination URL</label><input id="settingOfferSlideUrl${i}" type="url" placeholder="https://..." class="w-full border rounded-lg p-2.5 text-sm"></div>`;
-                host.appendChild(card);
-                const type = card.querySelector('#settingOfferSlideLinkType'+i); type.value = ['none','product','url'].includes(slide.linkType) ? slide.linkType : 'none';
-                const prod = card.querySelector('#settingOfferSlideProduct'+i); if (prod) prod.value = slide.productId || '';
-                const url = card.querySelector('#settingOfferSlideUrl'+i); if (url) url.value = slide.linkUrl || '';
-                const file = card.querySelector('#settingOfferSlideFile'+i);
-                file.addEventListener('change', () => { const f=file.files && file.files[0]; const img=card.querySelector('#settingOfferSlidePreview'+i); if (!f || !f.type.startsWith('image/')) return; const reader=new FileReader(); reader.onload=()=>{img.src=reader.result;img.classList.remove('hidden');};reader.readAsDataURL(f); });
-                const refresh = () => { card.querySelector('#settingOfferSlideProductWrap'+i).classList.toggle('hidden',type.value!=='product'); card.querySelector('#settingOfferSlideUrlWrap'+i).classList.toggle('hidden',type.value!=='url'); };
-                type.addEventListener('change',refresh); refresh();
-            }
-            const auto = document.getElementById('settingOfferSliderEnabled'); if (auto) auto.checked = storeSettings.offerSliderEnabled !== false;
-            const interval = document.getElementById('settingOfferSliderInterval'); if (interval) interval.value = String(Math.max(1, Math.min(60, Number(storeSettings.offerSliderInterval) || 4)));
-            const show = document.getElementById('settingOfferSliderEnabledOnSite'); if (show) show.value = storeSettings.offerSliderShow === false ? 'false' : 'true';
-        }
-        let delofiaOfferControlsReady = false;
-        function renderOfferSlider(resetTimer = true) {
-            const section = document.getElementById('delofiaOfferSlider');
-            const stage = document.getElementById('delofiaOfferSliderStage');
-            const dots = document.getElementById('delofiaOfferDots');
-            const frame = document.getElementById('delofiaOfferSliderFrame');
-            if (!section || !stage || !dots || !frame) return;
-            const getSlides = () => (Array.isArray(window.storeSettings?.offerSlides) ? window.storeSettings.offerSlides : []).filter(x => x && x.enabled !== false && typeof x.image === 'string' && x.image.trim());
-            let slides = getSlides();
-            const visible = window.storeSettings?.offerSliderShow !== false && slides.length > 0;
-            section.classList.toggle('hidden', !visible);
-            if (delofiaOfferTimer) { clearInterval(delofiaOfferTimer); delofiaOfferTimer = null; }
-            if (!visible) { stage.innerHTML = ''; dots.innerHTML = ''; return; }
-            delofiaOfferCurrentIndex = ((delofiaOfferCurrentIndex % slides.length) + slides.length) % slides.length;
-            const slide = slides[delofiaOfferCurrentIndex];
-            stage.innerHTML = '';
-            const img = document.createElement('img'); img.className = 'offer-slide-image'; img.src = slide.image; img.alt = `Delofia offer ${delofiaOfferCurrentIndex + 1}`; img.draggable = false;
-            img.onerror = () => { img.alt = 'Offer image could not load'; };
-            if (slide.linkType === 'url' && /^https?:\/\//i.test(String(slide.linkUrl || ''))) {
-                const a = document.createElement('a'); a.href = slide.linkUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.setAttribute('aria-label', 'Open offer'); a.appendChild(img); stage.appendChild(a);
-            } else if (slide.linkType === 'product' && slide.productId) {
-                const a = document.createElement('a'); a.href = getDelofiaProductUrl(slide.productId); a.setAttribute('aria-label', 'View offer product'); a.appendChild(img);
-                a.addEventListener('click', ev => { ev.preventDefault(); openProductDetail(String(slide.productId)); }); stage.appendChild(a);
-            } else stage.appendChild(img);
-            dots.innerHTML = '';
-            slides.forEach((item, i) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'offer-slider-dot' + (i === delofiaOfferCurrentIndex ? ' active' : ''); b.setAttribute('aria-label', `Show offer ${i + 1}`); b.addEventListener('click', () => { delofiaOfferCurrentIndex = i; renderOfferSlider(true); }); dots.appendChild(b); });
-            const prev = document.getElementById('delofiaOfferPrev'), next = document.getElementById('delofiaOfferNext');
-            if (prev) prev.style.display = slides.length > 1 ? 'flex' : 'none';
-            if (next) next.style.display = slides.length > 1 ? 'flex' : 'none';
-            if (!delofiaOfferControlsReady) {
-                delofiaOfferControlsReady = true;
-                frame.addEventListener('touchstart', ev => { delofiaOfferTouchStartX = ev.changedTouches?.[0]?.clientX ?? null; }, {passive:true});
-                frame.addEventListener('touchend', ev => {
-                    if (delofiaOfferTouchStartX === null) return;
-                    const dx = (ev.changedTouches?.[0]?.clientX ?? delofiaOfferTouchStartX) - delofiaOfferTouchStartX; delofiaOfferTouchStartX = null;
-                    const current = getSlides();
-                    if (Math.abs(dx) > 45 && current.length > 1) { delofiaOfferCurrentIndex = (delofiaOfferCurrentIndex + (dx < 0 ? 1 : -1) + current.length) % current.length; renderOfferSlider(true); }
-                }, {passive:true});
-                if (prev) prev.addEventListener('click', () => { const current = getSlides(); if (current.length > 1) { delofiaOfferCurrentIndex = (delofiaOfferCurrentIndex - 1 + current.length) % current.length; renderOfferSlider(true); } });
-                if (next) next.addEventListener('click', () => { const current = getSlides(); if (current.length > 1) { delofiaOfferCurrentIndex = (delofiaOfferCurrentIndex + 1) % current.length; renderOfferSlider(true); } });
-            }
-            // Only auto-advance when there are at least two enabled images and auto-slide is enabled.
-            if (window.storeSettings?.offerSliderEnabled !== false && slides.length > 1) {
-                const ms = Math.max(1000, Math.min(60000, Number(window.storeSettings.offerSliderInterval) || 4) * 1000);
-                delofiaOfferTimer = setInterval(() => {
-                    const current = getSlides();
-                    if (current.length < 2 || window.storeSettings?.offerSliderShow === false) { clearInterval(delofiaOfferTimer); delofiaOfferTimer = null; return; }
-                    delofiaOfferCurrentIndex = (delofiaOfferCurrentIndex + 1) % current.length;
-                    renderOfferSlider(false);
-                }, ms);
-            }
-        }
-        window.renderOfferSlider = renderOfferSlider;
-
 
         function applyStorefrontContent() {
             const fields = {
@@ -3637,7 +3386,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             Object.entries(fields).forEach(([id, pair]) => { const el = document.getElementById(id); if (el) el.textContent = String(storeSettings[pair[0]] ?? pair[1]); });
         }
         window.applyStorefrontContent = applyStorefrontContent;
-        try { renderOfferSlider(); } catch (_) {}
         function applyStorefrontTheme(theme) {
             document.body.classList.toggle('delofia-dark-storefront', theme === 'dark');
             const label = document.getElementById('delofiaCustomerThemeLabel');
@@ -4041,13 +3789,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function closeProductDetail() {
             const modal = document.getElementById('productDetailModal');
             if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-            // If this was a shared product URL, close in place instead of navigating back to the referring app.
+            // The X button behaves like one browser Back step, not a site exit.
             try {
-                const cleanUrl = new URL(window.location.href);
-                if (cleanUrl.searchParams.has('product')) {
-                    cleanUrl.searchParams.delete('product');
-                    history.replaceState({ delofiaModal: false }, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-                } else if (history.state && history.state.modal === 'productDetail') history.back();
+                if (history.state && history.state.modal === 'productDetail') history.back();
             } catch (error) { console.warn('Could not return from product detail:', error); }
         }
 
@@ -6032,7 +5776,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
                 const sfTheme = document.getElementById('settingStorefrontTheme'); if (sfTheme) sfTheme.value = storeSettings.storefrontTheme || 'dark';
                 const adTheme = document.getElementById('settingAdminTheme'); if (adTheme) adTheme.value = storeSettings.adminTheme || 'light';
-                pendingStoreLogo = null; applyStoreLogo(); populateOfferSlideAdminSettings();
+                pendingStoreLogo = null; applyStoreLogo();
             }
         }
 
@@ -6054,7 +5798,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const photoIntervalField = document.getElementById('settingProductPhotoInterval'); if (photoIntervalField) photoIntervalField.value = String(storeSettings.productPhotoInterval || 4);
                 const sfTheme = document.getElementById('settingStorefrontTheme'); if (sfTheme) sfTheme.value = storeSettings.storefrontTheme || 'dark';
                 const adTheme = document.getElementById('settingAdminTheme'); if (adTheme) adTheme.value = storeSettings.adminTheme || 'light';
-            pendingStoreLogo = null; applyStoreLogo(); populateOfferSlideAdminSettings();
+            pendingStoreLogo = null; applyStoreLogo();
 
             renderOrdersTable();
             renderAdminProductsList();
