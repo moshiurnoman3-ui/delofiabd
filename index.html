@@ -1305,7 +1305,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
       <div class="min-h-screen flex items-center justify-center p-3">
         <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden border border-purple-100">
           <div class="bg-gradient-to-r from-purple-800 to-indigo-800 text-white p-5 flex items-center justify-between">
-            <div><h2 id="customerAccountTitle" class="text-xl font-black">My Delofia Account</h2><p class="text-xs text-purple-100 mt-1">Login with phone number and password — no OTP</p></div>
+            <div><h2 id="customerAccountTitle" class="text-xl font-black">My Delofia Account</h2><p class="text-xs text-purple-100 mt-1">Secure email and password login</p></div>
             <button type="button" onclick="closeCustomerAccount()" class="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25" aria-label="Close"><i class="fas fa-times"></i></button>
           </div>
           <div class="p-5 sm:p-6">
@@ -1323,10 +1323,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                   <div class="grid grid-cols-2 gap-3"><input id="customerProfileDistrict" type="text" list="bdDistricts" autocomplete="off" placeholder="District / Zila * (type to search)" required class="min-w-0 rounded-xl border border-gray-300 px-3 py-3 text-sm text-gray-900"><input id="customerProfilePostal" type="text" placeholder="Postal code (optional)" class="min-w-0 rounded-xl border border-gray-300 px-3 py-3 text-sm text-gray-900"></div>
                   <input id="customerProfileEmail" type="email" autocomplete="email" placeholder="Email address (required for password reset) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
                 </div>
-                <input id="customerProfilePhone" type="tel" autocomplete="tel" inputmode="numeric" maxlength="11" minlength="11" pattern="01[3-9][0-9]{8}" placeholder="Phone number (11 digits, e.g. 017XXXXXXXX) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                <div id="customerPhoneField"><input id="customerProfilePhone" type="tel" autocomplete="tel" inputmode="numeric" maxlength="11" minlength="11" pattern="01[3-9][0-9]{8}" placeholder="Phone number (11 digits, e.g. 017XXXXXXXX) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900"></div>
+                <input id="customerLoginEmail" type="email" autocomplete="email" placeholder="Email address *" class="hidden w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
                 <input id="customerProfilePassword" type="password" autocomplete="current-password" minlength="6" placeholder="Password (at least 6 characters) *" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900">
                 <button id="customerForgotPasswordBtn" type="button" onclick="customerForgotPassword()" class="hidden text-sm font-bold text-purple-700 hover:underline">Forgot Password? Send reset link to email</button>
-                <p id="customerAccountHelp" class="text-xs text-gray-500">Account খুলতে email দিতে হবে। Login হবে ফোন নম্বর ও password দিয়ে। Password ভুলে গেলে email-এ reset link যাবে।</p>
+                <p id="customerAccountHelp" class="text-xs text-gray-500">Account খুলতে email ও ফোন নম্বর লাগবে। Login এবং password reset হবে email দিয়ে। তোমার profile ব্যক্তিগত থাকবে।</p>
                 <div id="customerAccountError" class="hidden rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm p-3"></div>
                 <button id="customerAccountSubmitBtn" type="submit" class="w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3.5 font-black">Create Account</button>
               </form>
@@ -1620,16 +1621,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     <i class="fas fa-lock"></i>
                 </div>
                 <h3 class="text-2xl font-black text-purple-900 mb-2">Admin Dashboard</h3>
-                <p class="text-xs text-gray-500 mb-6">Enter password to manage products, view direct orders, and change delivery fees.</p>
+                <p class="text-xs text-gray-500 mb-6">Sign in with an authorized Firebase Admin account.</p>
                 
-                <form onsubmit="event.preventDefault(); checkAdminPassword();">
-                    <input type="password" id="adminPasswordInput" placeholder="Enter Admin Password" class="w-full bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <p id="adminAuthError" class="text-xs text-red-500 hidden mb-4">Invalid password! Try again.</p>
-
-                    <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl transition shadow-lg">
-                        Login to Admin Panel
-                    </button>
+                <form onsubmit="event.preventDefault(); window.checkAdminPassword?.();">
+                    <input type="email" id="adminEmailInput" placeholder="Admin email address" autocomplete="username" required class="w-full bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <input type="password" id="adminPasswordInput" placeholder="Admin account password" autocomplete="current-password" required class="w-full bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    <p id="adminAuthError" class="text-xs text-red-500 hidden mb-4">Login failed. Check your email and password.</p>
+                    <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl transition shadow-lg">Login to Admin Panel</button>
                 </form>
+                <p class="text-[11px] text-gray-400 mt-4">Only Admin accounts specifically authorized for Delofia can enter.</p>
             </div>
 
             <!-- Dashboard Content View -->
@@ -1683,6 +1683,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                             <h4 class="font-bold text-gray-800">Customer Direct Orders</h4>
                             <button onclick="clearAllOrders()" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-xl font-bold transition">Clear All Orders</button>
                         </div>
+                        <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><strong>Security mode:</strong> Customer checkout cannot edit shared stock. After reviewing a new order, update stock manually from the Products tab. Automatic stock deduction needs a trusted server-side function.</div>
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-xs text-gray-700">
@@ -2171,7 +2172,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
           apiKey: "AIzaSyBzKio6DyX5kyaxYZvNGGcfXmVsQD4H2o4",
@@ -2187,6 +2188,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         const db = getFirestore(app);
         const auth = getAuth(app);
         window.customerAuth = auth;
+        // Bridge Firebase Auth methods for the separate classic-script Admin Panel.
+        window.delofiaFirebaseAuthMethods = { signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider };
         let customerAccountMode = 'register';
         // Keep a lexical cache variable and the window property in sync.
         // This prevents ReferenceError if any checkout/auth helper reads customerProfileCache directly.
@@ -2299,6 +2302,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             customerAccountMode = mode === 'login' ? 'login' : 'register';
             customerProfileEditMode = false;
             const fields = document.getElementById('customerRegisterFields');
+            const phoneField = document.getElementById('customerPhoneField');
+            const loginEmailField = document.getElementById('customerLoginEmail');
+            const phoneInput = document.getElementById('customerProfilePhone');
+            const loginEmailInput = document.getElementById('customerLoginEmail');
             const register = document.getElementById('customerRegisterTab');
             const login = document.getElementById('customerLoginTab');
             const submit = document.getElementById('customerAccountSubmitBtn');
@@ -2306,6 +2313,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const forgot = document.getElementById('customerForgotPasswordBtn');
             if (forgot) forgot.classList.toggle('hidden', customerAccountMode !== 'login' || customerProfileEditMode);
             if (fields) fields.classList.toggle('hidden', customerAccountMode === 'login');
+            if (phoneField) phoneField.classList.toggle('hidden', customerAccountMode === 'login' && !customerProfileEditMode);
+            if (phoneInput) phoneInput.required = customerAccountMode === 'register' || customerProfileEditMode;
+            if (loginEmailField) loginEmailField.classList.toggle('hidden', customerAccountMode !== 'login' || customerProfileEditMode);
+            if (loginEmailInput) loginEmailInput.required = customerAccountMode === 'login' && !customerProfileEditMode;
             ['customerProfileName','customerProfileAddress','customerProfileDistrict','customerProfileEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.required = customerAccountMode === 'register'; });
             if (register) register.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'register' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
             if (login) login.className = 'rounded-xl py-2.5 font-bold ' + (customerAccountMode === 'login' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700');
@@ -2315,38 +2326,26 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         };
         window.customerForgotPassword = async function() {
             setCustomerAccountError('');
-            const phone = normalizedCustomerPhone(document.getElementById('customerProfilePhone').value);
-            if (!/^01[3-9]\d{8}$/.test(phone)) { setCustomerAccountError('আগে তোমার account-এর ১১ সংখ্যার ফোন নম্বরটি দাও।'); return; }
+            const email = String(document.getElementById('customerLoginEmail')?.value || '').trim().toLowerCase();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setCustomerAccountError('Password reset করতে আগে তোমার account-এর email address দাও।'); return; }
             const btn = document.getElementById('customerForgotPasswordBtn');
             if (btn) { btn.disabled = true; btn.textContent = 'Sending reset link…'; }
             try {
-                const matches = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
-                let email = !matches.empty ? String((matches.docs[0].data() || {}).email || '').trim().toLowerCase() : '';
-                // If an admin deleted only the Firestore profile, the Auth account may still exist.
-                // Let the customer enter that account's email so they can recover access.
-                if (!email) {
-                    email = String(window.prompt('এই ফোন নম্বরের profile পাওয়া যায়নি। Firebase account-এর email address লিখো, যাতে password reset link পাঠানো যায়:') || '').trim().toLowerCase();
-                    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('সঠিক email address দেওয়া হয়নি। আবার চেষ্টা করো।');
-                }
-                // Explicit continue URL helps Firebase build a reset email for the current storefront.
                 const actionCodeSettings = { url: window.location.origin, handleCodeInApp: false };
                 await sendPasswordResetEmail(auth, email, actionCodeSettings);
-                setCustomerAccountError('');
-                alert('Password reset email পাঠানোর request সফল হয়েছে: ' + email + '\n\nInbox, Spam/Junk এবং Promotions folder দেখো। ৫ মিনিট অপেক্ষা করো।');
+                alert('যদি এই email-এ Delofia account থাকে, password reset email পাঠানো হয়েছে। Inbox, Spam/Junk folder দেখো।');
             } catch (error) {
                 console.error('Password reset error:', error);
                 const code = error?.code || '';
                 const friendly = {
-                    'auth/user-not-found': 'এই ইমেইলটি Firebase Authentication-এর login account-এর সঙ্গে মেলেনি। আগের পুরোনো account হলে Admin-এর সাহায্যে account migration করতে হবে।',
-                    'auth/invalid-email': 'Account-এর email ঠিক নেই। Admin-এর সাহায্য নাও।',
+                    'auth/invalid-email': 'সঠিক email address দাও।',
                     'auth/operation-not-allowed': 'Firebase Console → Authentication → Sign-in method থেকে Email/Password চালু করতে হবে।',
-                    'auth/invalid-continue-uri': 'Firebase reset link-এর URL গ্রহণ করেনি। Firebase Console → Authentication → Settings → Authorized domains-এ তোমার website domain যোগ করো।',
-                    'auth/unauthorized-continue-uri': 'Website domain Firebase-এ authorized নয়। Firebase Console → Authentication → Settings → Authorized domains-এ domain যোগ করো।',
+                    'auth/invalid-continue-uri': 'Firebase reset link-এর URL গ্রহণ করেনি। Firebase Authorized domains পরীক্ষা করো।',
+                    'auth/unauthorized-continue-uri': 'Website domain Firebase Authorized domains-এ যোগ করতে হবে।',
                     'auth/too-many-requests': 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করো।',
-                    'auth/network-request-failed': 'Internet connection পরীক্ষা করে আবার চেষ্টা করো।',
-                    'permission-denied': 'Customer profile পড়ার permission নেই। Firestore Rules যাচাই করতে হবে।'
+                    'auth/network-request-failed': 'Internet connection পরীক্ষা করে আবার চেষ্টা করো।'
                 };
-                setCustomerAccountError(friendly[code] || (error?.message && error.message.startsWith('এই ') ? error.message : 'Reset email পাঠানো যায়নি। Firebase Console-এ Authentication → Templates থেকে Password reset email template, Authorized domains এবং Spam/Junk folder পরীক্ষা করো। Error: ' + (code || error?.message || 'Unknown error')));
+                setCustomerAccountError(friendly[code] || 'Reset email পাঠানো যায়নি। Email address, Firebase Authorized domains এবং Spam/Junk folder পরীক্ষা করো।');
             } finally {
                 if (btn) { btn.disabled = false; btn.textContent = 'Forgot Password? Send reset link to email'; }
             }
@@ -2357,6 +2356,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             document.getElementById('customerAccountLoggedIn')?.classList.add('hidden');
             document.getElementById('customerAccountAuthArea')?.classList.remove('hidden');
             window.setCustomerAccountMode('register');
+            customerProfileEditMode = true;
             const p = window.customerProfileCache || {};
             document.getElementById('customerProfileName').value = p.name || '';
             document.getElementById('customerProfileAddress').value = p.address || '';
@@ -2376,16 +2376,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         };
         window.submitCustomerAccount = async function(event) {
             event.preventDefault(); setCustomerAccountError('');
+            const isLogin = customerAccountMode === 'login' && !customerProfileEditMode;
             const phone = normalizedCustomerPhone(document.getElementById('customerProfilePhone').value);
-            if (!/^01[3-9]\d{8}$/.test(phone) || phone.length !== 11) { setCustomerAccountError('বাংলাদেশের সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন (যেমন 017XXXXXXXX)।'); return; }
+            if (!isLogin && (!/^01[3-9]\d{8}$/.test(phone) || phone.length !== 11)) { setCustomerAccountError('বাংলাদেশের সঠিক ১১ সংখ্যার মোবাইল নম্বর দিন (যেমন 017XXXXXXXX)।'); return; }
             const districtValue = document.getElementById('customerProfileDistrict').value.trim();
             const validDistricts = Array.from(document.querySelectorAll('#bdDistricts option')).map(o => o.value.toLowerCase());
             if (customerAccountMode === 'register' && !customerProfileEditMode && !validDistricts.includes(districtValue.toLowerCase())) { setCustomerAccountError('তালিকা থেকে বাংলাদেশের ৬৪টি জেলার একটি নির্বাচন করো।'); return; }
             const passwordEl = document.getElementById('customerProfilePassword');
             const password = passwordEl.value;
             const name = document.getElementById('customerProfileName').value.trim();
-            const email = document.getElementById('customerProfileEmail').value.trim().toLowerCase();
-            if ((customerAccountMode === 'register' || customerProfileEditMode) && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) { setCustomerAccountError('সঠিক email address দিতে হবে। Password reset link এই email-এ যাবে।'); return; }
+            const email = String((isLogin ? document.getElementById('customerLoginEmail')?.value : document.getElementById('customerProfileEmail')?.value) || '').trim().toLowerCase();
+            if ((customerAccountMode === 'register' || customerProfileEditMode || isLogin) && (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) { setCustomerAccountError('সঠিক email address দিতে হবে।'); return; }
             if (customerProfileEditMode && window.customerProfileCache?.email && email !== String(window.customerProfileCache.email).toLowerCase()) { setCustomerAccountError('Account-এর email বদলাতে হলে নিরাপদ verification প্রয়োজন। আপাতত আগের email-টাই রাখো।'); return; }
             const profile = { name, phone, address: document.getElementById('customerProfileAddress').value.trim(), district: document.getElementById('customerProfileDistrict').value.trim(), postalCode: document.getElementById('customerProfilePostal').value.trim(), email, updatedAt: new Date().toISOString() };
             const submit = document.getElementById('customerAccountSubmitBtn');
@@ -2404,26 +2405,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 let credential;
                 if (customerAccountMode === 'register') {
                     if (!password || password.length < 6) { setCustomerAccountError('Password কমপক্ষে ৬ অক্ষরের হতে হবে।'); return; }
-                    // A phone number is considered in use only while a customer profile with that
-                    // phone exists. After Admin deletes the profile, the phone can be registered again.
-                    const existingPhoneProfile = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
-                    if (!existingPhoneProfile.empty) {
-                        setCustomerAccountError('এই ফোন নম্বর দিয়ে account আগে থেকেই আছে। নতুন account না খুলে Login করো। Password ভুলে গেলে Forgot Password ব্যবহার করো।');
-                        return;
-                    }
+                    // Do not query every customer's profile to check duplicate phone numbers; profile data is private.
                     credential = await createUserWithEmailAndPassword(auth, email, password);
                     await setDoc(doc(db, 'customerProfiles', credential.user.uid), { ...profile, createdAt: new Date().toISOString() });
                     window.customerProfileCache = { ...profile, uid: credential.user.uid };
                 } else {
-                    // New accounts authenticate using the real email, while the customer can still type their phone number.
-                    const matches = await getDocs(query(collection(db, 'customerProfiles'), where('phone', '==', phone)));
-                    let loginEmail = '';
-                    if (!matches.empty) loginEmail = String(matches.docs[0].data().email || '').trim().toLowerCase();
-                    // Legacy fallback for accounts created by the previous phone-alias login implementation.
-                    loginEmail = loginEmail || customerAuthEmail(phone);
-                    credential = await signInWithEmailAndPassword(auth, loginEmail, password);
+                    credential = await signInWithEmailAndPassword(auth, email, password);
                     const snap = await getDoc(doc(db, 'customerProfiles', credential.user.uid));
-                    window.customerProfileCache = snap.exists() ? { ...snap.data(), uid: credential.user.uid } : { ...profile, uid: credential.user.uid };
+                    window.customerProfileCache = snap.exists() ? { ...snap.data(), uid: credential.user.uid } : { uid: credential.user.uid, email: credential.user.email || email };
                     if (!snap.exists()) setCustomerAccountError('Login হয়েছে, কিন্তু profile পাওয়া যায়নি। Admin-কে জানাও।');
                 }
                 document.getElementById('customerProfilePhone').readOnly = false;
@@ -2434,17 +2423,21 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 console.error('Customer account error:', error);
                 const code = error?.code || '';
                 const messages = {
-                    'auth/email-already-in-use': 'এই email দিয়ে Firebase account আগে থেকেই আছে। Login করো। Password মনে না থাকলে Forgot Password থেকে reset email পাঠাও। Admin শুধু profile delete করে থাকলে একই email দিয়ে নতুন account খোলা যাবে না।',
-                    'auth/invalid-credential': 'ফোন নম্বর/email বা password সঠিক নয়।',
-                    'auth/weak-password': 'আরও শক্তিশালী পাসওয়ার্ড দাও (কমপক্ষে ৬ অক্ষর)।',
-                    'auth/operation-not-allowed': 'Firebase Console-এ Email/Password sign-in চালু করতে হবে।',
-                    'auth/network-request-failed': 'ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করো.'
+                    'auth/email-already-in-use': 'এই email দিয়ে account আগে থেকেই আছে। Login করো অথবা Forgot Password ব্যবহার করো।',
+                    'auth/invalid-email': 'সঠিক email address দাও।',
+                    'auth/weak-password': 'Password কমপক্ষে ৬ অক্ষরের এবং আরও শক্তিশালী হওয়া উচিত।',
+                    'auth/invalid-credential': 'Email অথবা password সঠিক নয়।',
+                    'auth/wrong-password': 'Email অথবা password সঠিক নয়।',
+                    'auth/user-not-found': 'এই email দিয়ে account পাওয়া যায়নি।',
+                    'auth/too-many-requests': 'অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করো।',
+                    'permission-denied': 'Firebase Security Rules অনুমতি দেয়নি। Rules ও লগইন অবস্থা পরীক্ষা করতে হবে।'
                 };
                 setCustomerAccountError(messages[code] || ('সমস্যা হয়েছে: ' + (error?.message || 'আবার চেষ্টা করো।')));
             } finally {
                 if (submit) { submit.disabled = false; submit.textContent = customerProfileEditMode ? 'Save Profile' : (customerAccountMode === 'login' ? 'Login' : 'Create Account'); }
             }
         };
+
         // Bind the customer account form directly from the module. Inline HTML handlers
         // cannot reliably resolve module-scoped functions; this guarantees submit clicks
         // reach Firebase auth and errors are shown in the account modal.
@@ -4614,6 +4607,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         let delofiaOrderSubmitInProgress = false;
         async function handlePlaceOrder(e) {
             e.preventDefault();
+            // Security-first mode: all orders must belong to a Firebase-authenticated customer.
+            if (!window.customerAuth?.currentUser) {
+                window.pendingLoginCheckout = currentCheckoutProduct ? { prodId: currentCheckoutProduct.id, qty: currentCheckoutQty, variantChoices: currentCheckoutVariants || {}, variantMeta: null } : null;
+                window.openCustomerAccount?.();
+                window.setCustomerAccountMode?.('login');
+                alert('নিরাপত্তার জন্য অর্ডার করতে আগে email দিয়ে Login অথবা Create Account করতে হবে। Login করার পর Checkout-এ ফিরে Place Order চাপো।');
+                return;
+            }
             if (window.storeSettings?.globalDirectOrderEnabled === false && !cartCheckoutMode) {
                 alert('Direct Order আপাতত বন্ধ আছে। পরে আবার চেষ্টা করুন।'); return;
             }
@@ -4688,6 +4689,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
             const orderId = 'DEL-' + Math.floor(100000 + Math.random() * 900000);
             const orderObj = {
+                customerUid: window.customerAuth?.currentUser.uid,
                 orderId: orderId,
                 date: new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }),
                 customerName: `${firstName} ${lastName}`.trim(),
@@ -4719,53 +4721,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Placing Order…'; submitButton.classList.add('opacity-70', 'cursor-not-allowed'); }
             try {
                 if (!window.db) throw new Error('Database connection is not ready. Please refresh the page and try again.');
-                if (typeof window.fsDoc !== 'function' || typeof window.fsRunTransaction !== 'function') {
+                if (typeof window.fsDoc !== 'function' || typeof window.fsSetDoc !== 'function') {
                     throw new Error('Firebase Firestore setup is incomplete on this page. Make sure the latest index.html is deployed to Firebase Hosting.');
                 }
-                const orderItems = cartCheckoutMode
-                    ? shoppingCart.map(i => ({ productId:String(i.productId), variants:i.variants || {}, quantity:Number(i.qty)||1 }))
-                    : [{ productId:String(currentCheckoutProduct.id), variants:currentCheckoutVariants || {}, quantity:Number(currentCheckoutQty)||1 }];
-                // Use a Firestore transaction so stock checks and deductions are atomic across simultaneous orders.
-                if (typeof window.fsRunTransaction === 'function') {
-                    await window.fsRunTransaction(window.db, async (tx) => {
-                        const productRefs = new Map();
-                        const latestProducts = new Map();
-                        // Read each product document only once; several variants may belong to the same product.
-                        for (const item of orderItems) {
-                            if (productRefs.has(item.productId)) continue;
-                            const ref = window.fsDoc(window.db, 'products', item.productId);
-                            const snap = await tx.get(ref);
-                            if (!snap.exists()) throw new Error('একটি পণ্য আর পাওয়া যাচ্ছে না। Cart আপডেট করে আবার চেষ্টা করুন।');
-                            productRefs.set(item.productId, ref);
-                            latestProducts.set(item.productId, { ...snap.data(), id:item.productId });
-                        }
-                        const changedIds = new Set();
-                        for (const item of orderItems) {
-                            const latest = latestProducts.get(item.productId);
-                            if (!latest || latest.stockOut) throw new Error(`“${latest?.title || 'একটি পণ্য'}” এখন স্টকে নেই। অনুগ্রহ করে পণ্যটি বাদ দিন বা অন্য পণ্য নির্বাচন করুন।`);
-                            const available = getAvailableStock(latest, item.variants);
-                            if (item.quantity > available) throw new Error(checkoutStockMessage(latest, item.quantity, available, item.variants));
-                            if (decrementProductStockData(latest, item.variants, item.quantity)) changedIds.add(item.productId);
-                        }
-                        changedIds.forEach(id => tx.set(productRefs.get(id), latestProducts.get(id)));
-                        tx.set(window.fsDoc(window.db, 'orders', orderId), orderObj);
-                    });
-                } else {
-                    // Compatibility fallback: validate and decrement inventory before saving the order.
-                    // The normal Firebase setup uses the atomic transaction branch above.
-                    const changedProducts = new Map();
-                    for (const item of orderItems) {
-                        const latest = changedProducts.get(item.productId) || products.find(p => p.id === item.productId);
-                        if (!latest || latest.stockOut) throw new Error(`“${latest?.title || 'একটি পণ্য'}” এখন স্টকে নেই / This product is out of stock.`);
-                        const available = getAvailableStock(latest, item.variants);
-                        if (item.quantity > available) throw new Error(checkoutStockMessage(latest, item.quantity, available, item.variants));
-                        if (decrementProductStockData(latest, item.variants, item.quantity)) changedProducts.set(item.productId, latest);
-                    }
-                    for (const [productId, latest] of changedProducts) {
-                        await window.fsSetDoc(window.fsDoc(window.db, 'products', productId), latest);
-                    }
-                    await window.fsSetDoc(window.fsDoc(window.db, "orders", orderId), orderObj);
-                }
+                // Security-first no-cost mode: customer browsers may create their own orders,
+                // but may not modify shared product stock. Admin must update stock in Admin Panel
+                // after reviewing each order. A trusted server function is required for secure auto-deduction.
+                await window.fsSetDoc(window.fsDoc(window.db, 'orders', orderId), orderObj);
             } catch (error) {
                 console.error('Could not save order:', { code: error?.code || 'unknown', message: error?.message || String(error), error });
                 const errorCode = String(error?.code || '');
@@ -5501,24 +5463,49 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             }, 10000);
         }
         function getCurrentAdminSession() { try { return JSON.parse(sessionStorage.getItem(ADMIN_SESSION_KEY) || 'null'); } catch (_) { return null; } }
+        // Front-end allowlist is for hiding the Admin UI; Firestore Rules must enforce the same UIDs.
+        // Add future authorized Admin UIDs here AND in Firestore Rules after verifying the account.
+        const DELOFIA_ADMIN_UIDS = ['zA65kcr4P2WiddUfkg0osrLtsjd2'];
+        function isAuthorizedDelofiaAdmin(user) { return !!user && DELOFIA_ADMIN_UIDS.includes(user.uid); }
         function restoreAdminSession() {
+            // Do not trust a locally stored session by itself. Require a Firebase-authenticated allowlisted user.
             const session = getCurrentAdminSession();
-            if (!session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) { if (session) sessionStorage.removeItem(ADMIN_SESSION_KEY); return false; }
+            if (!window.customerAuth?.currentUser || !isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser) || !session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
+                if (session) sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                return false;
+            }
             thisAdminSessionId = session.id;
             document.getElementById('adminLoginView').classList.add('hidden');
             document.getElementById('adminDashboardView').classList.remove('hidden');
             loadAdminData(); startAdminSessionHeartbeat(); return true;
         }
-        function checkAdminPassword() {
+        async function checkAdminPassword() {
+            const email = String(document.getElementById('adminEmailInput')?.value || '').trim();
             const pwd = document.getElementById('adminPasswordInput').value;
-            if (pwd === (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
+            const error = document.getElementById('adminAuthError');
+            const button = document.querySelector('#adminLoginView button[type="submit"]');
+            error.textContent = 'Signing in…'; error.classList.remove('hidden');
+            if (button) button.disabled = true;
+            try {
+                const credential = await window.delofiaFirebaseAuthMethods.signInWithEmailAndPassword(window.customerAuth, email, pwd);
+                if (!isAuthorizedDelofiaAdmin(credential.user)) {
+                    await window.delofiaFirebaseAuthMethods.signOut(window.customerAuth);
+                    throw new Error('This Firebase account is not authorized as a Delofia Admin.');
+                }
+                error.classList.add('hidden');
                 document.getElementById('adminLoginView').classList.add('hidden');
                 document.getElementById('adminDashboardView').classList.remove('hidden');
-                document.getElementById('adminAuthError').classList.add('hidden');
                 writeCurrentAdminSession(); loadAdminData();
-            } else { document.getElementById('adminAuthError').classList.remove('hidden'); }
+            } catch (err) {
+                console.error('Admin sign-in failed:', err);
+                error.textContent = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password' || err?.code === 'auth/user-not-found'
+                    ? 'Email or password is incorrect.'
+                    : (err?.message || 'Admin login failed. Please try again.');
+                error.classList.remove('hidden');
+            } finally { if (button) button.disabled = false; }
         }
-        function logoutAdmin(expired = false) {
+        window.checkAdminPassword = checkAdminPassword;
+        async function logoutAdmin(expired = false) {
             if (adminSessionHeartbeat) { clearInterval(adminSessionHeartbeat); adminSessionHeartbeat = null; }
             const current = getCurrentAdminSession();
             if (current) { current.revoked = true; const sessions = getAdminSessions(); sessions[current.id] = current; saveAdminSessions(sessions); }
@@ -5526,8 +5513,11 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('adminLoginView').classList.remove('hidden');
             document.getElementById('adminDashboardView').classList.add('hidden');
             document.getElementById('adminPasswordInput').value = '';
+            if (document.getElementById('adminEmailInput')) document.getElementById('adminEmailInput').value = '';
+            try { if (window.customerAuth?.currentUser && isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser)) await window.delofiaFirebaseAuthMethods.signOut(window.customerAuth); } catch (e) { console.warn('Admin sign-out warning:', e); }
             if (expired) { const err = document.getElementById('adminAuthError'); err.textContent = 'Session expired or revoked. Please log in again.'; err.classList.remove('hidden'); }
         }
+        window.logoutAdmin = logoutAdmin;
         function saveSessionSettings(e) {
             e.preventDefault();
             const mins = Number(document.getElementById('adminSessionDuration').value || 60);
@@ -5548,7 +5538,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const details = document.createElement('div'); details.className = 'text-xs';
                 details.innerHTML = `<strong class="block text-gray-800">${session.id === thisAdminSessionId ? 'This session' : 'Another browser tab'}</strong><span class="text-gray-500">Last active: ${new Date(session.lastSeen).toLocaleTimeString()} · Expires: ${new Date(session.expiresAt).toLocaleTimeString()}</span>`;
                 const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs px-3 py-2 rounded-lg'; btn.textContent = session.id === thisAdminSessionId ? 'Logout this session' : 'Force logout';
-                btn.onclick = () => { const pwd = prompt('Confirm admin password to revoke this session:'); if (pwd !== (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) { alert('Incorrect password.'); return; } session.revoked = true; sessions[session.id] = session; saveAdminSessions(sessions); if (session.id === thisAdminSessionId) logoutAdmin(true); else { localStorage.setItem('delofia_admin_revoke_notice', String(Date.now())); renderAdminSessions(); } };
+                btn.onclick = () => { if (!isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser)) { alert('Please sign in with an authorized Admin account.'); return; } if (!confirm('Revoke this browser session?')) return; session.revoked = true; sessions[session.id] = session; saveAdminSessions(sessions); if (session.id === thisAdminSessionId) logoutAdmin(true); else { localStorage.setItem('delofia_admin_revoke_notice', String(Date.now())); renderAdminSessions(); } };
                 row.append(details, btn); box.appendChild(row);
             });
         }
@@ -5560,38 +5550,51 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         });
         document.addEventListener('DOMContentLoaded', () => {
             const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes());
-            if (new URLSearchParams(window.location.search).get('admin') === '1') restoreAdminSession();
+            // Admin must explicitly sign in with Firebase Authentication on each fresh page load.
+            if (new URLSearchParams(window.location.search).get('admin') === '1') {
+                const err = document.getElementById('adminAuthError');
+                if (err) { err.textContent = ''; err.classList.add('hidden'); }
+            }
         });
 
-        function changeAdminPassword(e) {
+        async function changeAdminPassword(e) {
             e.preventDefault();
             const current = document.getElementById('currentAdminPassword').value;
             const next = document.getElementById('newAdminPassword').value;
             const confirmNext = document.getElementById('confirmAdminPassword').value;
             const error = document.getElementById('passwordChangeError');
             error.classList.add('hidden');
-            if (current !== (localStorage.getItem('delofia_admin_password') || 'Delofia#25')) {
-                error.textContent = 'Current password is incorrect.';
-                error.classList.remove('hidden');
-                return;
+            const user = window.customerAuth?.currentUser;
+            if (!isAuthorizedDelofiaAdmin(user) || !user.email) {
+                error.textContent = 'Please log in again with your authorized Admin account.';
+                error.classList.remove('hidden'); return;
             }
             if (next.length < 8) {
                 error.textContent = 'New password must be at least 8 characters.';
-                error.classList.remove('hidden');
-                return;
+                error.classList.remove('hidden'); return;
             }
             if (next !== confirmNext) {
                 error.textContent = 'New password and confirmation do not match.';
-                error.classList.remove('hidden');
-                return;
+                error.classList.remove('hidden'); return;
             }
-            localStorage.setItem('delofia_admin_password', next);
-            document.getElementById('currentAdminPassword').value = '';
-            document.getElementById('newAdminPassword').value = '';
-            document.getElementById('confirmAdminPassword').value = '';
-            alert('Admin password updated successfully! Use your new password next time you log in.');
-            logoutAdmin();
+            try {
+                const credential = window.delofiaFirebaseAuthMethods.EmailAuthProvider.credential(user.email, current);
+                await window.delofiaFirebaseAuthMethods.reauthenticateWithCredential(user, credential);
+                await window.delofiaFirebaseAuthMethods.updatePassword(user, next);
+                document.getElementById('currentAdminPassword').value = '';
+                document.getElementById('newAdminPassword').value = '';
+                document.getElementById('confirmAdminPassword').value = '';
+                alert('Firebase Admin password updated successfully. Please sign in again with the new password.');
+                await logoutAdmin();
+            } catch (err) {
+                console.error('Admin password update failed:', err);
+                error.textContent = err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential'
+                    ? 'Current password is incorrect.'
+                    : (err?.code === 'auth/weak-password' ? 'Password is too weak. Choose a stronger password.' : (err?.message || 'Could not update password. Please try again.'));
+                error.classList.remove('hidden');
+            }
         }
+        window.changeAdminPassword = changeAdminPassword;
 
         let adminCustomerRowsCache = [];
         function adminSafeText(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
@@ -6167,6 +6170,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const message = document.getElementById('delofiaReviewFormMessage');
                 const submit = document.getElementById('delofiaSubmitReview');
                 if (!delofiaCurrentReviewProductId) { message.textContent = 'Please open a product first.'; return; }
+                if (!window.customerAuth?.currentUser) { message.textContent = 'Review দিতে আগে Customer Account থেকে Login করো।'; window.openCustomerAccount?.(); window.setCustomerAccountMode?.('login'); return; }
                 const name = document.getElementById('delofiaReviewName').value.trim();
                 const text = document.getElementById('delofiaReviewText').value.trim();
                 if (!name || !text) { message.textContent = 'Please enter your name and review.'; return; }
@@ -6180,7 +6184,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                         photo = await new Promise((resolve,reject) => { const reader = new FileReader(); reader.onload=()=>resolve(String(reader.result)); reader.onerror=()=>reject(new Error('Could not read image.')); reader.readAsDataURL(file); });
                     }
                     const id = 'rv_' + Date.now() + '_' + Math.random().toString(36).slice(2,9);
-                    await window.fsSetDoc(window.fsDoc(window.db, 'reviews', id), { productId: String(delofiaCurrentReviewProductId || '').trim(), productTitle: document.getElementById('detailTitle').textContent, name, text, rating: delofiaChosenRating, photo, createdAt: Date.now() });
+                    await window.fsSetDoc(window.fsDoc(window.db, 'reviews', id), { uid: window.customerAuth.currentUser.uid, productId: String(delofiaCurrentReviewProductId || '').trim(), productTitle: document.getElementById('detailTitle').textContent, name, text, rating: delofiaChosenRating, photo, createdAt: Date.now() });
                     form.reset(); delofiaSetRating(5); message.className = 'text-sm text-emerald-700'; message.textContent = 'Thank you! Your review has been submitted.';
                 } catch (err) { console.error('Review submission failed', err); message.className = 'text-sm text-red-600'; message.textContent = err?.message || 'Review could not be submitted. Please check Firebase permissions.'; }
                 finally { submit.disabled = false; submit.textContent = 'Submit Review'; }
