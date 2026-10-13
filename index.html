@@ -2549,7 +2549,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function setupRealtimeSync() {
             const isAdminUrl = new URLSearchParams(window.location.search).get('admin') === '1';
-            const productCacheKey = 'delofia_products_cache_v1';
+            const productCacheKey = 'delofia_products_cache_v2';
             const productCacheTtlMs = 5 * 60 * 1000; // public storefront cache: 5 minutes
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
@@ -2569,7 +2569,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const readFreshProductCache = () => {
                 try {
                     const cached = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                    if (cached && Array.isArray(cached.products) && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
+                    if (cached && Array.isArray(cached.products) && cached.products.length === 0) localStorage.removeItem(productCacheKey);
+                    if (cached && Array.isArray(cached.products) && cached.products.length > 0 && Number.isFinite(Number(cached.savedAt)) && Date.now() - Number(cached.savedAt) >= 0 && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
                 } catch (e) { /* Ignore malformed or unavailable cache. */ }
                 return null;
             };
@@ -2607,7 +2608,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         // If the network read fails, use stale cache only as a fallback, if available.
                         try {
                             const stale = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                            if (Array.isArray(stale?.products)) applyProductList(stale.products);
+                            if (Array.isArray(stale?.products) && stale.products.length > 0) applyProductList(stale.products);
                         } catch (_) {}
                     });
                 }
@@ -6752,26 +6753,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             updateDetailPriceFromVariants();
         }
 
-        function syncAdminVariantNamesFromEditor() {
-            const editor = document.getElementById('adminVariantsEditor');
-            if (!editor || !Array.isArray(adminVariantGroups)) return;
-            Array.from(editor.children).forEach((section, gi) => {
-                const group = adminVariantGroups[gi];
-                if (!group) return;
-                const groupName = section.querySelector('input[placeholder="Group name (Color, Size, Style)"]');
-                if (groupName) group.name = groupName.value;
-                const optionRows = Array.from(section.children).filter(node => node.querySelector && node.querySelector('input[placeholder^="Option name"]'));
-                optionRows.forEach((row, oi) => {
-                    const option = group.options?.[oi];
-                    if (!option) return;
-                    const optionName = row.querySelector('input[placeholder^="Option name"]');
-                    if (optionName) option.name = optionName.value;
-                    const childNames = row.querySelectorAll('input[placeholder="e.g. 100 ml"]');
-                    childNames.forEach((input, ci) => { if (option.childVariants?.[ci]) option.childVariants[ci].name = input.value; });
-                });
-            });
-        }
-
         async function handleProductSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('productForm');
@@ -6806,9 +6787,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
                 const prodId = editId || ('p-' + Date.now());
 
-                // Read names directly from the visible editor at save time so a just-edited
-                // option cannot be omitted because of a stale UI state.
-                syncAdminVariantNamesFromEditor();
                 const productDoc = {
                     id: prodId,
                     title,
@@ -6830,20 +6808,19 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     videoUrl,
                     videoApproved,
                     variantEnabled: document.getElementById('prodVariantsEnabled').checked,
-                    variantGroups: adminVariantGroups.map(g => ({
+                    variantGroups: document.getElementById('prodVariantsEnabled').checked ? adminVariantGroups.map(g => ({
                         name: String(g.name || '').trim(),
                         options: (g.options || []).map(o => ({
                             name: String(o.name || '').trim(),
                             image: o.image || '',
                             price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
-                            originalPrice: o.originalPrice === '' || o.originalPrice === undefined || o.originalPrice === null ? null : (Number(o.originalPrice) || 0),
                             stockQty: Math.max(0, parseInt(o.stockQty ?? 0, 10) || 0),
                             descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
                             showDescriptionTable: o.showDescriptionTable !== false,
                             availableWith: Array.isArray(o.availableWith) ? o.availableWith : [],
                             childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), originalPrice: cv.originalPrice === '' || cv.originalPrice === undefined || cv.originalPrice === null ? null : (Number(cv.originalPrice) || 0), stockQty: Math.max(0, parseInt(cv.stockQty ?? 0, 10) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
                         })).filter(o => o.name)
-                    })).filter(g => g.name && g.options.length),
+                    })).filter(g => g.name && g.options.length) : [],
                     stockOut: document.getElementById('prodStockOut').checked,
                     stockQty: Math.max(0, parseInt(document.getElementById('prodStockQty')?.value || '0', 10) || 0),
                     displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
