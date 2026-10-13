@@ -1128,7 +1128,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         <!-- Compact category picker with inline subcategory chips and purple dual price slider -->
         <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
-                <div class="col-span-2 sm:col-span-2 min-w-0">
+                <div class="col-span-2 sm:col-span-4 min-w-0">
                     <label for="categoryFilter" class="block text-xs font-bold text-gray-600 mb-1">Browse Category</label>
                     <select id="categoryFilter" onchange="onCustomerCategoryChange()" class="w-full bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"><option value="all">All categories</option></select>
                     <div id="customerSubCategoryPanel" class="hidden mt-2">
@@ -1137,15 +1137,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     </div>
                     <select id="subCategoryFilter" class="hidden" aria-hidden="true" tabindex="-1"><option value="all">All sub-categories</option></select>
                 </div>
-                <div class="min-w-0">
-                    <label for="minPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Min (৳)</label>
-                    <input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-                <div class="min-w-0">
-                    <label for="maxPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Max (৳)</label>
-                    <input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
-                </div>
-                <button type="button" onclick="resetProductFilters()" class="col-span-2 sm:col-span-1 px-4 py-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-sm font-bold">Reset</button>
+                <div class="hidden" aria-hidden="true"><input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"></div>
+                <div class="hidden" aria-hidden="true"><input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"></div>
+                <button type="button" onclick="resetProductFilters()" class="col-span-2 sm:col-span-2 px-4 py-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-sm font-bold">Reset</button>
                 <div class="col-span-2 sm:col-span-6 rounded-xl border border-purple-100 bg-purple-50/40 px-3 py-2.5">
                     <div class="flex items-center justify-between gap-3 text-xs font-bold text-purple-900"><span>Price range</span><span id="priceRangeReadout">৳0 – ৳0</span></div>
                     <div class="relative mt-2 h-7" id="priceRangeSlider">
@@ -2931,7 +2925,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const saved = delofiaWishlist.map(id => (products || []).find(p => String(p.id) === id)).filter(Boolean);
             if (!saved.length) { box.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500"><i class="far fa-heart text-4xl text-pink-300 mb-3"></i><p class="font-semibold">Your wishlist is empty.</p><p class="text-sm mt-1">প্রোডাক্টের ❤️ চিহ্নে চাপ দিয়ে এখানে সেভ করুন।</p></div>'; updateWishlistBadge(); return; }
             box.innerHTML = saved.map(product => {
-                const image = (Array.isArray(product.images) ? product.images[0] : '') || '';
+                const image = (Array.isArray(product.images) ? product.images.find(src => src && !isAutoDelofiaPlaceholderImage(src)) : '') || '';
                 const price = isProductPriceVisible(product) ? `<p class="text-purple-700 font-extrabold mt-1">৳${Number(product.price || 0).toFixed(2)}</p>` : '<p class="text-xs text-gray-500 mt-1">Price জানতে যোগাযোগ করুন</p>';
                 const pid = String(product.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 return `<div class="border border-pink-100 rounded-xl p-3 flex gap-3 items-center"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="w-20 h-20 rounded-lg bg-purple-50 overflow-hidden flex-shrink-0 cursor-pointer" aria-label="View product details"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.title || 'Product')}" class="w-full h-full object-contain" onerror="this.style.display='none'"></button><div class="min-w-0 flex-1"><button type="button" onclick="openWishlistProductDetail('${pid}')" class="font-bold text-sm text-gray-900 text-left hover:text-purple-700 cursor-pointer">${escapeHtml(product.title || 'Product')} · View Details</button>${price}<div class="flex flex-wrap gap-2 mt-3"><button type="button" onclick="addProductToCart('${pid}')" class="rounded-lg bg-purple-700 hover:bg-purple-800 text-white px-3 py-2 text-xs font-bold" ${product.stockOut ? 'disabled' : ''}>Add to Cart</button><button type="button" onclick="toggleWishlist('${pid}')" class="rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 px-3 py-2 text-xs font-bold">Remove ❤️</button></div></div></div>`;
@@ -3020,7 +3014,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
 
             pageProducts.forEach(product => {
-                const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+                const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src)) : [];
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
@@ -3681,7 +3675,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const price = isProductPriceVisible(p) && Number.isFinite(Number(p.price))
                     ? `<span class="block mt-0.5 text-xs font-bold text-pink-600">৳${Number(p.price).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
                     : '<span class="block mt-0.5 text-xs font-semibold text-pink-600">Price জানতে যোগাযোগ করুন</span>';
-                const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
+                const photo = Array.isArray(p.images) ? p.images.find(src => src && !isAutoDelofiaPlaceholderImage(src)) : '';
                 return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
             }).join('');
             box.classList.remove('hidden');
@@ -3962,13 +3956,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 ? '<i class="fas fa-lock"></i> Stock Out'
                 : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
             const mainImg = document.getElementById('detailMainImage');
-            mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
-            mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
+            const detailImages = (selectedDetailProd.images || []).filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src));
+            mainImg.src = detailImages[0] || '';
+            mainImg.alt = detailImages.length ? 'Product' : 'No product photo uploaded';
 
             const thumbsContainer = document.getElementById('detailThumbnails');
             thumbsContainer.innerHTML = '';
-            if (selectedDetailProd.images) {
-                selectedDetailProd.images.forEach((img, idx) => {
+            if (detailImages.length) {
+                detailImages.forEach((img, idx) => {
                     const thumb = document.createElement('img');
                     thumb.src = img;
                     thumb.className = `w-14 h-14 rounded-lg object-contain bg-white cursor-pointer border-2 ${idx === 0 ? 'border-purple-600' : 'border-transparent'} hover:opacity-80 transition`;
@@ -6808,6 +6803,12 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             });
         }
 
+        function isAutoDelofiaPlaceholderImage(src) {
+            const value = String(src || '').toLowerCase();
+            return value.includes('placehold.co/400x400/8b5cf6/ffffff?text=delofia')
+                || (value.includes('placehold.co/') && value.includes('text=delofia'));
+        }
+
         async function handleProductSubmit(e) {
             e.preventDefault();
             const form = document.getElementById('productForm');
@@ -6836,10 +6837,11 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const videoApproved = document.getElementById('prodVideoApproved').checked;
                 const subCatBoxes = document.querySelectorAll('input[name="adminProdSubCat"]:checked');
                 const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
-                const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean);
+                const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean).filter(src => !isAutoDelofiaPlaceholderImage(src));
                 const existing = editId ? products.find(p => p.id === editId) : null;
-                const imagesArr = [...selectedProductPhotoData, ...(linkedImages.length ? linkedImages : (selectedProductPhotoData.length ? [] : (existing?.images || [])))];
-                const finalImages = imagesArr.length ? imagesArr : ['https://placehold.co/400x400/8b5cf6/ffffff?text=Delofia'];
+                const imagesArr = [...selectedProductPhotoData.filter(src => !isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
+                // Leave the product photo list empty when no photo is selected; never save a fake Delofia tile.
+                const finalImages = imagesArr;
                 const prodId = editId || ('p-' + Date.now());
 
                 // Read names directly from the visible editor at save time so a just-edited
@@ -7021,7 +7023,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('prodVideoUrl').value = p.videoUrl || '';
             document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
 
-            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/')).join(', ');
+            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/') && !isAutoDelofiaPlaceholderImage(src)).join(', ');
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = p.photoAutoRotate === true;
             const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = String(p.photoInterval || 4);
             selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
