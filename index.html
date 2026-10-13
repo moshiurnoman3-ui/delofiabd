@@ -1018,6 +1018,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 #productDetailModal #detailOriginalPrice { white-space:nowrap; }
 #productDetailModal #detailDiscountBadge { white-space:nowrap; }
 </style>
+<style id="delofia-search-suggestions-results-style">
+#desktopSearchSuggestions,#mobileSearchSuggestions{max-height:min(68vh,560px)!important;overflow-y:auto!important;overscroll-behavior:contain!important;z-index:9999!important;background:#fff!important;border:1px solid #e5e7eb!important;box-shadow:0 16px 36px rgba(17,24,39,.2)!important}
+#desktopSearchSuggestions [data-search-product-id],#mobileSearchSuggestions [data-search-product-id]{text-decoration:none!important}
+#mobileProductSearchBar #mobileSearchClearButton[style*="display: block"]{display:flex!important;align-items:center;justify-content:center;z-index:4;width:30px;height:30px;top:50%;right:18px;transform:translateY(-50%);border-radius:999px;background:rgba(255,255,255,.18);color:#fff!important}
+@media(max-width:767px){#mobileSearchSuggestions{max-height:min(65vh,520px)!important;left:0!important;right:0!important;margin-top:6px!important;border-radius:14px!important}#mobileSearchSuggestions [data-search-product-id]{min-height:66px!important}}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -1041,8 +1047,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             <!-- Search Bar -->
             <div class="hidden md:flex flex-1 max-w-md mx-8">
                 <div class="relative w-full">
-                    <input type="search" id="searchInput" oninput="filterProducts()" onkeydown="handleProductSearchKeydown(event, 'searchInput')" autocomplete="off" aria-label="Search products" aria-controls="desktopSearchSuggestions" placeholder="Search products..." class="w-full bg-purple-50/50 border border-purple-200 rounded-full py-2 px-4 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                    <input type="search" id="searchInput" oninput="filterProducts()" onkeydown="handleProductSearchKeydown(event, 'searchInput')" autocomplete="off" aria-label="Search products" aria-controls="desktopSearchSuggestions" placeholder="Search products..." class="w-full bg-purple-50/50 border border-purple-200 rounded-full py-2 px-4 pl-10 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
                     <i class="fas font-solid fa-magnifying-glass absolute left-3 top-3 text-purple-400 text-sm pointer-events-none"></i>
+                    <button type="button" id="desktopSearchClearButton" onclick="clearProductSearch()" aria-label="Clear search" class="absolute right-3 top-2.5 text-purple-500 px-1 py-1" style="display:none"><i class="fas fa-times"></i></button>
                     <div id="desktopSearchSuggestions" class="hidden absolute left-0 right-0 top-full mt-2 bg-white border border-purple-100 rounded-xl shadow-xl overflow-hidden z-[80] max-h-72 overflow-y-auto" role="listbox"></div>
                 </div>
             </div>
@@ -3517,7 +3524,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             renderProducts(query);
             renderProductSearchSuggestions(query, source?.id || 'searchInput');
             const clearButton = document.getElementById('mobileSearchClearButton');
+            const desktopClearButton = document.getElementById('desktopSearchClearButton');
             if (clearButton) clearButton.style.display = query ? 'block' : 'none';
+            if (desktopClearButton) desktopClearButton.style.display = query ? 'block' : 'none';
         }
 
         function renderProductSearchSuggestions(query, sourceId) {
@@ -3526,17 +3535,19 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (!box) return;
             const q = String(query || '').trim().toLowerCase();
             if (!q) { box.innerHTML = ''; box.classList.add('hidden'); return; }
-            const matches = (window.products || []).filter(p => String(p.title || '').toLowerCase().includes(q)).slice(0, 7);
+            const matches = (window.products || []).filter(p => String(p.title || '').toLowerCase().includes(q)).slice(0, 30);
             if (!matches.length) {
-                box.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">No matching products found</div>';
+                box.innerHTML = '<div class="px-4 py-4 text-sm text-gray-500">No matching products found</div>';
                 box.classList.remove('hidden');
                 return;
             }
-            box.innerHTML = matches.map((p, index) => {
+            box.innerHTML = matches.map(p => {
                 const title = escapeHtml(String(p.title || 'Product'));
-                const price = isProductPriceVisible(p) && Number.isFinite(Number(p.price)) ? `<span class="text-xs text-purple-700 font-bold whitespace-nowrap">৳${Number(p.price).toLocaleString('en-BD')}</span>` : '';
+                const price = isProductPriceVisible(p) && Number.isFinite(Number(p.price))
+                    ? `<span class="block mt-0.5 text-xs font-bold text-pink-600">৳${Number(p.price).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
+                    : '<span class="block mt-0.5 text-xs font-semibold text-pink-600">Price জানতে যোগাযোগ করুন</span>';
                 const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
-                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-purple-50 active:bg-purple-100 border-b border-gray-100 last:border-b-0" style="min-height:56px"><span class="w-10 h-10 rounded-lg bg-purple-50 border border-purple-100 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-purple-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-gray-800 truncate">${title}</span><span class="block text-[11px] text-gray-400">View product</span></span>${price}<i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
+                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
             }).join('');
             box.classList.remove('hidden');
             box.querySelectorAll('[data-search-product-id]').forEach(button => {
@@ -3575,7 +3586,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (desktopInput) desktopInput.value = '';
             if (mobileInput) mobileInput.value = '';
             const clearButton = document.getElementById('mobileSearchClearButton');
+            const desktopClearButton = document.getElementById('desktopSearchClearButton');
             if (clearButton) clearButton.style.display = 'none';
+            if (desktopClearButton) desktopClearButton.style.display = 'none';
             document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
             document.getElementById('desktopSearchSuggestions')?.classList.add('hidden');
             renderProducts('');
@@ -3955,7 +3968,29 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const valueLabel = document.getElementById('cartValueLabel'); if (valueLabel) valueLabel.textContent = '৳' + total.toFixed(2);
         }
         updateCartBadge();
+        let delofiaCartToastTimer = null;
+        function showDelofiaCartToast() {
+            let toast = document.getElementById('delofiaCartToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'delofiaCartToast';
+                toast.setAttribute('role', 'status');
+                toast.setAttribute('aria-live', 'polite');
+                toast.className = 'fixed bottom-5 left-1/2 z-[9999] flex -translate-x-1/2 translate-y-3 items-center gap-3 rounded-2xl border border-purple-300/40 bg-gradient-to-r from-purple-700 via-purple-700 to-indigo-700 px-5 py-3.5 text-sm font-bold text-white opacity-0 shadow-2xl shadow-purple-950/30 transition-all duration-300';
+                toast.innerHTML = '<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15"><i class="fas fa-check text-white"></i></span><span>Product successfully added to cart</span>';
+                document.body.appendChild(toast);
+            }
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            if (delofiaCartToastTimer) clearTimeout(delofiaCartToastTimer);
+            delofiaCartToastTimer = setTimeout(() => {
+                if (!toast.isConnected) return;
+                toast.classList.add('opacity-0', 'translate-y-3');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 2400);
+        }
         function addProductToCart(productId) {
+            const previousScrollY = window.scrollY;
             const prod = products.find(p => p.id === productId);
             if (!prod || prod.stockOut) { alert('এই পণ্যটি এখন স্টকে নেই।'); return; }
             if (prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.length) { openProductDetail(productId); return; }
@@ -3964,7 +3999,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const requestedQty = (old ? Number(old.qty || 0) : 0) + 1;
             if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
-            updateCartBadge(); renderCartItems();
+            updateCartBadge(); renderCartItems(); showDelofiaCartToast();
+            requestAnimationFrame(() => { if (Math.abs(window.scrollY - previousScrollY) > 8) window.scrollTo({ top: previousScrollY, behavior: 'auto' }); });
             const btn = document.querySelector(`button[onclick="addProductToCart('${productId}')"]`);
             if (btn) { const previous = btn.innerHTML; btn.innerHTML = '<i class="fas fa-check"></i> Added'; setTimeout(() => { if (btn.isConnected) btn.innerHTML = previous; }, 1000); }
         }
@@ -4069,7 +4105,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 else shoppingCart.push({...line, variants:{...(line.variants||{})}});
             });
             pendingVariantLines = [];
-            renderPendingVariantLines(); updateCartBadge(); renderCartItems(); closeProductDetail(); openCartModal();
+            renderPendingVariantLines(); updateCartBadge(); renderCartItems(); showDelofiaCartToast();
         }
 
         function addDetailProductToCart() {
@@ -4087,11 +4123,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const colorMeta = colorGroup && meta[colorGroup.name];
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
-            window.__cartReturnProductId = prod.id;
             const requestedQty = (old ? Number(old.qty || 0) : 0) + detailQtyVal;
             if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
-            updateCartBadge(); renderCartItems(); closeProductDetail(); openCartModal();
+
+            updateCartBadge(); renderCartItems();
+            const addButton = document.getElementById('detailAddCartBtn');
+            if (addButton) { const oldText = addButton.innerHTML; addButton.innerHTML = '<i class="fas fa-check"></i> Added to Cart'; setTimeout(() => { if (addButton.isConnected) addButton.innerHTML = oldText; }, 1400); }
+            showDelofiaCartToast();
         }
         function renderCartItems() {
             const box = document.getElementById('cartItemsList'); if (!box) return;
