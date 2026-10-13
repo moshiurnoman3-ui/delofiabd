@@ -1628,7 +1628,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     <input type="password" id="adminPasswordInput" placeholder="Admin account password" autocomplete="current-password" required class="w-full bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
                     <p id="adminAuthError" class="text-xs text-red-500 hidden mb-4">Login failed. Check your email and password.</p>
                     <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl transition shadow-lg">Login to Admin Panel</button>
-                    <button type="button" onclick="window.resetDelofiaAdminPassword?.()" class="w-full mt-3 text-sm font-bold text-purple-700 hover:text-purple-900 underline">Forgot Admin Password?</button>
                 </form>
                 <p class="text-[11px] text-gray-400 mt-4">Only Admin accounts specifically authorized for Delofia can enter.</p>
             </div>
@@ -2189,12 +2188,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         const db = getFirestore(app);
         const auth = getAuth(app);
         window.customerAuth = auth;
-        // Use a second named Firebase app for Admin auth so an Admin sign-in never appears as a Customer account.
-        const adminApp = initializeApp(firebaseConfig, 'delofiaAdmin');
-        const adminAuth = getAuth(adminApp);
-        window.delofiaAdminAuth = adminAuth;
         // Bridge Firebase Auth methods for the separate classic-script Admin Panel.
-        window.delofiaFirebaseAuthMethods = { signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail, onAuthStateChanged };
+        window.delofiaFirebaseAuthMethods = { signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider };
         let customerAccountMode = 'register';
         // Keep a lexical cache variable and the window property in sync.
         // This prevents ReferenceError if any checkout/auth helper reads customerProfileCache directly.
@@ -2519,11 +2514,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         window.fsGetDocs = getDocs;
         window.fsOnSnapshot = onSnapshot;
         window.fsRunTransaction = runTransaction;
-        // Restore the Admin dashboard after reload only when the separate Admin Auth session and local timeout session are both valid.
-        onAuthStateChanged(adminAuth, user => {
-            if (new URLSearchParams(window.location.search).get('admin') !== '1') return;
-            if (user && typeof window.tryRestoreDelofiaAdminSession === 'function') window.tryRestoreDelofiaAdminSession();
-        });
 
         // Global controls override individual product preferences without overwriting them.
         function isProductPriceVisible(product) {
@@ -5480,7 +5470,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         function restoreAdminSession() {
             // Do not trust a locally stored session by itself. Require a Firebase-authenticated allowlisted user.
             const session = getCurrentAdminSession();
-            if (!window.delofiaAdminAuth?.currentUser || !isAuthorizedDelofiaAdmin(window.delofiaAdminAuth?.currentUser) || !session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
+            if (!window.customerAuth?.currentUser || !isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser) || !session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
                 if (session) sessionStorage.removeItem(ADMIN_SESSION_KEY);
                 return false;
             }
@@ -5489,28 +5479,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('adminDashboardView').classList.remove('hidden');
             loadAdminData(); startAdminSessionHeartbeat(); return true;
         }
-        window.tryRestoreDelofiaAdminSession = restoreAdminSession;
-        async function resetDelofiaAdminPassword() {
-            const email = String(document.getElementById('adminEmailInput')?.value || '').trim();
-            const error = document.getElementById('adminAuthError');
-            if (!email) {
-                if (error) { error.textContent = 'Enter your Admin email first, then click Forgot Admin Password.'; error.classList.remove('hidden'); }
-                document.getElementById('adminEmailInput')?.focus();
-                return;
-            }
-            if (error) { error.textContent = 'Sending password reset email…'; error.classList.remove('hidden'); }
-            try {
-                await window.delofiaFirebaseAuthMethods.sendPasswordResetEmail(window.delofiaAdminAuth, email);
-                if (error) { error.textContent = 'If this email belongs to your Admin account, a password reset link has been sent. Check Inbox and Spam.'; error.classList.remove('hidden'); }
-            } catch (err) {
-                console.error('Admin password reset request failed:', err);
-                if (error) {
-                    error.textContent = err?.code === 'auth/invalid-email' ? 'Please enter a valid email address.' : 'Could not send reset email. Check the email and Firebase Authentication settings, then try again.';
-                    error.classList.remove('hidden');
-                }
-            }
-        }
-        window.resetDelofiaAdminPassword = resetDelofiaAdminPassword;
         async function checkAdminPassword() {
             const email = String(document.getElementById('adminEmailInput')?.value || '').trim();
             const pwd = document.getElementById('adminPasswordInput').value;
@@ -5519,9 +5487,9 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             error.textContent = 'Signing in…'; error.classList.remove('hidden');
             if (button) button.disabled = true;
             try {
-                const credential = await window.delofiaFirebaseAuthMethods.signInWithEmailAndPassword(window.delofiaAdminAuth, email, pwd);
+                const credential = await window.delofiaFirebaseAuthMethods.signInWithEmailAndPassword(window.customerAuth, email, pwd);
                 if (!isAuthorizedDelofiaAdmin(credential.user)) {
-                    await window.delofiaFirebaseAuthMethods.signOut(window.delofiaAdminAuth);
+                    await window.delofiaFirebaseAuthMethods.signOut(window.customerAuth);
                     throw new Error('This Firebase account is not authorized as a Delofia Admin.');
                 }
                 error.classList.add('hidden');
@@ -5546,7 +5514,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             document.getElementById('adminDashboardView').classList.add('hidden');
             document.getElementById('adminPasswordInput').value = '';
             if (document.getElementById('adminEmailInput')) document.getElementById('adminEmailInput').value = '';
-            try { if (window.delofiaAdminAuth?.currentUser && isAuthorizedDelofiaAdmin(window.delofiaAdminAuth?.currentUser)) await window.delofiaFirebaseAuthMethods.signOut(window.delofiaAdminAuth); } catch (e) { console.warn('Admin sign-out warning:', e); }
+            try { if (window.customerAuth?.currentUser && isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser)) await window.delofiaFirebaseAuthMethods.signOut(window.customerAuth); } catch (e) { console.warn('Admin sign-out warning:', e); }
             if (expired) { const err = document.getElementById('adminAuthError'); err.textContent = 'Session expired or revoked. Please log in again.'; err.classList.remove('hidden'); }
         }
         window.logoutAdmin = logoutAdmin;
@@ -5570,7 +5538,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 const details = document.createElement('div'); details.className = 'text-xs';
                 details.innerHTML = `<strong class="block text-gray-800">${session.id === thisAdminSessionId ? 'This session' : 'Another browser tab'}</strong><span class="text-gray-500">Last active: ${new Date(session.lastSeen).toLocaleTimeString()} · Expires: ${new Date(session.expiresAt).toLocaleTimeString()}</span>`;
                 const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs px-3 py-2 rounded-lg'; btn.textContent = session.id === thisAdminSessionId ? 'Logout this session' : 'Force logout';
-                btn.onclick = () => { if (!isAuthorizedDelofiaAdmin(window.delofiaAdminAuth?.currentUser)) { alert('Please sign in with an authorized Admin account.'); return; } if (!confirm('Revoke this browser session?')) return; session.revoked = true; sessions[session.id] = session; saveAdminSessions(sessions); if (session.id === thisAdminSessionId) logoutAdmin(true); else { localStorage.setItem('delofia_admin_revoke_notice', String(Date.now())); renderAdminSessions(); } };
+                btn.onclick = () => { if (!isAuthorizedDelofiaAdmin(window.customerAuth?.currentUser)) { alert('Please sign in with an authorized Admin account.'); return; } if (!confirm('Revoke this browser session?')) return; session.revoked = true; sessions[session.id] = session; saveAdminSessions(sessions); if (session.id === thisAdminSessionId) logoutAdmin(true); else { localStorage.setItem('delofia_admin_revoke_notice', String(Date.now())); renderAdminSessions(); } };
                 row.append(details, btn); box.appendChild(row);
             });
         }
@@ -5582,11 +5550,10 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         });
         document.addEventListener('DOMContentLoaded', () => {
             const duration = document.getElementById('adminSessionDuration'); if (duration) duration.value = String(getAdminDurationMinutes());
+            // Admin must explicitly sign in with Firebase Authentication on each fresh page load.
             if (new URLSearchParams(window.location.search).get('admin') === '1') {
                 const err = document.getElementById('adminAuthError');
                 if (err) { err.textContent = ''; err.classList.add('hidden'); }
-                // Wait briefly for Firebase to restore its persisted Admin auth state after reload.
-                setTimeout(() => window.tryRestoreDelofiaAdminSession?.(), 250);
             }
         });
 
@@ -5597,7 +5564,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             const confirmNext = document.getElementById('confirmAdminPassword').value;
             const error = document.getElementById('passwordChangeError');
             error.classList.add('hidden');
-            const user = window.delofiaAdminAuth?.currentUser;
+            const user = window.customerAuth?.currentUser;
             if (!isAuthorizedDelofiaAdmin(user) || !user.email) {
                 error.textContent = 'Please log in again with your authorized Admin account.';
                 error.classList.remove('hidden'); return;
