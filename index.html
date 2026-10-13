@@ -1125,30 +1125,36 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             </div>
         </div>
 
-        <!-- Customer product filters -->
-        <section class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
-            <div class="flex flex-col sm:flex-row sm:items-end gap-3">
-                <div class="flex-1 min-w-0">
+        <!-- Compact category picker with inline subcategory chips and purple dual price slider -->
+        <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
+                <div class="col-span-2 sm:col-span-2 min-w-0">
                     <label for="categoryFilter" class="block text-xs font-bold text-gray-600 mb-1">Browse Category</label>
-                    <select id="categoryFilter" onchange="onCustomerCategoryChange()" class="w-full bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="all">All categories</option>
-                    </select>
+                    <select id="categoryFilter" onchange="onCustomerCategoryChange()" class="w-full bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"><option value="all">All categories</option></select>
+                    <div id="customerSubCategoryPanel" class="hidden mt-2">
+                        <div class="mb-1 text-[11px] font-bold text-gray-600">Sub-categories</div>
+                        <div id="customerSubCategoryChips" class="flex flex-wrap gap-1.5"></div>
+                    </div>
+                    <select id="subCategoryFilter" class="hidden" aria-hidden="true" tabindex="-1"><option value="all">All sub-categories</option></select>
                 </div>
-                <div class="flex-1 min-w-0">
-                    <label for="subCategoryFilter" class="block text-xs font-bold text-gray-600 mb-1">Sub-category / Variety</label>
-                    <select id="subCategoryFilter" onchange="filterProducts()" class="w-full bg-purple-50 border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                        <option value="all">All sub-categories</option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-28">
+                <div class="min-w-0">
                     <label for="minPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Min (৳)</label>
-                    <input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm">
+                    <input id="minPriceFilter" type="number" min="0" placeholder="Min" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
                 </div>
-                <div class="w-full sm:w-28">
+                <div class="min-w-0">
                     <label for="maxPriceFilter" class="block text-xs font-bold text-gray-600 mb-1">Max (৳)</label>
-                    <input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm">
+                    <input id="maxPriceFilter" type="number" min="0" placeholder="Max" oninput="syncPriceSliderFromFields(); filterProducts()" class="w-full border border-purple-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400">
                 </div>
-                <button type="button" onclick="resetProductFilters()" class="px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold">Reset</button>
+                <button type="button" onclick="resetProductFilters()" class="col-span-2 sm:col-span-1 px-4 py-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-sm font-bold">Reset</button>
+                <div class="col-span-2 sm:col-span-6 rounded-xl border border-purple-100 bg-purple-50/40 px-3 py-2.5">
+                    <div class="flex items-center justify-between gap-3 text-xs font-bold text-purple-900"><span>Price range</span><span id="priceRangeReadout">৳0 – ৳0</span></div>
+                    <div class="relative mt-2 h-7" id="priceRangeSlider">
+                        <div class="absolute left-0 right-0 top-3 h-1.5 rounded-full bg-purple-200"></div>
+                        <div id="priceRangeFill" class="absolute top-3 h-1.5 rounded-full bg-purple-600"></div>
+                        <input id="minPriceRange" type="range" min="0" max="1000" value="0" step="1" aria-label="Minimum price" oninput="updatePriceRangeFromSlider('min')">
+                        <input id="maxPriceRange" type="range" min="0" max="1000" value="1000" step="1" aria-label="Maximum price" oninput="updatePriceRangeFromSlider('max')">
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -1205,8 +1211,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                                 <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel">Add to Wishlist</span>
                             </button>
                             <div class="flex gap-2 mt-2">
-                                <button type="button" data-delofia-share-current="1" class="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 px-4 py-2 font-bold text-xs"><i class="fas fa-share-alt"></i> Share product</button>
-                                <button type="button" data-delofia-copy-current="1" class="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 px-4 py-2 font-bold text-xs"><i class="fas fa-link"></i> Copy link</button>
+                                <button type="button" data-delofia-share-current="1" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
+                                <button type="button" data-delofia-copy-current="1" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
@@ -2562,6 +2568,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const productCacheTtlMs = 5 * 60 * 1000; // public storefront cache: 5 minutes
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
+                window.refreshPriceRangeBounds?.();
                 window.__productsSnapshotLoaded = true;
                 window.__productsLoadError = "";
                 window.dispatchEvent(new Event("delofia-products-updated"));
@@ -2774,6 +2781,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (cart) cart.classList.add('hidden');
 
             if (targetModal === 'productDetail') {
+                document.body.classList.add('delofia-product-detail-open');
+                document.getElementById('mobileSearchInput')?.blur();
                 const checkout = document.getElementById('checkoutModal');
                 if (checkout) { checkout.classList.add('hidden'); checkout.classList.remove('flex'); }
                 const detail = document.getElementById('productDetailModal');
@@ -2806,6 +2815,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function closeAllModalsSilently() {
+            document.body.classList.remove('delofia-product-detail-open');
             const pModal = document.getElementById('productDetailModal');
             const cModal = document.getElementById('checkoutModal');
             const aModal = document.getElementById('adminModal');
@@ -3017,9 +3027,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                             ${product.stockOut ? '' : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
                             ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to know the price and details of this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease share the price and availability.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Ask Price on WhatsApp</a>`}
                         
-                            <div class="grid grid-cols-2 gap-2 pt-1">
-                                <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" class="rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 text-[11px] font-bold"><i class="fas fa-share-alt mr-1"></i>Share</button>
-                                <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" class="rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 text-[11px] font-bold"><i class="fas fa-link mr-1"></i>Copy link</button>
+                            <div class="flex justify-center gap-2 pt-1">
+                                <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
+                                <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
                             </div>
 </div>
                     </div>
@@ -3102,13 +3112,31 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const subs = tree[category] || [];
                 const wrap = document.createElement('div');
                 const btn = document.createElement('button');
-                btn.type = 'button'; btn.innerHTML = '<i class="fas fa-tag text-violet-300"></i><span class="flex-1"></span><i class="fas fa-chevron-down text-xs"></i>';
+                btn.type = 'button';
+                btn.innerHTML = '<i class="fas fa-tag text-violet-300"></i><span class="flex-1"></span>';
                 btn.querySelector('span').textContent = category;
+                // Show an expand arrow only when this category actually has sub-categories.
+                if (subs.length) {
+                    const arrow = document.createElement('i');
+                    arrow.className = 'fas fa-chevron-down text-xs';
+                    arrow.setAttribute('aria-hidden', 'true');
+                    btn.appendChild(arrow);
+                    btn.setAttribute('aria-expanded', 'false');
+                } else {
+                    btn.removeAttribute('aria-expanded');
+                }
                 const subBox = document.createElement('div'); subBox.className = 'hidden';
                 btn.addEventListener('click', () => {
                     const filter = document.getElementById('categoryFilter');
                     if (filter) { filter.value = category; if (typeof onCustomerCategoryChange === 'function') onCustomerCategoryChange(); }
-                    subBox.classList.toggle('hidden');
+                    if (subs.length) {
+                        const opening = subBox.classList.contains('hidden');
+                        subBox.classList.toggle('hidden', !opening);
+                        btn.setAttribute('aria-expanded', String(opening));
+                    } else {
+                        toggleDelofiaSidebar(false);
+                        document.getElementById('mainContainer')?.scrollIntoView({behavior:'smooth'});
+                    }
                 });
                 (subs || []).forEach(sub => {
                     const sb = document.createElement('button'); sb.type='button'; sb.className='sidebar-sub'; sb.textContent=sub;
@@ -3205,19 +3233,44 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         }
 
+        function renderCustomerSubcategoryChips() {
+            const panel = document.getElementById('customerSubCategoryPanel');
+            const chips = document.getElementById('customerSubCategoryChips');
+            const subFilter = document.getElementById('subCategoryFilter');
+            if (!panel || !chips || !subFilter) return;
+            const category = document.getElementById('categoryFilter')?.value || 'all';
+            const subs = category !== 'all' ? (window.categoryTree?.[category] || []) : [];
+            panel.classList.toggle('hidden', !subs.length);
+            chips.innerHTML = '';
+            if (!subs.length) return;
+            const current = subFilter.value || 'all';
+            [['all', 'All'], ...subs.map(name => [name, name])].forEach(([value, label]) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = label;
+                button.setAttribute('aria-pressed', String(current === value));
+                button.className = 'rounded-full border px-3 py-1.5 text-[11px] font-bold transition ' + (current === value ? 'border-purple-700 bg-purple-700 text-white' : 'border-purple-200 bg-white text-purple-800 hover:bg-purple-50');
+                button.addEventListener('click', () => selectCustomerSubcategory(value));
+                chips.appendChild(button);
+            });
+        }
+        function selectCustomerSubcategory(value) {
+            const subFilter = document.getElementById('subCategoryFilter');
+            if (subFilter) subFilter.value = value;
+            renderCustomerSubcategoryChips();
+            filterProducts();
+        }
         function onCustomerCategoryChange() {
             const cat = document.getElementById('categoryFilter')?.value;
             const subFilter = document.getElementById('subCategoryFilter');
-            if (!subFilter) return;
-
-            subFilter.innerHTML = '<option value="all">All sub-categories</option>';
-
             const tree = window.categoryTree || {};
-            if (cat && cat !== 'all' && tree[cat]) {
-                tree[cat].forEach(sub => {
-                    subFilter.innerHTML += `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`;
-                });
+            if (subFilter) {
+                const prior = subFilter.value || 'all';
+                const subs = cat && cat !== 'all' ? (tree[cat] || []) : [];
+                subFilter.innerHTML = '<option value="all">All sub-categories</option>' + subs.map(sub => `<option value="${escapeHtml(sub)}">${escapeHtml(sub)}</option>`).join('');
+                subFilter.value = subs.includes(prior) ? prior : 'all';
             }
+            renderCustomerSubcategoryChips();
             filterProducts();
         }
 
@@ -3303,13 +3356,74 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         }
 
+        function getPriceSliderMaximum() {
+            const prices = (window.products || []).filter(p => window.isProductPriceVisible?.(p) !== false).map(p => Number(p.price)).filter(n => Number.isFinite(n) && n > 0);
+            const highest = prices.length ? Math.max(...prices) : 10000;
+            return Math.max(1000, Math.ceil(highest / 100) * 100);
+        }
+        function refreshPriceRangeBounds() {
+            const minRange = document.getElementById('minPriceRange');
+            const maxRange = document.getElementById('maxPriceRange');
+            if (!minRange || !maxRange) return;
+            const max = getPriceSliderMaximum();
+            [minRange, maxRange].forEach(input => { input.max = String(max); });
+            const minField = document.getElementById('minPriceFilter');
+            const maxField = document.getElementById('maxPriceFilter');
+            if (minField) minField.max = String(max);
+            if (maxField) maxField.max = String(max);
+            syncPriceSliderFromFields();
+        }
+        function updatePriceRangeVisual(low, high, max) {
+            const fill = document.getElementById('priceRangeFill');
+            const label = document.getElementById('priceRangeReadout');
+            const safeMax = Math.max(1, Number(max) || 1);
+            const left = Math.max(0, Math.min(100, low / safeMax * 100));
+            const right = Math.max(0, Math.min(100, 100 - high / safeMax * 100));
+            if (fill) { fill.style.left = left + '%'; fill.style.right = right + '%'; }
+            if (label) label.textContent = '৳' + Math.round(low).toLocaleString('en-BD') + ' – ৳' + Math.round(high).toLocaleString('en-BD');
+        }
+        function syncPriceSliderFromFields() {
+            const minRange = document.getElementById('minPriceRange');
+            const maxRange = document.getElementById('maxPriceRange');
+            if (!minRange || !maxRange) return;
+            const max = Number(maxRange.max) || getPriceSliderMaximum();
+            const minField = document.getElementById('minPriceFilter');
+            const maxField = document.getElementById('maxPriceFilter');
+            let low = minField?.value === '' ? 0 : Math.max(0, Math.min(max, Number(minField.value) || 0));
+            let high = maxField?.value === '' ? max : Math.max(0, Math.min(max, Number(maxField.value) || 0));
+            if (low > high) high = low;
+            minRange.value = String(low); maxRange.value = String(high);
+            updatePriceRangeVisual(low, high, max);
+        }
+        function updatePriceRangeFromSlider(which) {
+            const minRange = document.getElementById('minPriceRange');
+            const maxRange = document.getElementById('maxPriceRange');
+            const minField = document.getElementById('minPriceFilter');
+            const maxField = document.getElementById('maxPriceFilter');
+            if (!minRange || !maxRange || !minField || !maxField) return;
+            const max = Number(maxRange.max) || getPriceSliderMaximum();
+            let low = Number(minRange.value), high = Number(maxRange.value);
+            if (which === 'min' && low > high) { high = low; maxRange.value = String(high); }
+            if (which === 'max' && high < low) { low = high; minRange.value = String(low); }
+            minField.value = low <= 0 ? '' : String(Math.round(low));
+            maxField.value = high >= max ? '' : String(Math.round(high));
+            updatePriceRangeVisual(low, high, max);
+            filterProducts();
+        }
+        window.refreshPriceRangeBounds = refreshPriceRangeBounds;
+        window.syncPriceSliderFromFields = syncPriceSliderFromFields;
+        window.updatePriceRangeFromSlider = updatePriceRangeFromSlider;
+
         function resetProductFilters() {
             const q = document.getElementById('searchInput'); if (q) q.value = '';
             document.getElementById('categoryFilter').value = 'all';
             document.getElementById('subCategoryFilter').value = 'all';
             document.getElementById('minPriceFilter').value = '';
             document.getElementById('maxPriceFilter').value = '';
+            const minRange = document.getElementById('minPriceRange'); if (minRange) minRange.value = '0';
+            const maxRange = document.getElementById('maxPriceRange'); if (maxRange) maxRange.value = String(getPriceSliderMaximum());
             onCustomerCategoryChange();
+            syncPriceSliderFromFields();
         }
 
         function getWhatsappDigits() {
@@ -3558,8 +3672,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     if (product) {
                         const desktopInput = document.getElementById('searchInput');
                         const mobileInput = document.getElementById('mobileSearchInput');
-                        if (desktopInput) desktopInput.value = product.title || '';
-                        if (mobileInput) mobileInput.value = product.title || '';
+                        if (desktopInput) { desktopInput.value = product.title || ''; desktopInput.blur(); }
+                        if (mobileInput) { mobileInput.value = product.title || ''; mobileInput.blur(); }
+                        document.getElementById('desktopSearchSuggestions')?.classList.add('hidden');
+                        document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
                         renderProducts(product.title || '');
                         openProductDetail(product.id);
                     }
@@ -3798,6 +3914,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const pendingBox = document.getElementById('pendingVariantLinesBox');
             if (pendingBox) { pendingBox.innerHTML = ''; pendingBox.classList.add('hidden'); }
             if (!selectedDetailProd) return;
+            // Stop mobile keyboard/auto-zoom and hide the sticky search UI behind the product modal.
+            document.body.classList.add('delofia-product-detail-open');
+            document.getElementById('searchInput')?.blur();
+            document.getElementById('mobileSearchInput')?.blur();
+            document.getElementById('desktopSearchSuggestions')?.classList.add('hidden');
+            document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
 
             detailQtyVal = 1;
             document.getElementById('detailQty').innerText = detailQtyVal;
@@ -3899,6 +4021,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function closeProductDetail() {
             const modal = document.getElementById('productDetailModal');
+            document.body.classList.remove('delofia-product-detail-open');
             if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
             // The X button behaves like one browser Back step, not a site exit.
             try {
@@ -5523,6 +5646,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
         }
 
         function closeSuccessModal() {
+            document.body.classList.remove('delofia-product-detail-open');
             const modal = document.getElementById('orderSuccessModal');
             if (modal) {
                 modal.classList.add('hidden');
@@ -7572,4 +7696,22 @@ header #cartValueLabel {
   body #mobileProductSearchBar #mobileSearchSuggestions button[data-search-product-id] { display:flex !important; visibility:visible !important; opacity:1 !important; width:100% !important; min-height:66px !important; touch-action:manipulation; pointer-events:auto !important; }
   body #mobileProductSearchBar #mobileSearchClearButton[style*="display: block"] { display:flex !important; visibility:visible !important; align-items:center !important; justify-content:center !important; z-index:10000 !important; }
 }
+</style>
+<style id="delofia-product-modal-hide-mobile-search-fix">
+/* The sticky mobile search must never sit over the product details after a suggestion is selected. */
+body.delofia-product-detail-open #mobileProductSearchBar,
+body:has(#productDetailModal:not(.hidden)) #mobileProductSearchBar,
+body.delofia-product-detail-open #desktopSearchSuggestions,
+body.delofia-product-detail-open #mobileSearchSuggestions { display:none !important; visibility:hidden !important; pointer-events:none !important; }
+body.delofia-product-detail-open #productDetailModal { z-index:110 !important; }
+</style>
+<style id="delofia-purple-dual-price-slider">
+#priceRangeSlider input[type="range"]{position:absolute;left:0;top:0;width:100%;height:28px;margin:0;background:transparent;appearance:none;-webkit-appearance:none;pointer-events:none;outline:none}
+#priceRangeSlider input[type="range"]::-webkit-slider-runnable-track{height:6px;background:transparent}
+#priceRangeSlider input[type="range"]::-moz-range-track{height:6px;background:transparent}
+#priceRangeSlider input[type="range"]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-7px;border:3px solid #fff;border-radius:50%;background:#7c3aed;box-shadow:0 1px 5px #581c87;appearance:none;-webkit-appearance:none;pointer-events:auto;cursor:pointer}
+#priceRangeSlider input[type="range"]::-moz-range-thumb{width:15px;height:15px;border:3px solid #fff;border-radius:50%;background:#7c3aed;box-shadow:0 1px 5px #581c87;pointer-events:auto;cursor:pointer}
+#minPriceRange{z-index:3}#maxPriceRange{z-index:2}
+#customerSubCategoryChips button{max-width:100%;white-space:normal}
+@media(max-width:640px){#priceRangeSlider{touch-action:pan-y}#priceRangeSlider input[type="range"]::-webkit-slider-thumb{width:22px;height:22px}}
 </style>
