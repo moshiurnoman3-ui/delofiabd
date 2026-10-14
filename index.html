@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Delofia - Premium E-Commerce Store</title>
+    <meta name="description" content="Shop Delofia for lovely lifestyle finds, thoughtful gifts, and quality products at reasonable prices. Fast delivery across Bangladesh.">
+    <link rel="canonical" href="https://delofiabd.vercel.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Delofia">
+    <meta property="og:title" content="Delofia — Draft · Dreamy · Delicacy">
+    <meta property="og:description" content="Discover lovely lifestyle finds and thoughtful gifts at Delofia. Fast delivery across Bangladesh.">
+    <meta property="og:url" content="https://delofiabd.vercel.app/">
+    <meta property="og:image" content="https://delofiabd.vercel.app/delofia-share-card.png">
+    <meta property="og:image:secure_url" content="https://delofiabd.vercel.app/delofia-share-card.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Delofia — Draft · Dreamy · Delicacy">
+    <meta name="twitter:description" content="Discover lovely lifestyle finds and thoughtful gifts at Delofia. Fast delivery across Bangladesh.">
+    <meta name="twitter:image" content="https://delofiabd.vercel.app/delofia-share-card.png">
+    <title>Delofia — Draft · Dreamy · Delicacy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1023,6 +1039,14 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 #desktopSearchSuggestions [data-search-product-id],#mobileSearchSuggestions [data-search-product-id]{text-decoration:none!important}
 #mobileProductSearchBar #mobileSearchClearButton[style*="display: block"]{display:flex!important;align-items:center;justify-content:center;z-index:4;width:30px;height:30px;top:50%;right:18px;transform:translateY(-50%);border-radius:999px;background:rgba(255,255,255,.18);color:#fff!important}
 @media(max-width:767px){#mobileSearchSuggestions{max-height:min(65vh,520px)!important;left:0!important;right:0!important;margin-top:6px!important;border-radius:14px!important}#mobileSearchSuggestions [data-search-product-id]{min-height:66px!important}}
+</style>
+
+<style id="delofia-cart-wishlist-mobile-overlay-fix">
+/* Keep the sticky mobile search behind cart/wishlist overlays and prevent page scroll-through. */
+body.delofia-cart-wishlist-open { overflow: hidden !important; }
+body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !important; }
+#cartModal, #wishlistModal { overscroll-behavior: contain; }
+#cartModal > div, #wishlistModal > div { overscroll-behavior: contain; }
 </style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
@@ -2741,6 +2765,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             onSnapshot(doc(db, "settings", "store"), (snapshot) => {
                 if (snapshot.exists()) {
                     window.storeSettings = { ...window.storeSettings, ...snapshot.data() };
+                    // Refresh local hero cache when Firestore delivers the latest saved banner/slides.
+                    cacheStorefrontHeroSettings(window.storeSettings);
                     window.updateWhatsappUI();
                     window.renderSocialLinks();
                     window.applyStoreLogo();
@@ -2829,6 +2855,9 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         // Product -> Checkout -> Back returns to the same product detail; another Back closes it.
         window.__cartReturnProductId = null;
         window.addEventListener('popstate', function(event) {
+            const editor = document.getElementById('productFormCard');
+            if (editor && editor.classList.contains('product-edit-active')) { closeProductEditModal(); return; }
+            window.__delofiaProductEditHistoryActive = false;
             const targetModal = event.state && event.state.modal ? event.state.modal : null;
             const cart = document.getElementById('cartModal');
             if (cart) cart.classList.add('hidden');
@@ -2869,6 +2898,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
 
         function closeAllModalsSilently() {
             document.body.classList.remove('delofia-product-detail-open');
+            if (document.body.style.position === 'fixed') { const savedY = Number(window.__delofiaSavedScrollY) || 0; document.body.style.position=''; document.body.style.top=''; document.body.style.left=''; document.body.style.right=''; document.body.style.width=''; window.scrollTo(0, savedY); }
             const pModal = document.getElementById('productDetailModal');
             const cModal = document.getElementById('checkoutModal');
             const aModal = document.getElementById('adminModal');
@@ -2892,6 +2922,27 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         };
         window.orders = [];
         window.storeSettings = { requireLoginToOrder: false, globalDirectOrderEnabled: true, globalShowPrice: true, whatsappEnabled: true, whatsappNumber: '01410947236', facebookUrl: 'https://www.facebook.com/profile.php?id=61580349052376', instagramUrl: 'https://www.instagram.com/delofia.bd/', tiktokUrl: '', youtubeUrl: '', otherSocialUrl: '', logoImage: '', productPhotoAutoRotate: false, productPhotoInterval: 4, storefrontTheme: 'dark', adminTheme: 'light', heroBadge: 'Exclusive Offers', heroTitle: '𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .', heroDescription: 'Fast delivery across Bangladesh • Great quality at reasonable prices • A delightful shopping experience, every time.', heroShopText: 'Shop Now', heroWhatsappText: 'Instant WhatsApp Order', heroCarouselEnabled: false, heroCarouselInterval: 5, heroCarouselSlides: [], footerBrand: 'DELOFIA', footerDescription: 'Your premium fashion & lifestyle companion in Bangladesh. High quality products delivered directly to your doorstep.', footerContactHeading: 'Quick Contact', footerDeliveryHeading: 'Delivery Information', footerInsideDelivery: 'Inside Dhaka: Fast Delivery', footerOutsideDelivery: 'Outside Dhaka: Cash on delivery nationwide', footerFollowHeading: 'Follow Delofia', footerCopyright: '© 2026 Delofia E-Commerce Store. All rights reserved.' };
+        // Cache only the homepage hero/banner settings so saved offer slides can render
+        // immediately on repeat visits, while Firestore remains the source of truth.
+        const STOREFRONT_HERO_CACHE_KEY = 'delofia_storefront_hero_cache_v1';
+        function getStorefrontHeroCachePayload(settings) {
+            const s = settings || window.storeSettings || {};
+            return {
+                heroBadge: s.heroBadge, heroTitle: s.heroTitle, heroDescription: s.heroDescription,
+                heroShopText: s.heroShopText, heroWhatsappText: s.heroWhatsappText,
+                heroCarouselEnabled: s.heroCarouselEnabled === true,
+                heroCarouselInterval: Number(s.heroCarouselInterval) || 5,
+                heroCarouselSlides: Array.isArray(s.heroCarouselSlides) ? s.heroCarouselSlides : []
+            };
+        }
+        function cacheStorefrontHeroSettings(settings) {
+            try { localStorage.setItem(STOREFRONT_HERO_CACHE_KEY, JSON.stringify(getStorefrontHeroCachePayload(settings))); }
+            catch (error) { console.warn('Homepage banner cache could not be saved:', error); }
+        }
+        try {
+            const cachedHero = localStorage.getItem(STOREFRONT_HERO_CACHE_KEY);
+            if (cachedHero) Object.assign(window.storeSettings, JSON.parse(cachedHero));
+        } catch (error) { console.warn('Homepage banner cache could not be read:', error); }
         window.shippingSettings = { inside: 90, sub: 100, outside: 110, districtRates: {}, districtRatesEnabled: {} };
         window.paymentSettings = { advanceEnabled: false, advanceAmount: 100, bkashAccount: '', nagadAccount: '', bankAccount: '' };
         window.coupons = {};
@@ -3025,8 +3076,13 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             closeWishlistModal();
             openProductDetail(product.id);
         }
-        function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); }
-        function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); }
+        function syncCartWishlistOverlayState() {
+            const cartOpen = !!document.getElementById('cartModal') && !document.getElementById('cartModal').classList.contains('hidden');
+            const wishlistOpen = !!document.getElementById('wishlistModal') && !document.getElementById('wishlistModal').classList.contains('hidden');
+            document.body.classList.toggle('delofia-cart-wishlist-open', cartOpen || wishlistOpen);
+        }
+        function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); syncCartWishlistOverlayState(); }
 
         const DELOFIA_PRODUCTS_PER_PAGE = 30;
         let delofiaCurrentProductPage = 1;
@@ -3482,7 +3538,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function getPriceSliderMaximum() {
             const prices = (window.products || []).flatMap(getProductFilterPrices).filter(n => Number.isFinite(n) && n > 0);
             const highest = prices.length ? Math.max(...prices) : 10000;
-            return Math.max(1000, Math.ceil(highest / 100) * 100);
+            return 3000; // Requested fixed maximum for the customer price slider.
         }
         function refreshPriceRangeBounds() {
             const minRange = document.getElementById('minPriceRange');
@@ -3603,7 +3659,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function resizeHeroBannerFile(file,mobile=false){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('ছবিটি পড়া যায়নি।'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('ছবিটি খোলা যায়নি। JPG/PNG ব্যবহার করো।'));img.onload=()=>{const maxW=mobile?850:1400,maxH=mobile?1100:700;let scale=Math.min(1,maxW/img.width,maxH/img.height),quality=.68,data='';for(let n=0;n<10;n++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);data=c.toDataURL('image/jpeg',quality);if(data.length<=60000){resolve(data);return;}if(quality>.43)quality-=.08;else scale*=.82;}if(data.length<=80000)resolve(data);else reject(new Error('ছবিটি compress করেও বড় থাকছে; ছোট ছবি ব্যবহার করো।'));};img.src=reader.result;};reader.readAsDataURL(file);});}
         function renderAdminHeroSlides(){const host=document.getElementById('adminHeroSlidesEditor');if(!host)return;adminHeroSlides=normalizeAdminHeroSlides(adminHeroSlides);host.innerHTML=adminHeroSlides.map((s,i)=>{const options=['<option value="">কোনো product-এ link নয়</option>',...(window.products||[]).map(p=>`<option value="${escapeHtml(String(p.id))}" ${String(p.id)===s.productId?'selected':''}>${escapeHtml(p.title||'Product')}</option>`)].join('');const dp=s.desktopImage?`<img src="${escapeHtml(s.desktopImage)}" alt="Desktop slide ${i+1}" class="mt-2 h-24 w-full rounded-lg border object-cover">`:'<div class="mt-2 flex h-24 items-center justify-center rounded-lg border border-dashed text-xs text-gray-400">Desktop preview</div>';const mp=s.mobileImage?`<img src="${escapeHtml(s.mobileImage)}" alt="Mobile slide ${i+1}" class="mt-2 h-24 w-20 rounded-lg border object-cover">`:'<div class="mt-2 flex h-24 w-20 items-center justify-center rounded-lg border border-dashed text-[10px] text-gray-400">Mobile<br>optional</div>';return `<article class="rounded-2xl border border-purple-200 bg-white p-3 sm:p-4 space-y-3"><div class="flex items-center justify-between gap-2"><strong class="text-sm text-purple-900">Slide ${i+1}</strong><button type="button" data-hero-remove="${i}" title="${adminHeroSlides.length<=ADMIN_HERO_SLIDE_MIN?'Clear this slide; keep the 5 minimum':'Remove this slide'}" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100">Remove</button></div><div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3"><div><label class="block text-xs font-bold">Desktop banner *</label><input type="file" accept="image/*" data-hero-upload-index="${i}" data-hero-upload-kind="desktopImage" class="mt-1 block w-full text-xs">${dp}</div><div><label class="block text-xs font-bold">Mobile banner (optional)</label><input type="file" accept="image/*" data-hero-upload-index="${i}" data-hero-upload-kind="mobileImage" class="mt-1 block w-full max-w-full text-xs">${mp}</div></div><label class="flex items-center gap-2 rounded-lg bg-blue-50 p-2 text-xs font-bold text-blue-800"><input type="checkbox" data-hero-field="clickable" data-hero-index="${i}" ${s.clickable?'checked':''} class="h-4 w-4"> Click slide to open a product</label><label class="block text-xs font-bold">Product to open</label><select data-hero-field="productId" data-hero-index="${i}" class="w-full rounded-xl border p-2.5 text-sm" ${s.clickable?'':'disabled'}>${options}</select></article>`;}).join('');const add=document.getElementById('addHeroSlideButton');if(add)add.disabled=adminHeroSlides.length>=ADMIN_HERO_SLIDE_MAX;}
         window.renderAdminHeroSlides=renderAdminHeroSlides;
-        function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){img.src=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
+        function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
         window.applyStorefrontHeroCarousel=applyStorefrontHeroCarousel;
         function moveHeroCarousel(delta){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));if(slides.length<2)return;heroCarouselCurrentIndex=(heroCarouselCurrentIndex+delta+slides.length)%slides.length;applyStorefrontHeroCarousel();}
         function openHeroCarouselProduct(){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const slide=slides[heroCarouselCurrentIndex];if(slide?.clickable&&slide.productId)window.openProductDetail?.(slide.productId);}
@@ -4014,6 +4070,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function openProductDetail(prodId) {
+            if (!document.body.classList.contains('delofia-product-detail-open')) {
+                window.__delofiaSavedScrollY = window.scrollY || window.pageYOffset || 0;
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${window.__delofiaSavedScrollY}px`;
+                document.body.style.left = '0'; document.body.style.right = '0'; document.body.style.width = '100%';
+            }
             selectedDetailProd = products.find(p => p.id === prodId);
             pendingVariantLines = [];
             const pendingBox = document.getElementById('pendingVariantLinesBox');
@@ -4127,6 +4189,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function closeProductDetail() {
             const modal = document.getElementById('productDetailModal');
             document.body.classList.remove('delofia-product-detail-open');
+            if (document.body.style.position === 'fixed') {
+                const savedY = Number(window.__delofiaSavedScrollY) || 0;
+                document.body.style.position = ''; document.body.style.top = ''; document.body.style.left = ''; document.body.style.right = ''; document.body.style.width = '';
+                window.scrollTo(0, savedY);
+            }
             if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
             // The X button behaves like one browser Back step, not a site exit.
             try {
@@ -4409,10 +4476,11 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => String(p.id) === String(item.productId)); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; savePersistedShoppingCart(); renderCartItems(); }
         function removeCartItem(index) { const removed = shoppingCart[index]; if (removed) cartCheckoutExcludedKeys.delete(String(removed.key || cartItemKey(removed.productId, removed.variants || {}))); shoppingCart.splice(index,1); savePersistedShoppingCart(); renderCartItems(); }
-        function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); }
+        function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
         function closeCartModal() {
             const m = document.getElementById('cartModal');
             if (m) m.classList.add('hidden');
+            syncCartWishlistOverlayState();
             const returnId = window.__cartReturnProductId;
             window.__cartReturnProductId = null;
             if (returnId != null) openProductDetail(returnId);
@@ -5608,6 +5676,14 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
     z-index: 1 !important;
   }
 }
+</style>
+
+
+<style id="delofia-product-modal-scroll-lock-fix">
+body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavior:none !important; }
+#productDetailModal { overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch; }
+#productDetailModal > div { max-height:calc(100dvh - 24px); overflow-y:auto !important; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+@media(max-width:640px){ #productDetailModal { height:100dvh; align-items:flex-start !important; overflow-y:auto !important; } #productDetailModal > div { max-height:calc(100dvh - 16px) !important; margin:0 auto !important; } }
 </style>
 
 </body>
@@ -7119,6 +7195,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             if (card.parentNode !== document.body) document.body.appendChild(card);
         }
         function closeProductEditModal() {
+            window.__delofiaProductEditHistoryActive = false;
             const card = document.getElementById('productFormCard');
             if (card) {
                 card.classList.remove('product-edit-active');
@@ -7183,6 +7260,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = String(p.stockQty ?? 0);
             ensureProductFormModalPlacement();
             const editCard = document.getElementById('productFormCard');
+            if (!window.__delofiaProductEditHistoryActive) { history.pushState({ ...(history.state || {}), delofiaProductEditor: true }, '', window.location.href); window.__delofiaProductEditHistoryActive = true; }
             editCard.classList.add('product-edit-active');
             editCard.style.display = 'block';
             editCard.style.position = 'fixed';
@@ -7229,6 +7307,7 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             resetProductForm();
             const card=document.getElementById('productFormCard');
             if(!card)return;
+            if (!window.__delofiaProductEditHistoryActive) { history.pushState({ ...(history.state || {}), delofiaProductEditor: true }, '', window.location.href); window.__delofiaProductEditHistoryActive = true; }
             document.getElementById('productFormTitle').textContent='Add New Product';
             ensureProductFormModalPlacement();
             card.classList.add('product-edit-active');
@@ -7470,6 +7549,14 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
     z-index: 1 !important;
   }
 }
+</style>
+
+
+<style id="delofia-product-modal-scroll-lock-fix">
+body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavior:none !important; }
+#productDetailModal { overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch; }
+#productDetailModal > div { max-height:calc(100dvh - 24px); overflow-y:auto !important; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+@media(max-width:640px){ #productDetailModal { height:100dvh; align-items:flex-start !important; overflow-y:auto !important; } #productDetailModal > div { max-height:calc(100dvh - 16px) !important; margin:0 auto !important; } }
 </style>
 
 </body>
