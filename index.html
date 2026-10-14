@@ -1290,7 +1290,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         <h2 class="text-xl font-extrabold text-purple-900 mb-4"><i class="fas fa-shopping-cart mr-2"></i>Your Cart</h2>
         <div id="cartItemsList" class="space-y-3"></div>
         <div class="flex items-center justify-between border-t mt-4 pt-4"><span class="font-bold">Subtotal</span><strong class="text-purple-800 text-xl" id="cartSubtotalLabel">৳0.00</strong></div>
-        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="closeCartModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 py-3 font-bold text-sm">Continue Shopping</button><button onclick="window.checkoutCart?.()" id="cartCheckoutBtn" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 font-bold text-sm">Checkout</button></div>
+        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="closeCartModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 py-3 font-bold text-sm">Continue Shopping</button><button onclick="checkoutCart()" id="cartCheckoutBtn" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 font-bold text-sm">Checkout</button></div>
       </div></div>
     </div>
 
@@ -4346,10 +4346,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (label) label.textContent = '৳' + selectedSubtotal.toFixed(2) + (selected.length !== shoppingCart.length ? ' selected' : '');
             const checkoutBtn = document.getElementById('cartCheckoutBtn');
             if (checkoutBtn) {
-                checkoutBtn.disabled = shoppingCart.length === 0;
-                checkoutBtn.style.opacity = shoppingCart.length === 0 ? '.55' : '1';
-                checkoutBtn.style.cursor = shoppingCart.length === 0 ? 'not-allowed' : 'pointer';
-                checkoutBtn.textContent = selected.length === 0 ? 'Checkout all items · ৳' + allSubtotal.toFixed(2) : (selected.length === shoppingCart.length ? 'Checkout · ৳' + allSubtotal.toFixed(2) : 'Checkout selected (' + selected.length + ') · ৳' + selectedSubtotal.toFixed(2));
+                checkoutBtn.disabled = selected.length === 0;
+                checkoutBtn.style.opacity = selected.length === 0 ? '.55' : '1';
+                checkoutBtn.style.cursor = selected.length === 0 ? 'not-allowed' : 'pointer';
+                checkoutBtn.textContent = selected.length === shoppingCart.length ? 'Checkout · ৳' + allSubtotal.toFixed(2) : 'Checkout selected (' + selected.length + ') · ৳' + selectedSubtotal.toFixed(2);
             }
             updateCartBadge();
         }
@@ -4432,8 +4432,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function checkoutCart() {
             if (window.customerAuth?.currentUser && window.customerProfileCache) window.fillCheckoutFromCustomerProfile?.(window.customerProfileCache);
             if (!shoppingCart.length) { alert('Your cart is empty.'); return; }
-            let selectedItems = shoppingCart.filter(item => !cartCheckoutExcludedKeys.has(String(item.key || cartItemKey(item.productId, item.variants || {}))));
-            if (!selectedItems.length) { cartCheckoutExcludedKeys.clear(); selectedItems = shoppingCart.slice(); renderCartItems(); }
+            const selectedItems = shoppingCart.filter(item => !cartCheckoutExcludedKeys.has(String(item.key || cartItemKey(item.productId, item.variants || {}))));
+            if (!selectedItems.length) { alert('Checkout করার জন্য Cart থেকে অন্তত একটি পণ্য select করো।'); return; }
             const first = selectedItems[0], prod = products.find(p => String(p.id) === String(first.productId));
             if (!prod) { alert('A product in your selected cart items is no longer available. Please remove it and try again.'); return; }
             // Keep the full cart safe while checkout operates only on selected lines.
@@ -4457,11 +4457,6 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const modal = document.getElementById('checkoutModal'); if (modal) modal.classList.remove('hidden'); pushModalState('checkout');
             if (window.customerAuth?.currentUser && window.customerProfileCache) window.fillCheckoutFromCustomerProfile?.(window.customerProfileCache);
         }
-
-        window.checkoutCart = function() {
-            try { checkoutCart(); }
-            catch (error) { console.error('Cart checkout could not start:', error); alert('Checkout could not start. Please refresh the page and try again.'); }
-        };
 
         function updateDetailQty(delta) {
             detailQtyVal = Math.max(1, detailQtyVal + delta);
@@ -7203,9 +7198,25 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                 }
             }
         }
+        // Public bridges for inline cart/checkout buttons.
+        // Functions inside this Firebase module are module-scoped by default;
+        // assigning them to window makes the existing HTML onclick handlers work.
+        window.checkoutCart = checkoutCart;
+        window.openCartModal = openCartModal;
+        window.closeCartModal = closeCartModal;
+        window.changeCartQty = changeCartQty;
+        window.removeCartItem = removeCartItem;
+        window.openCartProductDetail = openCartProductDetail;
+        window.toggleCartCheckoutItem = toggleCartCheckoutItem;
+        window.changeCheckoutCartQty = changeCheckoutCartQty;
+        window.changeCheckoutQty = changeCheckoutQty;
+        window.setCheckoutQtyFromInput = setCheckoutQtyFromInput;
+        window.closeCheckoutModal = closeCheckoutModal;
+        window.applyDiscount = applyDiscount;
+        window.updatePaymentUI = updatePaymentUI;
     </script>
 <script>
-// Delofia catalog safety bridge: render from the current Firestore-backed window.products
+ // Delofia catalog safety bridge: render from the current Firestore-backed window.products
 // whenever the admin panel opens, without changing or deleting saved products.
 (function () {
   function refreshDelofiaCatalog() {
