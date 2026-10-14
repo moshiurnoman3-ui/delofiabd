@@ -2960,7 +2960,28 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         };
         function isInWishlist(productId) { return delofiaWishlist.includes(String(productId)); }
-        function updateWishlistBadge() { const count = String(delofiaWishlist.length); ['wishlistCountBadge','mobileWishlistCountBadge'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; }); }
+        function updateWishlistBadge() {
+            const allIds = [...new Set((delofiaWishlist || []).map(String))];
+            const catalog = Array.isArray(window.products) ? window.products : [];
+            const catalogReady = window.__productsSnapshotLoaded === true && !window.__productsLoadError;
+            const visibleIds = catalogReady ? allIds.filter(id => catalog.some(product => String(product.id) === id)) : [];
+            // Drop deleted/non-existent product IDs after a successful catalog load, and sync the clean wishlist back to the signed-in account.
+            if (catalogReady && JSON.stringify(visibleIds) !== JSON.stringify(delofiaWishlist || [])) {
+                delofiaWishlist = visibleIds;
+                try { localStorage.setItem('delofiaWishlist', JSON.stringify(delofiaWishlist)); } catch (_) {}
+                const uid = window.customerAuth?.currentUser?.uid;
+                const syncCleanList = () => {
+                    if (uid && window.customerAuth?.currentUser?.uid === uid && !window.__delofiaApplyingRemoteState && !window.__delofiaWishlistLocalWritePending && typeof window.__delofiaCloudWishlistSync === 'function') {
+                        window.__delofiaCloudWishlistSync(delofiaWishlist.slice()).catch(error => console.warn('Could not sync cleaned wishlist.', error));
+                    }
+                };
+                if (window.__delofiaApplyingRemoteState) setTimeout(syncCleanList, 0);
+                else syncCleanList();
+            }
+            // Count only unique products that can actually appear in the wishlist list.
+            const count = String(catalogReady ? visibleIds.length : 0);
+            ['wishlistCountBadge','mobileWishlistCountBadge'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = count; });
+        }
         function updateDetailWishlistButton() {
             const product = selectedDetailProd;
             const button = document.getElementById('detailWishlistButton');
@@ -7795,5 +7816,28 @@ body.delofia-product-detail-open #productDetailModal { z-index:110 !important; }
 @media(max-width:767px){
  body.delofia-customer-account-open #mobileProductSearchBar{display:none!important;visibility:hidden!important;pointer-events:none!important}
  body.delofia-customer-account-open #customerAccountModal{z-index:2147483000!important}
+}
+</style>
+<style id="delofia-admin-shipping-fee-contrast-fix">
+/* Keep the fee number readable beside Inside/Outside Dhaka in both Admin themes. */
+#adminTabOrders #ordersTableBody td:nth-child(4) div {
+  color:#374151 !important;
+  -webkit-text-fill-color:#374151 !important;
+  opacity:1 !important;
+  font-weight:600 !important;
+}
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) div {
+  color:#f4f4f5 !important;
+  -webkit-text-fill-color:#f4f4f5 !important;
+}
+#adminTabOrders #ordersTableBody td:nth-child(4) span.bg-purple-100 {
+  background-color:#ede9fe !important;
+  color:#5b21b6 !important;
+  -webkit-text-fill-color:#5b21b6 !important;
+}
+body.delofia-admin-dark #adminTabOrders #ordersTableBody td:nth-child(4) span.bg-purple-100 {
+  background-color:#5b21b6 !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
 }
 </style>
