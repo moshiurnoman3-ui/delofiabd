@@ -3,24 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DELOFIA — official online store for fashion and lifestyle in Bangladesh. Discover products, offers, and convenient delivery.">
-    <meta name="theme-color" content="#f5d6f5">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://delofiabd.vercel.app/">
-    <meta property="og:site_name" content="DELOFIA">
-    <meta property="og:title" content="DELOFIA | Official Online Store">
-    <meta property="og:description" content="Discover Delofia fashion and lifestyle products, offers, and convenient delivery across Bangladesh.">
-    <meta property="og:image" content="https://delofiabd.vercel.app/delofia-share-logo.jpg">
-    <meta property="og:image:secure_url" content="https://delofiabd.vercel.app/delofia-share-logo.jpg">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="430">
-    <meta property="og:image:height" content="429">
-    <meta property="og:image:alt" content="DELOFIA logo on a light pink background">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="DELOFIA | Official Online Store">
-    <meta name="twitter:description" content="Discover Delofia fashion and lifestyle products, offers, and convenient delivery across Bangladesh.">
-    <meta name="twitter:image" content="https://delofiabd.vercel.app/delofia-share-logo.jpg">
-
     <title>Delofia - Premium E-Commerce Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1334,6 +1316,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
           <div class="p-5 sm:p-6">
             <div id="customerAccountLoggedIn" class="hidden">
               <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4 mb-4"><p class="text-sm text-gray-500">Logged in as</p><p id="customerAccountSummaryName" class="font-black text-lg text-purple-900"></p><p id="customerAccountSummaryPhone" class="text-sm text-gray-600"></p></div>
+              <section class="mb-4 rounded-2xl border border-purple-100 bg-purple-50/50 p-3"><div class="mb-2 flex items-center justify-between gap-2"><h3 class="font-extrabold text-purple-900">My Order History</h3><button type="button" onclick="window.startCustomerOrderHistory?.()" class="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-purple-700">Refresh</button></div><p id="customerOrderHistoryStatus" class="mb-2 text-[11px] text-gray-500">Open to load your orders.</p><div id="customerOrderHistoryList" class="max-h-72 space-y-2 overflow-y-auto"></div></section>
               <button type="button" onclick="editCustomerAccountProfile()" class="w-full rounded-xl border border-purple-200 py-3 font-bold text-purple-800 hover:bg-purple-50 mb-2">Edit Profile</button>
               <button type="button" onclick="customerAccountLogout()" class="w-full rounded-xl bg-gray-100 py-3 font-bold text-gray-700 hover:bg-gray-200">Log Out</button>
             </div>
@@ -2341,10 +2324,12 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             if (modal) modal.classList.remove('hidden');
             setCustomerAccountError('');
             renderCustomerAccountState();
+            if (auth.currentUser) window.startCustomerOrderHistory?.();
         };
         window.closeCustomerAccount = function() {
             document.getElementById('customerAccountModal')?.classList.add('hidden');
             document.body.classList.remove('delofia-customer-account-open');
+            window.stopCustomerOrderHistory?.();
         };
         window.setCustomerAccountMode = function(mode) {
             customerAccountMode = mode === 'login' ? 'login' : 'register';
@@ -2466,6 +2451,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 document.getElementById('customerProfilePhone').readOnly = false;
                 passwordEl.required = true; passwordEl.value = '';
                 renderCustomerAccountState(); fillCheckoutFromCustomerProfile(window.customerProfileCache);
+                if (document.getElementById('customerAccountModal') && !document.getElementById('customerAccountModal').classList.contains('hidden')) window.startCustomerOrderHistory?.();
                 if (!customerProfileEditMode) window.resumePendingLoginCheckout?.();
             } catch (error) {
                 console.error('Customer account error:', error);
@@ -2562,6 +2548,53 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         window.fsGetDocs = getDocs;
         window.fsOnSnapshot = onSnapshot;
         window.fsRunTransaction = runTransaction;
+        window.fsQuery = query;
+        window.fsWhere = where;
+        let customerOrderHistoryUnsubscribe = null;
+        let customerOrderHistoryUid = '';
+        function customerOrderHistoryEscape(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+        function renderCustomerOrderHistory(rows) {
+            const list = document.getElementById('customerOrderHistoryList');
+            const status = document.getElementById('customerOrderHistoryStatus');
+            if (!list) return;
+            const sorted = rows.slice().sort((a,b) => (Date.parse(b.date || '') || 0) - (Date.parse(a.date || '') || 0));
+            if (status) status.textContent = `${sorted.length} order(s)`;
+            if (!sorted.length) { list.innerHTML = '<p class="rounded-xl bg-white p-4 text-sm text-gray-500">No orders yet. Your orders will appear here.</p>'; return; }
+            const statusClasses = { Pending:'bg-amber-100 text-amber-800', Confirmed:'bg-blue-100 text-blue-800', Courier:'bg-violet-100 text-violet-800', Delivered:'bg-emerald-100 text-emerald-800', Cancelled:'bg-red-100 text-red-800' };
+            list.innerHTML = sorted.map(order => {
+                const items = Array.isArray(order.items) && order.items.length ? order.items : [{productTitle:order.productTitle || 'Product', quantity:order.quantity || 1, variantSelection:order.variantSelection || ''}];
+                const itemRows = items.map(item => `<li class="flex justify-between gap-3 py-1"><span class="min-w-0">${customerOrderHistoryEscape(item.productTitle || 'Product')}${item.variantSelection ? ` <span class="text-gray-500">(${customerOrderHistoryEscape(item.variantSelection)})</span>` : ''} × ${customerOrderHistoryEscape(item.quantity || 1)}</span><span class="shrink-0">৳${Number(item.lineTotal ?? ((Number(item.unitPrice)||0)*(Number(item.quantity)||1))).toFixed(2)}</span></li>`).join('');
+                const orderStatus = String(order.status || 'Pending');
+                return `<article class="rounded-xl border border-purple-100 bg-white p-3"><div class="flex flex-wrap items-start justify-between gap-2"><div><strong class="block text-sm text-gray-900">Order ${customerOrderHistoryEscape(order.orderId || order.id || '')}</strong><span class="text-[11px] text-gray-500">${customerOrderHistoryEscape(order.date || '')}</span></div><span class="rounded-full px-2.5 py-1 text-[11px] font-bold ${statusClasses[orderStatus] || 'bg-gray-100 text-gray-700'}">${customerOrderHistoryEscape(orderStatus)}</span></div><ul class="mt-2 divide-y divide-gray-100 text-xs text-gray-700">${itemRows}</ul><div class="mt-2 border-t border-gray-100 pt-2 text-right text-sm font-extrabold text-purple-900">Total: ৳${Number(order.grandTotal || 0).toFixed(2)}</div></article>`;
+            }).join('');
+        }
+        window.stopCustomerOrderHistory = function() {
+            if (customerOrderHistoryUnsubscribe) customerOrderHistoryUnsubscribe();
+            customerOrderHistoryUnsubscribe = null;
+            customerOrderHistoryUid = '';
+        };
+        window.startCustomerOrderHistory = function() {
+            const list = document.getElementById('customerOrderHistoryList');
+            const status = document.getElementById('customerOrderHistoryStatus');
+            const user = auth.currentUser;
+            if (!list) return;
+            if (!user) { if (status) status.textContent = 'Log in to view your order history.'; return; }
+            if (customerOrderHistoryUid === user.uid && customerOrderHistoryUnsubscribe) return;
+            window.stopCustomerOrderHistory();
+            if (status) status.textContent = 'Loading your orders…';
+            list.innerHTML = '';
+            const ownOrdersQuery = query(collection(db, 'orders'), where('customerUid', '==', user.uid));
+            customerOrderHistoryUid = user.uid;
+            customerOrderHistoryUnsubscribe = onSnapshot(ownOrdersQuery, snapshot => {
+                const rows = [];
+                snapshot.forEach(orderDoc => rows.push({id:orderDoc.id, ...orderDoc.data()}));
+                if (auth.currentUser?.uid === user.uid) renderCustomerOrderHistory(rows);
+            }, error => {
+                console.error('Customer order history load failed:', error);
+                if (status) status.textContent = 'Order history could not be loaded.';
+                list.innerHTML = '<p class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Order history access needs the updated Firestore Rules: customers may read only their own orders.</p>';
+            });
+        };
         // Restore the Admin dashboard after reload only when the separate Admin Auth session and local timeout session are both valid.
         onAuthStateChanged(adminAuth, user => {
             if (new URLSearchParams(window.location.search).get('admin') !== '1') return;
@@ -3075,9 +3108,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                         </div>
                         
                         <div class="space-y-2">
-                            <button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>
-                            <a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Order via WhatsApp</a>
-                        
+                            ${product.stockOut ? `<button type="button" onclick="showStockOutNotice()" class="w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100"><i class="fas fa-ban mr-1"></i> Out of Stock</button>` : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
+                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Order via WhatsApp</a>`}
                             <div class="flex justify-center gap-2 pt-1">
                                 <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
                                 <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
@@ -4121,15 +4153,17 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 toast.classList.remove('opacity-100', 'translate-y-0');
             }, 2400);
         }
+        function showStockOutNotice() { alert('This product is out of stock and cannot be ordered right now.'); }
+        window.showStockOutNotice = showStockOutNotice;
         function addProductToCart(productId) {
             const previousScrollY = window.scrollY;
             const prod = products.find(p => p.id === productId);
-            if (!prod) return;
+            if (!prod) return; if (prod.stockOut) { showStockOutNotice(); return; }
             if (prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.length) { openProductDetail(productId); return; }
             const variants = {}, unitPrice = Number(prod.price || 0), key = cartItemKey(productId, variants);
             const old = shoppingCart.find(i => i.key === key);
             const requestedQty = (old ? Number(old.qty || 0) : 0) + 1;
-            if (!prod.stockOut && requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
+            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই পণ্যের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId, title: prod.title || 'Product', qty: 1, variants, unitPrice, image: (prod.images || [])[0] || ''});
             updateCartBadge(); renderCartItems(); showDelofiaCartToast();
             requestAnimationFrame(() => { if (Math.abs(window.scrollY - previousScrollY) > 8) window.scrollTo({ top: previousScrollY, behavior: 'auto' }); });
@@ -4138,7 +4172,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
         function getCurrentDetailVariantLine() {
             const prod = selectedDetailProd;
-            if (!prod) return null;
+            if (!prod || prod.stockOut) return null;
             const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
             const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
             if (missing) { alert('Please choose ' + missing.name + ' before adding this combination.'); return null; }
@@ -4178,9 +4212,15 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function addSelectedVariantsToCart() {
-            // Add the currently selected Color / Size combination to the real cart immediately.
-            // addDetailProductToCart validates required options, updates the cart and shows the success toast.
-            addDetailProductToCart();
+            const prod = selectedDetailProd;
+            if (!prod) return;
+            if (prod.stockOut) { showStockOutNotice(); return; }
+            const hasVariants = !!(prod.variantEnabled && Array.isArray(prod.variantGroups) && prod.variantGroups.some(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())));
+            if (!hasVariants) { addDetailProductToCart(); return; }
+            // For variant products, the main Add to Cart button saves the current combination
+            // into the selection list. Shopper can choose another combination and repeat.
+            // The separate batch button then adds every saved combination to the real cart.
+            addCurrentVariantLine();
         }
 
         function renderPendingVariantLines() {
@@ -4204,7 +4244,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const prod = products.find(p => String(p.id) === String(line.productId));
             const existing = pendingVariantLines.find(x => x.key === line.key);
             const newQty = Number(line.qty) + (existing ? Number(existing.qty) : 0);
-            if (prod && !prod.stockOut && newQty > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
+            if (prod && newQty > getAvailableStock(prod, line.variants || {})) { alert('এই Color / Size-এর পর্যাপ্ত stock নেই।'); return; }
             if (existing) existing.qty = newQty; else pendingVariantLines.push(line);
             renderPendingVariantLines();
             const btn = document.getElementById('detailAddCartBtn');
@@ -4224,7 +4264,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const prod = products.find(p => String(p.id) === String(line.productId));
                 const existing = shoppingCart.find(x => x.key === line.key);
                 const totalQty = Number(line.qty || 0) + (existing ? Number(existing.qty || 0) : 0);
-                if (prod && !prod.stockOut && totalQty > getAvailableStock(prod, line.variants || {})) { alert('Stock Out — ' + Object.values(line.variants || {}).filter(Boolean).join(' / ') + ' এর পর্যাপ্ত stock নেই।'); return; }
+                if (prod && totalQty > getAvailableStock(prod, line.variants || {})) { alert('Stock Out — ' + Object.values(line.variants || {}).filter(Boolean).join(' / ') + ' এর পর্যাপ্ত stock নেই।'); return; }
             }
             pendingVariantLines.forEach(line => {
                 const existing = shoppingCart.find(x => x.key === line.key);
@@ -4236,7 +4276,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         }
 
         function addDetailProductToCart() {
-            const prod = selectedDetailProd; if (!prod) return;
+            const prod = selectedDetailProd; if (!prod) return; if (prod.stockOut) { showStockOutNotice(); return; }
             const requiredGroups = (prod.variantEnabled && Array.isArray(prod.variantGroups)) ? prod.variantGroups.filter(g => String(g.name || '').trim() && (g.options || []).some(o => String(o.name || '').trim())) : [];
             const missing = requiredGroups.find(g => !selectedVariantChoices[g.name]);
             if (missing) { alert('Please choose ' + missing.name + ' before adding to cart.'); return; }
@@ -4251,7 +4291,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const image = (colorMeta && colorMeta.image) || (Object.values(meta).reverse().find(o => o && o.image)?.image) || (prod.images || [])[0] || '';
             const key = cartItemKey(prod.id, variants), old = shoppingCart.find(i => i.key === key);
             const requestedQty = (old ? Number(old.qty || 0) : 0) + detailQtyVal;
-            if (!prod.stockOut && requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
+            if (requestedQty > getAvailableStock(prod, variants)) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; }
             if (old) old.qty = requestedQty; else shoppingCart.push({key, productId:prod.id, title:prod.title || 'Product', qty:detailQtyVal, variants, unitPrice, image});
 
             updateCartBadge(); renderCartItems();
@@ -4445,7 +4485,8 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         window.startVariantBatchDirectCheckout = startVariantBatchDirectCheckout;
 
         function startCheckoutFromDetail() {
-            if (!selectedDetailProd || selectedDetailProd.stockOut) return;
+            if (!selectedDetailProd) return;
+            if (selectedDetailProd.stockOut) { showStockOutNotice(); return; }
             // If the shopper added multiple color/size combinations, Direct Order must include every one.
             if (pendingVariantLines.length) {
                 startVariantBatchDirectCheckout(pendingVariantLines.map(line => ({...line, variants:{...(line.variants||{})}})));
@@ -6127,14 +6168,14 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
                     <td class="p-3"><span class="bg-purple-100 text-purple-800 text-[11px] font-bold px-2 py-0.5 rounded-full inline-block mb-1">${adminSafeText(o.shippingArea || '')}</span><div class="text-gray-600">৳${Number(o.shippingFee || 0).toFixed(2)}</div></td>
                     <td class="p-3 font-black text-purple-900 text-sm">৳${Number(o.grandTotal || 0).toFixed(2)}</td>
                     <td class="p-3 min-w-[150px]"><strong class="block">${isAdvance ? 'Advance · ' + adminSafeText(o.paymentProvider || '') : 'Cash on Delivery'}</strong>${isAdvance ? `<span class="block text-[11px] text-gray-600">Advance: ৳${Number(o.advanceAmount || 0).toFixed(2)}</span><span class="block text-[11px] break-all">Txn: ${adminSafeText(o.transactionId || 'Not provided')}</span>${safeScreenshot}` : ''}</td>
-                    <td class="p-3 min-w-[145px]"><select onchange="updateOrderStatus('${safeDocId}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status"><option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option><option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option><option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option><option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option></select></td>
+                    <td class="p-3 min-w-[145px]"><select onchange="updateOrderStatus('${safeDocId}', this.value)" class="border rounded-lg px-2 py-2 text-xs font-bold bg-white focus:outline-none focus:ring-2 focus:ring-purple-400 ${orderStatusClass(o.status)}" aria-label="Order status"><option value="Pending" ${(o.status || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option><option value="Confirmed" ${o.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option><option value="Courier" ${o.status === 'Courier' ? 'selected' : ''}>Courier</option><option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option><option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option></select></td>
                     <td class="p-3"><button onclick="deleteOrder('${safeDocId}')" class="text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition" title="Delete order"><i class="fas fa-trash"></i> <span class="ml-1">Delete</span></button></td>`;
                 tbody.appendChild(tr);
             });
         }
 
         function orderStatusClass(status) {
-            return ({ Pending: 'text-amber-700 border-amber-200', Confirmed: 'text-blue-700 border-blue-200', Delivered: 'text-emerald-700 border-emerald-200', Cancelled: 'text-red-700 border-red-200' })[status || 'Pending'] || 'text-gray-700';
+            return ({ Pending: 'text-amber-700 border-amber-200', Confirmed: 'text-blue-700 border-blue-200', Courier: 'text-violet-700 border-violet-200', Delivered: 'text-emerald-700 border-emerald-200', Cancelled: 'text-red-700 border-red-200' })[status || 'Pending'] || 'text-gray-700';
         }
 
         async function updateOrderStatus(id, status) {
