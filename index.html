@@ -1333,7 +1333,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
           </div>
           <div class="p-5 sm:p-6">
             <div id="customerAccountLoggedIn" class="hidden">
-              <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4 mb-4"><p class="text-sm text-gray-500">Logged in as</p><p id="customerAccountSummaryName" class="font-black text-lg text-purple-900"></p><p id="customerAccountSummaryPhone" class="text-sm text-gray-600"></p></div>
+              <div class="rounded-2xl bg-purple-50 border border-purple-100 p-4 mb-4"><p class="text-sm text-gray-500">My Profile Details</p><p class="mt-2 text-xs font-semibold text-gray-500">Full name</p><p id="customerAccountSummaryName" class="font-black text-lg text-purple-900 break-words"></p><p class="mt-2 text-xs font-semibold text-gray-500">Phone number</p><p id="customerAccountSummaryPhone" class="text-sm text-gray-700 break-words"></p><p class="mt-2 text-xs font-semibold text-gray-500">Email</p><p id="customerAccountSummaryEmail" class="text-sm text-gray-700 break-words"></p><p class="mt-2 text-xs font-semibold text-gray-500">Address</p><p id="customerAccountSummaryAddress" class="text-sm text-gray-700 break-words"></p><p class="mt-2 text-xs font-semibold text-gray-500">District</p><p id="customerAccountSummaryDistrict" class="text-sm text-gray-700 break-words"></p><p class="mt-2 text-xs font-semibold text-gray-500">Postal code</p><p id="customerAccountSummaryPostal" class="text-sm text-gray-700 break-words"></p></div>
               <section class="mb-4 rounded-2xl border border-purple-100 bg-purple-50/50 p-3"><div class="mb-2 flex items-center justify-between gap-2"><h3 class="font-extrabold text-purple-900">My Order History</h3><button type="button" onclick="window.startCustomerOrderHistory?.()" class="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-purple-700">Refresh</button></div><p id="customerOrderHistoryStatus" class="mb-2 text-[11px] text-gray-500">Open to load your orders.</p><div id="customerOrderHistoryList" class="max-h-72 space-y-2 overflow-y-auto"></div></section>
               <button type="button" onclick="editCustomerAccountProfile()" class="w-full rounded-xl border border-purple-200 py-3 font-bold text-purple-800 hover:bg-purple-50 mb-2">Edit Profile</button>
               <button type="button" onclick="customerAccountLogout()" class="w-full rounded-xl bg-gray-100 py-3 font-bold text-gray-700 hover:bg-gray-200">Log Out</button>
@@ -2334,9 +2334,17 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
             const label = document.getElementById('customerAccountHeaderLabel');
             if (label) label.textContent = loggedIn ? ((window.customerProfileCache?.name || 'Account').split(/\s+/)[0]) : 'Login';
             const name = document.getElementById('customerAccountSummaryName');
+            const profile = window.customerProfileCache || {};
             const phone = document.getElementById('customerAccountSummaryPhone');
-            if (name) name.textContent = window.customerProfileCache?.name || 'Delofia Customer';
-            if (phone) phone.textContent = window.customerProfileCache?.phone || '';
+            if (name) name.textContent = profile.name || 'Delofia Customer';
+            if (phone) phone.textContent = profile.phone || 'Not provided';
+            const summaryFields = {
+                customerAccountSummaryEmail: profile.email || auth.currentUser?.email || 'Not provided',
+                customerAccountSummaryAddress: profile.address || 'Not provided',
+                customerAccountSummaryDistrict: profile.district || 'Not provided',
+                customerAccountSummaryPostal: profile.postalCode || 'Not provided'
+            };
+            Object.entries(summaryFields).forEach(([id, value]) => { const el = document.getElementById(id); if (el) el.textContent = value; });
         }
         window.openCustomerAccount = function() {
             const modal = document.getElementById('customerAccountModal');
@@ -3166,12 +3174,14 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
+                card.style.contentVisibility = 'auto';
+                card.style.containIntrinsicSize = '320px';
                 
                 let subCategoryDisplay = Array.isArray(product.subCategory) ? product.subCategory.join(', ') : (product.subCategory || '');
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        <img src="${mainImg}" loading="lazy" decoding="async" fetchpriority="low" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
@@ -5680,10 +5690,14 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
 
 
 <style id="delofia-product-modal-scroll-lock-fix">
+/* Keep the storefront behind the detail modal locked, but allow the modal itself to scroll on touch devices. */
 body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavior:none !important; }
-#productDetailModal { overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch; }
-#productDetailModal > div { max-height:calc(100dvh - 24px); overflow-y:auto !important; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
-@media(max-width:640px){ #productDetailModal { height:100dvh; align-items:flex-start !important; overflow-y:auto !important; } #productDetailModal > div { max-height:calc(100dvh - 16px) !important; margin:0 auto !important; } }
+#productDetailModal { overscroll-behavior:contain !important; -webkit-overflow-scrolling:touch; touch-action:pan-y; }
+#productDetailModal > div { max-height:calc(100dvh - 24px); overflow-y:auto !important; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; }
+@media(max-width:640px){
+  #productDetailModal { height:100dvh; align-items:flex-start !important; justify-content:flex-start !important; overflow-x:hidden !important; overflow-y:auto !important; padding:8px !important; }
+  #productDetailModal > div { flex:0 0 auto; max-height:none !important; min-height:min-content; height:auto !important; overflow:visible !important; margin:0 auto !important; touch-action:pan-y; }
+}
 </style>
 
 </body>
