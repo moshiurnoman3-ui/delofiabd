@@ -2613,7 +2613,7 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         function setupRealtimeSync() {
             const isAdminUrl = new URLSearchParams(window.location.search).get('admin') === '1';
             const productCacheKey = 'delofia_products_cache_v3';
-            const productCacheTtlMs = 5 * 60 * 1000; // public storefront cache: 5 minutes
+            // Use the last known catalog immediately; the live Firestore listener below refreshes it.
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
                 window.refreshPriceRangeBounds?.();
@@ -2629,10 +2629,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             const saveProductCache = (list) => {
                 try { localStorage.setItem(productCacheKey, JSON.stringify({ savedAt: Date.now(), products: list })); } catch (e) { /* Cache is optional; private browsing/storage limits must not break the store. */ }
             };
-            const readFreshProductCache = () => {
+            const readProductCache = () => {
                 try {
                     const cached = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                    if (cached && Array.isArray(cached.products) && cached.products.length > 0 && Number.isFinite(Number(cached.savedAt)) && Date.now() - Number(cached.savedAt) >= 0 && Date.now() - Number(cached.savedAt) < productCacheTtlMs) return cached.products;
+                    if (cached && Array.isArray(cached.products) && cached.products.length > 0) return cached.products;
                 } catch (e) { /* Ignore malformed or unavailable cache. */ }
                 return null;
             };
@@ -2652,28 +2652,32 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                     if (list) list.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-sm">Products load হয়নি: ' + String(error?.message || error).replace(/[<>]/g, '') + '</div>';
                 });
             } else {
-                // Display a useful local cache immediately, then revalidate from Firestore on every page load.
-                // Each device has its own cache, so a phone must not keep an old catalog after reload.
-                const cachedProducts = readFreshProductCache();
+                // Render the last known catalog immediately, even if it is older than five minutes.
+                // A realtime listener then replaces it with server-confirmed data without requiring refresh.
+                // This avoids an empty/slow storefront on first visit and keeps admin edits in sync for visitors.
+                const cachedProducts = readProductCache();
                 if (cachedProducts) applyProductList(cachedProducts);
-                getDocs(collection(db, "products")).then((snapshot) => {
+                onSnapshot(collection(db, "products"), (snapshot) => {
+                    // The local Firestore cache may be older than localStorage. Keep the immediately
+                    // rendered catalog until the server responds, but use Firestore cache if no local cache exists.
+                    if (snapshot.metadata?.fromCache && cachedProducts) return;
                     const list = [];
                     snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
-                    saveProductCache(list);
+                    if (!snapshot.metadata?.fromCache) {
+                        saveProductCache(list);
+                    }
+                    // Do not briefly replace a saved catalog with an empty offline cache.
+                    if (snapshot.metadata?.fromCache && snapshot.empty && cachedProducts?.length) return;
                     applyProductList(list);
-                }).catch((error) => {
-                    console.error('Products load failed:', error);
+                }, (error) => {
+                    console.error('Products realtime listener failed:', error);
                     window.__productsLoadError = String(error?.message || error);
                     window.__productsSnapshotLoaded = true;
                     window.dispatchEvent(new Event('delofia-products-updated'));
-                    try {
-                        const stale = JSON.parse(localStorage.getItem(productCacheKey) || 'null');
-                        if (Array.isArray(stale?.products) && stale.products.length > 0) applyProductList(stale.products);
-                        else {
-                            const grid = document.getElementById('productsGrid');
-                            if (grid) grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">Products could not load. Check your connection and refresh.</div>';
-                        }
-                    } catch (_) {}
+                    if (!cachedProducts) {
+                        const grid = document.getElementById('productsGrid');
+                        if (grid) grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">Products could not load. Check your connection and refresh.</div>';
+                    }
                 });
             }
 
@@ -3077,9 +3081,10 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
                 const hasPriceFilter = minPrice !== null || maxPrice !== null;
                 // If the visitor applies a price range, hide items whose prices are hidden.
                 // Without an active range, those products remain visible as usual.
-                const matchesPrice = !hasPriceFilter || (isProductPriceVisible(p) &&
-                    (minPrice === null || Number(p.price) >= minPrice) &&
-                    (maxPrice === null || Number(p.price) <= maxPrice));
+                const productPrices = getProductFilterPrices(p);
+                const matchesPrice = !hasPriceFilter || (isProductPriceVisible(p) && productPrices.some(price =>
+                    (minPrice === null || price >= minPrice) &&
+                    (maxPrice === null || price <= maxPrice)));
                 return matchesText && matchesCategory && matchesSubCategory && matchesPrice;
             });
             const totalPages = Math.max(1, Math.ceil(filtered.length / DELOFIA_PRODUCTS_PER_PAGE));
@@ -3456,8 +3461,26 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
             }
         }
 
+        function getProductFilterPrices(product) {
+            const prices = [];
+            const addPrice = value => {
+                if (value !== '' && value !== null && value !== undefined) {
+                    const n = Number(value);
+                    if (Number.isFinite(n) && n >= 0) prices.push(n);
+                }
+            };
+            addPrice(product?.price);
+            // Include every explicitly configured option price and nested size price.
+            (Array.isArray(product?.variantGroups) ? product.variantGroups : []).forEach(group => {
+                (Array.isArray(group?.options) ? group.options : []).forEach(option => {
+                    addPrice(option?.price);
+                    (Array.isArray(option?.childVariants) ? option.childVariants : []).forEach(child => addPrice(child?.price));
+                });
+            });
+            return prices;
+        }
         function getPriceSliderMaximum() {
-            const prices = (window.products || []).map(p => Number(p.price)).filter(n => Number.isFinite(n) && n > 0);
+            const prices = (window.products || []).flatMap(getProductFilterPrices).filter(n => Number.isFinite(n) && n > 0);
             const highest = prices.length ? Math.max(...prices) : 10000;
             return Math.max(1000, Math.ceil(highest / 100) * 100);
         }
@@ -3853,13 +3876,37 @@ header #delofiaHeaderActions { position:static !important; transform:none !impor
         };
         window.shareCurrentDelofiaProduct = function() { if (selectedDetailProd) window.shareDelofiaProduct(selectedDetailProd.id); };
         window.copyCurrentDelofiaProductLink = function() { if (selectedDetailProd) window.copyDelofiaProductLink(selectedDetailProd.id); };
-        function openDelofiaProductFromSharedUrl() {
+        let delofiaSharedProductFetchInFlight = '';
+        async function openDelofiaProductFromSharedUrl() {
             const productId = new URLSearchParams(window.location.search).get('product');
-            if (!productId || !(window.products || []).length) return;
-            const product = window.products.find(p => String(p.id) === String(productId));
-            if (!product || delofiaSharedUrlProductOpened === String(product.id)) return;
-            delofiaSharedUrlProductOpened = String(product.id);
-            openProductDetail(product.id);
+            if (!productId || delofiaSharedUrlProductOpened === String(productId) || delofiaSharedProductFetchInFlight === String(productId)) return;
+            // Open immediately from the already-loaded catalog/cache when possible.
+            let product = (window.products || []).find(p => String(p.id) === String(productId));
+            if (product) {
+                delofiaSharedUrlProductOpened = String(product.id);
+                openProductDetail(product.id);
+                return;
+            }
+            // A shared product URL should not wait for the entire catalog download.
+            // Fetch only the requested product while the normal catalog loads in parallel.
+            delofiaSharedProductFetchInFlight = String(productId);
+            try {
+                const productSnap = await getDoc(doc(db, 'products', String(productId)));
+                if (!productSnap.exists()) return;
+                product = { ...productSnap.data(), id: productSnap.id };
+                const current = Array.isArray(window.products) ? window.products : [];
+                const existingIndex = current.findIndex(p => String(p.id) === String(productId));
+                if (existingIndex >= 0) current[existingIndex] = product;
+                else current.push(product);
+                window.products = current;
+                delofiaSharedUrlProductOpened = String(product.id);
+                window.dispatchEvent(new Event('delofia-products-updated'));
+                openProductDetail(product.id);
+            } catch (error) {
+                console.warn('Shared product direct load failed; waiting for catalog load:', error);
+            } finally {
+                delofiaSharedProductFetchInFlight = '';
+            }
         }
         window.addEventListener('delofia-products-updated', openDelofiaProductFromSharedUrl);
         document.addEventListener('DOMContentLoaded', openDelofiaProductFromSharedUrl);
@@ -6749,11 +6796,22 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
             const hasDiscount = !!isProductPriceVisible(selectedDetailProd) && regular > price && regular > 0;
             if (oldEl) { oldEl.textContent = hasDiscount ? `৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; oldEl.classList.toggle('hidden', !hasDiscount); }
             if (badge) { badge.textContent = hasDiscount ? `${Math.round((regular-price)/regular*100)}% OFF · SAVE ৳${(regular-price).toLocaleString('en-BD',{minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; badge.classList.toggle('hidden', !hasDiscount); }
+            const available = getAvailableStock(selectedDetailProd, {...choices});
+            // Keep one clear stock message beside the price: the colored badge handles zero stock.
+            const hasVariantSelection = Object.entries(choices).some(([key, value]) => key !== '__size' ? !!value : !!value) || !!choices.__size;
+            const variantIsOut = hasVariantSelection && Number.isFinite(available) && available <= 0;
+            const isOut = !!selectedDetailProd.stockOut || variantIsOut;
+            const stockBadge = document.getElementById('detailStockBadge');
+            if (stockBadge) {
+                stockBadge.textContent = isOut ? 'Stock Out' : 'In Stock';
+                stockBadge.className = isOut
+                    ? 'text-xs bg-red-100 text-red-800 font-semibold px-2.5 py-1 rounded-full'
+                    : 'text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded-full';
+            }
             const qtyEl = document.getElementById('detailAvailableQty');
             if (qtyEl) {
-                const available = getAvailableStock(selectedDetailProd, {...choices});
-                const canShow = selectedDetailProd.showStockQuantity === true && Number.isFinite(available);
-                qtyEl.textContent = canShow ? (available > 0 ? `${available} available` : 'Out of stock') : '';
+                const canShow = selectedDetailProd.showStockQuantity === true && Number.isFinite(available) && available > 0;
+                qtyEl.textContent = canShow ? `${available} available` : '';
                 qtyEl.classList.toggle('hidden', !canShow);
             }
         }
