@@ -3,6 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <meta name="description" content="Shop Delofia for lovely lifestyle finds, thoughtful gifts, and quality products at reasonable prices. Fast delivery across Bangladesh.">
     <link rel="canonical" href="https://delofiabd.vercel.app/">
     <meta property="og:type" content="website">
@@ -20,7 +26,8 @@
     <meta name="twitter:description" content="Discover lovely lifestyle finds and thoughtful gifts at Delofia. Fast delivery across Bangladesh.">
     <meta name="twitter:image" content="https://delofiabd.vercel.app/delofia-share-card.png">
     <title>Delofia — Draft · Dreamy · Delicacy</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Delofia safe speed pass: preconnect + deferred Tailwind + Firestore device cache; product schema/features unchanged. -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
@@ -2202,7 +2209,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
     <!-- FIREBASE SDK INTEGRATION -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -2216,7 +2223,17 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Keep a local Firestore cache for repeat visits on the same device/browser.
+        // Firestore remains the source of truth; this does not change product records.
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (cacheInitError) {
+            console.warn('Persistent product cache unavailable; using standard Firestore:', cacheInitError);
+            db = getFirestore(app);
+        }
         const auth = getAuth(app);
         window.customerAuth = auth;
         // Use a second named Firebase app for Admin auth so an Admin sign-in never appears as a Customer account.
