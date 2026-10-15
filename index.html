@@ -3701,9 +3701,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                 storeSettings.heroCarouselEnabled = !!document.getElementById('settingHeroCarouselEnabled')?.checked;
                 storeSettings.heroCarouselInterval = Math.max(2, Math.min(30, Number(document.getElementById('settingHeroCarouselInterval')?.value) || 5));
                 storeSettings.heroCarouselSlides = normalizeAdminHeroSlides(adminHeroSlides);
-                // Move legacy/new logo and hero banner data URLs to Cloudinary before saving settings.
-                storeSettings = await delofiaMigrateImageData(storeSettings);
-                if (new Blob([JSON.stringify(storeSettings)]).size > 850000) throw new Error('Store settings are still too large after image upload. Please use smaller banners.');
+                if (new Blob([JSON.stringify(storeSettings)]).size > 850000) throw new Error('Slider images are too large for Firestore. Use smaller banner images and try again.');
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
                 Object.entries(settingTextFields).forEach(([key, id]) => { const field = document.getElementById(id); if (field) storeSettings[key] = field.value.trim(); });
                 if (!window.db || typeof window.fsSetDoc !== 'function' || typeof window.fsDoc !== 'function') {
@@ -6418,37 +6416,6 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 
         let selectedProductPhotoData = [];
 
-        // Delofia image migration: upload image data URLs to Cloudinary before saving
-        // product/store documents, so Firestore stores compact HTTPS URLs instead of base64.
-        // Keep the API secret out of browser code; unsigned uploads use the named preset only.
-        const DELOFIA_CLOUDINARY_CLOUD_NAME = 'jmdjsohe';
-        const DELOFIA_CLOUDINARY_UPLOAD_PRESET = 'delofia_products';
-        async function delofiaUploadImageDataUrl(dataUrl) {
-            if (typeof dataUrl !== 'string' || !/^data:image\//i.test(dataUrl)) return dataUrl;
-            const blob = await (await fetch(dataUrl)).blob();
-            const ext = (blob.type.split('/')[1] || 'jpg').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'jpg';
-            const formData = new FormData();
-            formData.append('file', blob, `delofia-${Date.now()}.${ext}`);
-            formData.append('upload_preset', DELOFIA_CLOUDINARY_UPLOAD_PRESET);
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${DELOFIA_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-            let result = {};
-            try { result = await response.json(); } catch (_) {}
-            if (!response.ok || !result.secure_url) {
-                const detail = result?.error?.message || `Cloudinary upload failed (HTTP ${response.status}).`;
-                throw new Error(detail + ' Check Cloud Name, preset name, and Unsigned signing mode.');
-            }
-            return result.secure_url;
-        }
-        async function delofiaMigrateImageData(value) {
-            if (typeof value === 'string') return /^data:image\//i.test(value) ? await delofiaUploadImageDataUrl(value) : value;
-            if (Array.isArray(value)) return await Promise.all(value.map(item => delofiaMigrateImageData(item)));
-            if (value && typeof value === 'object') {
-                const entries = await Promise.all(Object.entries(value).map(async ([key, item]) => [key, await delofiaMigrateImageData(item)]));
-                return Object.fromEntries(entries);
-            }
-            return value;
-        }
-
         function resizeProductPhoto(file) {
             return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read image file.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('This image could not be opened.'));img.onload=()=>{let scale=Math.min(1,1200/Math.max(img.width,img.height)),quality=.84,data='';for(let i=0;i<14;i++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);data=c.toDataURL('image/jpeg',quality);if(data.length<=130000){resolve(data);return;}if(quality>.64)quality-=.06;else{scale*=.88;quality=.78;}}if(data.length<=155000)resolve(data);else reject(new Error('Image still too large; use a smaller photo.'));};img.src=reader.result;};reader.readAsDataURL(file);});
         }
@@ -7156,11 +7123,9 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
                 };
 
-                // Migrate both newly selected and legacy base64 product/variant photos before Firestore save.
-                const migratedProductDoc = await delofiaMigrateImageData(productDoc);
-                const serializedSize = new Blob([JSON.stringify(migratedProductDoc)]).size;
+                const serializedSize = new Blob([JSON.stringify(productDoc)]).size;
                 if (serializedSize > 900000) throw new Error('Product data is still too large (' + Math.round(serializedSize/1024) + ' KB). Please reduce the number of photos/variants or use image URLs. Firestore limit is 1 MiB.');
-                await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('products', prodId), migratedProductDoc);
+                await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('products', prodId), productDoc);
                 resetProductForm();
                 alert('✅ Product saved successfully!');
             } catch (error) {
