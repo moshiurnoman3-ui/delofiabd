@@ -2575,7 +2575,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                     // Do not query every customer's profile to check duplicate phone numbers; profile data is private.
                     credential = await createUserWithEmailAndPassword(auth, email, password);
                     if (!credential.sessionCreated) {
-                        setCustomerAccountError('Account তৈরি হয়েছে। তোমার email-এর inbox/spam থেকে verification link-এ click করো। Verification শেষ হলে এই email ও password দিয়ে Login করো। Profile save করার আগে login session প্রয়োজন।');
+                        setCustomerAccountError('Account তৈরি হলেও login session পাওয়া যায়নি। Email confirmation বন্ধ আছে কি না Supabase Dashboard → Authentication → Providers → Email-এ আবার check করো। Confirmation বন্ধ থাকলে signup-এর পর session তৈরি হওয়ার কথা।');
                         return;
                     }
                     await setDoc(doc(db, 'customerProfiles', credential.user.uid), { ...profile, createdAt: new Date().toISOString() });
