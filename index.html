@@ -1386,7 +1386,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                 <div id="customerAccountError" class="hidden rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm p-3"></div>
                 <button id="customerAccountSubmitBtn" type="submit" class="w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3.5 font-black">Create Account</button>
               </form>
-              <p class="text-[11px] text-gray-400 mt-4">Your password is handled by Firebase Authentication and is not saved as plain text in your profile.</p>
+              <p class="text-[11px] text-gray-400 mt-4">Your password is handled securely by Supabase Authentication and is not saved as plain text in your profile.</p>
             </div>
           </div>
         </div>
@@ -1676,7 +1676,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                     <i class="fas fa-lock"></i>
                 </div>
                 <h3 class="text-2xl font-black text-purple-900 mb-2">Admin Dashboard</h3>
-                <p class="text-xs text-gray-500 mb-6">Sign in with an authorized Firebase Admin account.</p>
+                <p class="text-xs text-gray-500 mb-6">Sign in with your authorized Supabase Admin account.</p>
                 
                 <form onsubmit="event.preventDefault(); window.checkAdminPassword?.();">
                     <input type="email" id="adminEmailInput" placeholder="Admin email address" autocomplete="username" required class="w-full bg-gray-50 border border-gray-300 rounded-2xl px-4 py-3 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-purple-500">
@@ -2230,44 +2230,108 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
         </div>
     </footer>
 
-    <!-- FIREBASE SDK INTEGRATION -->
+    <!-- SUPABASE SDK INTEGRATION (Firebase compatibility bridge) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, runTransaction, query, where, orderBy, getDocs, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        const firebaseConfig = {
-          apiKey: "AIzaSyBzKio6DyX5kyaxYZvNGGcfXmVsQD4H2o4",
-          authDomain: "delofia.firebaseapp.com",
-          projectId: "delofia",
-          storageBucket: "delofia.firebasestorage.app",
-          messagingSenderId: "734114286266",
-          appId: "1:734114286266:web:21fd353e848f12cbc0d083",
-          measurementId: "G-QFZ1D6VW7X"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        window.customerAuth = auth;
-        // Use a second named Firebase app for Admin auth so an Admin sign-in never appears as a Customer account.
-        const adminApp = initializeApp(firebaseConfig, 'delofiaAdmin');
-        const adminAuth = getAuth(adminApp);
-        // Prepare persistent Admin Auth in the background while the login page loads.
-        window.delofiaAdminPersistenceReady = setPersistence(adminAuth, browserLocalPersistence).catch(error => {
-            console.warn('Could not prepare persistent Admin sign-in:', error);
-            return false;
+        const SUPABASE_URL = "https://uzlruxpbzncajgytwlnp.supabase.co";
+        // Publishable/anon key is intended for browser use; access is controlled by Supabase RLS.
+        const SUPABASE_ANON_KEY = "sb_publishable_3ohS1p1TTXb2gbfnx6Wm8w_BUMmheTg";
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
-        const adminDb = getFirestore(adminApp);
-        window.delofiaAdminDb = adminDb;
-        window.delofiaAdminFs = {
-            doc: (...segments) => doc(adminDb, ...segments),
-            collection: (...segments) => collection(adminDb, ...segments),
-            setDoc, deleteDoc, getDocs, onSnapshot
+        window.delofiaSupabase = supabase;
+
+        const tableMap = {
+            products: 'products', orders: 'orders', coupons: 'coupons', reviews: 'reviews',
+            customerProfiles: 'customer_profiles', customer_admin_data: 'customer_admin_data',
+            admin_users: 'admin_users', settings: 'store_settings', store_settings: 'store_settings'
         };
-        window.delofiaAdminAuth = adminAuth;
-        // Bridge Firebase Auth methods for the separate classic-script Admin Panel.
-        window.delofiaFirebaseAuthMethods = { signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendPasswordResetEmail, onAuthStateChanged, setPersistence, browserLocalPersistence };
+        const ref = (kind, segments) => ({ __delofiaRef: true, kind, segments });
+        const collection = (...segments) => ref('collection', segments);
+        const doc = (...segments) => ref('doc', segments);
+        const where = (field, op, value) => ({ field, op, value });
+        const orderBy = (field, direction='asc') => ({ field, direction });
+        const query = (base, ...constraints) => ({ ...base, constraints });
+        const tableName = name => tableMap[name] || name;
+        const payloadFor = (r, data) => {
+            const name = r.segments[0], id = r.segments[1], table = tableName(name);
+            if (table === 'products') return { id, data, active: data.active !== false, updated_at: new Date().toISOString() };
+            if (table === 'orders') return { id, customer_uid: data.customerUid || data.customer_uid || null, status: data.status || 'Pending', data, updated_at: new Date().toISOString() };
+            if (table === 'coupons') return { code: id, data, active: data.active !== false, updated_at: new Date().toISOString() };
+            if (table === 'reviews') return { id, product_id: data.productId || data.product_id || '', user_id: data.uid || data.user_id || null, data, approved: !!data.approved, created_at: data.createdAt || new Date().toISOString() };
+            if (table === 'customer_profiles') return { user_id: id, profile_data: data, cart: data.cart || [], wishlist: data.wishlist || [], updated_at: new Date().toISOString() };
+            if (table === 'store_settings') return { setting_key: id, data, updated_at: new Date().toISOString() };
+            if (table === 'customer_admin_data') return { user_id: id, data, updated_at: new Date().toISOString() };
+            return { id, data, updated_at: new Date().toISOString() };
+        };
+        const unwrap = (table, row) => {
+            if (!row) return null;
+            if (table === 'products' || table === 'orders' || table === 'coupons' || table === 'reviews') return { ...(row.data || {}), id: row.id || row.code };
+            if (table === 'customer_profiles') return { ...(row.profile_data || {}), cart: row.cart || row.profile_data?.cart || [], wishlist: row.wishlist || row.profile_data?.wishlist || [] };
+            if (table === 'store_settings') return row.data || {};
+            if (table === 'customer_admin_data') return row.data || {};
+            return row.data || row;
+        };
+        function snapOne(r, row) { const table=tableName(r.segments[0]); return { id:r.segments[1], exists:()=>!!row, data:()=>unwrap(table,row), ref:r }; }
+        function snapMany(r, rows) { const table=tableName(r.segments[0]); const docs=rows.map(row=>({id:row.id || row.code || row.user_id || row.setting_key, data:()=>unwrap(table,row), exists:()=>true})); return { docs, size:docs.length, empty:!docs.length, metadata:{fromCache:false}, forEach:fn=>docs.forEach(fn) }; }
+        async function getDoc(r) {
+            const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).select('*');
+            if(table==='coupons') q=q.eq('code',id); else if(table==='store_settings') q=q.eq('setting_key',id); else if(table==='customer_profiles'||table==='customer_admin_data'||table==='admin_users') q=q.eq('user_id',id); else q=q.eq('id',id);
+            const {data,error}=await q.maybeSingle(); if(error) throw error; return snapOne(r,data);
+        }
+        function applyConstraints(q, constraints=[]) { const fields={customerUid:'customer_uid',productId:'product_id',uid:'user_id',settingKey:'setting_key'}; for(const c of constraints){ const field=fields[c.field]||c.field; if(c.field && c.op==='==') q=q.eq(field,c.value); if(c.field && c.op==='!=') q=q.neq(field,c.value); if(c.direction) q=q.order(field,{ascending:c.direction!=='desc'}); } return q; }
+        async function getDocs(r) {
+            const table=tableName(r.segments[0]); let q=supabase.from(table).select('*');
+            q=applyConstraints(q,r.constraints||[]); const {data,error}=await q; if(error) throw error; return snapMany(r,data||[]);
+        }
+        async function setDoc(r, value, options={}) {
+            const table=tableName(r.segments[0]), id=r.segments[1];
+            let previous={}; if(options.merge){ try{const old=await getDoc(r); if(old.exists()) previous=old.data()||{};}catch(_){}}
+            const payload=payloadFor(r,{...previous,...value});
+            let conflict=table==='coupons'?'code':table==='store_settings'?'setting_key':(table==='customer_profiles'||table==='customer_admin_data'||table==='admin_users')?'user_id':'id';
+            const {error}=await supabase.from(table).upsert(payload,{onConflict:conflict}); if(error) throw error;
+        }
+        async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
+        function onSnapshot(r, next, fail=()=>{}) {
+            let active=true, timer=null;
+            const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
+            run(); timer=setInterval(run, r.segments[0]==='products'?12000:20000);
+            return ()=>{active=false;if(timer)clearInterval(timer);};
+        }
+        const currentUserFrom = session => session?.user ? ({...session.user, uid:session.user.id, email:session.user.email}) : null;
+        function makeAuthClient() {
+            let currentUser=null;
+            const client={get currentUser(){return currentUser;}, _setUser(u){currentUser=u;}};
+            return client;
+        }
+        const auth=makeAuthClient(), adminAuth=makeAuthClient();
+        async function syncAuth(client){ const {data}=await supabase.auth.getSession(); client._setUser(currentUserFrom(data.session)); }
+        syncAuth(auth); syncAuth(adminAuth);
+        supabase.auth.onAuthStateChange((_event,session)=>{const u=currentUserFrom(session);auth._setUser(u);adminAuth._setUser(u);});
+        const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;auth._setUser(currentUserFrom(data.session)||currentUserFrom({user:data.user}));return {user:auth.currentUser};};
+        const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
+        const sendPasswordResetEmail=async(_a,email,options={})=>{const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
+        const onAuthStateChanged=(_a,callback)=>{let active=true;syncAuth(_a).then(()=>{if(active)callback(_a.currentUser);});const {data}=supabase.auth.onAuthStateChange((_e,session)=>{_a._setUser(currentUserFrom(session));if(active)callback(_a.currentUser);});return()=>{active=false;data.subscription.unsubscribe();};};
+        const signOut=async(_a)=>{const {error}=await supabase.auth.signOut();if(error)throw error;auth._setUser(null);adminAuth._setUser(null);};
+        const updatePassword=async(_u,password)=>{const {error}=await supabase.auth.updateUser({password});if(error)throw error;};
+        const reauthenticateWithCredential=async(_user,credential)=>{
+            if(!credential?.email || !credential?.password) throw new Error('Please enter your current password.');
+            const {data,error}=await supabase.auth.signInWithPassword({email:credential.email,password:credential.password});
+            if(error) throw error;
+            const verifiedUser=currentUserFrom(data.session);
+            auth._setUser(verifiedUser);
+            adminAuth._setUser(verifiedUser);
+            return {user:verifiedUser};
+        };
+        const EmailAuthProvider={credential:(email,password)=>({email,password})};
+        const setPersistence=async()=>true, browserLocalPersistence='local';
+        const runTransaction=async(_db,fn)=>fn({get:getDoc,set:setDoc,delete:deleteDoc});
+        const app={}; const db={kind:'supabase'}; const adminDb=db;
+        window.customerAuth=auth; window.delofiaAdminAuth=adminAuth; window.delofiaAdminDb=adminDb;
+        window.delofiaAdminPersistenceReady=Promise.resolve(true);
+        window.delofiaAdminFs={doc:(...a)=>doc(...a),collection:(...a)=>collection(...a),setDoc,deleteDoc,getDocs,onSnapshot};
+        window.delofiaFirebaseAuthMethods={signInWithEmailAndPassword,signOut,updatePassword,reauthenticateWithCredential,EmailAuthProvider,sendPasswordResetEmail,onAuthStateChanged,setPersistence,browserLocalPersistence};
         let customerAccountMode = 'register';
         // Keep a lexical cache variable and the window property in sync.
         // This prevents ReferenceError if any checkout/auth helper reads customerProfileCache directly.
@@ -5986,7 +6050,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         }
         // Front-end allowlist is for hiding the Admin UI; Firestore Rules must enforce the same UIDs.
         // Add future authorized Admin UIDs here AND in Firestore Rules after verifying the account.
-        const DELOFIA_ADMIN_UIDS = ['zA65kcr4P2WiddUfkg0osrLtsjd2'];
+        const DELOFIA_ADMIN_UIDS = ['1925abce-f8ec-48f1-ad2f-f30a77d51987'];
         function isAuthorizedDelofiaAdmin(user) { return !!user && DELOFIA_ADMIN_UIDS.includes(user.uid); }
         function restoreAdminSession() {
             // Firebase may still be restoring its local login at page startup. Do not erase the saved session yet.
@@ -6151,13 +6215,15 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 document.getElementById('currentAdminPassword').value = '';
                 document.getElementById('newAdminPassword').value = '';
                 document.getElementById('confirmAdminPassword').value = '';
-                alert('Firebase Admin password updated successfully. Please sign in again with the new password.');
+                alert('Admin password updated successfully. Please sign in again with the new password.');
                 await logoutAdmin();
             } catch (err) {
                 console.error('Admin password update failed:', err);
-                error.textContent = err?.code === 'auth/wrong-password' || err?.code === 'auth/invalid-credential'
+                const errorCode = String(err?.code || '').toLowerCase();
+                const errorMessage = String(err?.message || '').toLowerCase();
+                error.textContent = ['auth/wrong-password','auth/invalid-credential','invalid_credentials'].includes(errorCode) || errorMessage.includes('invalid login credentials')
                     ? 'Current password is incorrect.'
-                    : (err?.code === 'auth/weak-password' ? 'Password is too weak. Choose a stronger password.' : (err?.message || 'Could not update password. Please try again.'));
+                    : (errorCode === 'auth/weak-password' || errorCode === 'weak_password' ? 'Password is too weak. Choose a stronger password.' : (err?.message || 'Could not update password. Please try again.'));
                 error.classList.remove('hidden');
             }
         }
