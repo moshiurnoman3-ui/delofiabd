@@ -2248,8 +2248,16 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
             admin_users: 'admin_users', settings: 'store_settings', store_settings: 'store_settings'
         };
         const ref = (kind, segments) => ({ __delofiaRef: true, kind, segments });
-        const collection = (...segments) => ref('collection', segments);
-        const doc = (...segments) => ref('doc', segments);
+        // Firebase-compatible helpers are called as collection(db, 'products') and doc(db, 'products', id).
+        // Strip the database handle so the first segment is always the collection/table name.
+        const normalizeSegments = (segments) => {
+            if (segments.length && segments[0] && typeof segments[0] === 'object' && segments[0].kind === 'supabase') {
+                return segments.slice(1);
+            }
+            return segments;
+        };
+        const collection = (...segments) => ref('collection', normalizeSegments(segments));
+        const doc = (...segments) => ref('doc', normalizeSegments(segments));
         const where = (field, op, value) => ({ field, op, value });
         const orderBy = (field, direction='asc') => ({ field, direction });
         const query = (base, ...constraints) => ({ ...base, constraints });
