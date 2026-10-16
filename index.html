@@ -2317,7 +2317,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
         async function syncAuth(client){ const {data}=await supabase.auth.getSession(); client._setUser(currentUserFrom(data.session)); }
         syncAuth(auth); syncAuth(adminAuth);
         supabase.auth.onAuthStateChange((_event,session)=>{const u=currentUserFrom(session);auth._setUser(u);adminAuth._setUser(u);});
-        const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;auth._setUser(currentUserFrom(data.session)||currentUserFrom({user:data.user}));return {user:auth.currentUser};};
+        const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;const sessionUser=currentUserFrom(data.session);auth._setUser(sessionUser);return {user:sessionUser||currentUserFrom({user:data.user}),sessionCreated:!!data.session,needsEmailConfirmation:!!data.user&&!data.session};};
         const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
         const sendPasswordResetEmail=async(_a,email,options={})=>{const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
         const onAuthStateChanged=(_a,callback)=>{let active=true;syncAuth(_a).then(()=>{if(active)callback(_a.currentUser);});const {data}=supabase.auth.onAuthStateChange((_e,session)=>{_a._setUser(currentUserFrom(session));if(active)callback(_a.currentUser);});return()=>{active=false;data.subscription.unsubscribe();};};
@@ -2574,6 +2574,10 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                     if (!password || password.length < 6) { setCustomerAccountError('Password কমপক্ষে ৬ অক্ষরের হতে হবে।'); return; }
                     // Do not query every customer's profile to check duplicate phone numbers; profile data is private.
                     credential = await createUserWithEmailAndPassword(auth, email, password);
+                    if (!credential.sessionCreated) {
+                        setCustomerAccountError('Account তৈরি হয়েছে। তোমার email-এর inbox/spam থেকে verification link-এ click করো। Verification শেষ হলে এই email ও password দিয়ে Login করো। Profile save করার আগে login session প্রয়োজন।');
+                        return;
+                    }
                     await setDoc(doc(db, 'customerProfiles', credential.user.uid), { ...profile, createdAt: new Date().toISOString() });
                     window.customerProfileCache = { ...profile, uid: credential.user.uid };
                 } else {
@@ -2591,6 +2595,9 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
                 console.error('Customer account error:', error);
                 const code = error?.code || '';
                 const messages = {
+                    'email_exists': 'এই email দিয়ে account আগে থেকেই আছে। Login করো অথবা Forgot Password ব্যবহার করো।',
+                    'email_not_confirmed': 'প্রথমে email-এর verification link-এ click করো, তারপর Login করো।',
+                    'email_address_invalid': 'Email address সঠিক নয়। নিজের valid email address দাও।',
                     'auth/email-already-in-use': 'এই email দিয়ে account আগে থেকেই আছে। Login করো অথবা Forgot Password ব্যবহার করো।',
                     'auth/invalid-email': 'সঠিক email address দাও।',
                     'auth/weak-password': 'Password কমপক্ষে ৬ অক্ষরের এবং আরও শক্তিশালী হওয়া উচিত।',
