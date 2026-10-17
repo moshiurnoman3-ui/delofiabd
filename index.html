@@ -1196,7 +1196,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
     <a id="delofiaFloatingWhatsapp" href="https://wa.me/8801410947236" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" title="Chat on WhatsApp"><i class="fab fa-whatsapp"></i></a>
     <!-- Mobile shortcuts: Wishlist above Cart; use the existing round WhatsApp button -->
     <nav id="delofiaMobileActionBar" aria-label="Quick shopping actions">
-      <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Home"><i class="fas fa-house"></i><span>Home</span></button>
+      <button type="button" onclick="delofiaShowHome()" aria-label="Home"><i class="fas fa-house"></i><span>Home</span></button>
       <button type="button" onclick="delofiaShowCategoryLanding()" aria-label="Category"><i class="fas fa-layer-group"></i><span>Category</span></button>
       <button type="button" onclick="openWishlistModal()" aria-label="Open wishlist" class="mobile-action-wishlist"><i class="fas fa-heart"></i><span>Wishlist</span><b id="mobileWishlistCountBadge">0</b></button>
       <button type="button" onclick="openCartModal()" aria-label="Open cart" class="mobile-action-cart"><i class="fas fa-shopping-cart"></i><span>Cart</span><b id="mobileCartCountBadge">0</b></button>
@@ -1223,7 +1223,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         </div>
 
         <!-- Compact category picker with inline subcategory chips and purple dual price slider -->
-        <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm hidden" aria-label="Product filters">
+        <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
                 <div class="col-span-2 sm:col-span-2 min-w-0">
                     <label for="categoryFilter" class="block text-xs font-bold text-gray-600 mb-1">Browse Category</label>
@@ -3379,8 +3379,10 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                         </div>
                         
                         <div class="space-y-2">
-                            ${product.stockOut ? `<button type="button" onclick="showStockOutNotice()" class="w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100"><i class="fas fa-ban mr-1"></i> Out of Stock</button>` : `<button type="button" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="w-full bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"><i class="fas fa-cart-plus"></i> Add to Cart</button>`}
-                            ${product.stockOut ? '' : `<a href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2 rounded-xl text-[11px] transition flex items-center justify-center gap-1"><i class="fab fa-whatsapp"></i> Order via WhatsApp</a>`}
+                            ${product.stockOut ? `<button type="button" onclick="showStockOutNotice()" aria-label="Out of stock" title="Out of stock" class="w-full rounded-xl border border-red-200 bg-red-50 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100"><i class="fas fa-ban"></i></button>` : `<div class="flex items-center gap-2">
+                              <button type="button" aria-label="Add to cart" title="Add to cart" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="flex-1 min-w-0 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-base transition flex items-center justify-center"><i class="fas fa-shopping-cart" aria-hidden="true"></i></button>
+                              <a aria-label="Order via WhatsApp" title="Order via WhatsApp" href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="flex-1 min-w-0 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2.5 rounded-xl text-base transition flex items-center justify-center"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+                            </div>`}
                             <div class="flex justify-center gap-2 pt-1">
                                 <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
                                 <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
@@ -5883,6 +5885,27 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 }
 </style>
 
+
+<style id="delofia-price-slider-and-icon-actions-v2">
+/* Keep the original dual price slider visible on desktop and mobile; hide only the category dropdown area. */
+#productFilters > .grid > div:first-child { display:none !important; }
+#productFilters { display:block; }
+#productFilters.hidden { display:none !important; }
+#productFilters #priceRangeSlider { min-height:30px; }
+#productFilters #priceRangeSlider input[type="range"] { touch-action:pan-y; }
+/* Product actions are compact, icon-only buttons side-by-side on all screen sizes. */
+#productsGrid .space-y-2 > .flex.items-center.gap-2 > button,
+#productsGrid .space-y-2 > .flex.items-center.gap-2 > a { min-height:40px; text-decoration:none; }
+@media(max-width:640px) {
+  #productFilters { padding:10px 12px !important; margin-bottom:16px !important; }
+  #productFilters > .grid { display:block !important; }
+  #productFilters > .grid > div:first-child { display:none !important; }
+  #productFilters > .grid > div:last-child { display:block !important; }
+  #productsGrid .space-y-2 > .flex.items-center.gap-2 > button,
+  #productsGrid .space-y-2 > .flex.items-center.gap-2 > a { min-height:38px; }
+}
+</style>
+
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
@@ -7858,7 +7881,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     if (!main) return;
     const keep = new Set(['delofiaCategoryLanding','delofiaCategoryProducts','productGrid','delofiaProductLoading','productsGrid','productPagination']);
     Array.from(main.children).forEach(el => {
-      if (el.id === 'productFilters') { el.classList.add('hidden'); return; }
+      if (el.id === 'productFilters') { el.classList.toggle('hidden', currentView === 'categories'); return; }
       if (el.id === 'productGrid' || el.id === 'productsGrid' || el.id === 'productPagination' || el.id === 'delofiaProductLoading' || el.id === 'delofiaCategoryLanding' || el.id === 'delofiaCategoryProducts') return;
       el.classList.toggle('hidden', !showHome);
     });
