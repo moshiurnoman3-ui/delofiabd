@@ -3319,9 +3319,10 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             delofiaProductTotalPages = Math.max(1, Math.ceil(totalItems / DELOFIA_PRODUCTS_PER_PAGE));
             if (delofiaCurrentProductPage > delofiaProductTotalPages) delofiaCurrentProductPage = delofiaProductTotalPages;
             if (delofiaProductTotalPages <= 1 || totalItems === 0) { nav.innerHTML = ''; nav.classList.add('hidden'); return; }
-            const shown = Math.min(totalItems, delofiaCurrentProductPage * DELOFIA_PRODUCTS_PER_PAGE);
+            const first = (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE + 1;
+            const last = Math.min(totalItems, delofiaCurrentProductPage * DELOFIA_PRODUCTS_PER_PAGE);
             nav.classList.remove('hidden');
-            nav.innerHTML = `<span class="text-xs font-semibold text-gray-600">Showing ${shown} of ${totalItems} products</span><div class="flex items-center gap-2">${shown < totalItems ? `<button type="button" id="delofiaLoadMoreProducts" onclick="changeDelofiaProductPage(1)" class="rounded-xl border border-purple-700 bg-purple-700 px-5 py-3 text-sm font-bold text-white hover:bg-purple-800">Load more products ↓</button>` : `<span class="text-xs font-semibold text-gray-500">All products loaded</span>`}</div>`;
+            nav.innerHTML = `<span class="text-xs font-semibold text-gray-600">Showing ${first}–${last} of ${totalItems} products</span><div class="flex items-center gap-2"><button type="button" onclick="changeDelofiaProductPage(-1)" ${delofiaCurrentProductPage<=1?'disabled':''} class="rounded-xl border border-purple-200 bg-white px-4 py-2 text-sm font-bold text-purple-800 hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-40">← Previous</button><span class="min-w-20 text-center text-sm font-extrabold text-purple-900">Page ${delofiaCurrentProductPage} / ${delofiaProductTotalPages}</span><button type="button" onclick="changeDelofiaProductPage(1)" ${delofiaCurrentProductPage>=delofiaProductTotalPages?'disabled':''} class="rounded-xl border border-purple-700 bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:opacity-40">Next →</button></div>`;
         }
         function changeDelofiaProductPage(delta) {
             const next = Math.max(1, Math.min(delofiaProductTotalPages, delofiaCurrentProductPage + Number(delta || 0)));
@@ -3332,21 +3333,6 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             if (target) window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - 145), behavior: 'smooth' });
         }
         window.changeDelofiaProductPage = changeDelofiaProductPage;
-        // Auto-load the next batch when the customer reaches the product list end.
-        let delofiaLoadMoreObserver = null;
-        function setupDelofiaInfiniteScroll() {
-            const nav = document.getElementById('productPagination');
-            if (!nav || !('IntersectionObserver' in window)) return;
-            if (delofiaLoadMoreObserver) delofiaLoadMoreObserver.disconnect();
-            delofiaLoadMoreObserver = new IntersectionObserver(entries => {
-                if (!entries.some(entry => entry.isIntersecting)) return;
-                const button = document.getElementById('delofiaLoadMoreProducts');
-                if (button && !button.disabled) { button.disabled = true; changeDelofiaProductPage(1); }
-            }, { rootMargin: '700px 0px', threshold: 0 });
-            delofiaLoadMoreObserver.observe(nav);
-        }
-        window.addEventListener('load', setupDelofiaInfiniteScroll, { once: true });
-        document.addEventListener('delofia-products-updated', () => { setTimeout(setupDelofiaInfiniteScroll, 0); });
 
         function renderProducts(filterText = '') {
             filterText = String(filterText || '');
@@ -3386,12 +3372,12 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             delofiaProductTotalPages = totalPages;
             delofiaCurrentProductPage = Math.max(1, Math.min(delofiaCurrentProductPage, totalPages));
             const firstVisible = filtered.length ? (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE : 0;
-            const pageProducts = filtered.slice(0, Math.min(filtered.length, delofiaCurrentProductPage * DELOFIA_PRODUCTS_PER_PAGE));
+            const pageProducts = filtered.slice(firstVisible, firstVisible + DELOFIA_PRODUCTS_PER_PAGE);
             renderProductPagination(filtered.length);
 
             const countEl = document.getElementById('productCount');
             if (countEl) {
-                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : (filtered.length === 0 ? 'No matching products' : `Showing ${Math.min(filtered.length, delofiaCurrentProductPage * DELOFIA_PRODUCTS_PER_PAGE)} of ${filtered.length} items`);
+                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : (filtered.length === 0 ? 'No matching products' : `Showing ${firstVisible + 1}–${Math.min(filtered.length, firstVisible + DELOFIA_PRODUCTS_PER_PAGE)} of ${filtered.length} items`);
             }
 
             if (filtered.length === 0) {
