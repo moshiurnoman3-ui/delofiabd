@@ -3239,6 +3239,14 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             if (editor && editor.classList.contains('product-edit-active')) { closeProductEditModal(); return; }
             window.__delofiaProductEditHistoryActive = false;
             const targetModal = event.state && event.state.modal ? event.state.modal : null;
+            if (targetModal === 'wishlist' || targetModal === 'cart') {
+                document.getElementById('cartModal')?.classList.toggle('hidden', targetModal !== 'cart');
+                document.getElementById('wishlistModal')?.classList.toggle('hidden', targetModal !== 'wishlist');
+                syncCartWishlistOverlayState();
+                return;
+            }
+            document.getElementById('wishlistModal')?.classList.add('hidden');
+            syncCartWishlistOverlayState();
             const cart = document.getElementById('cartModal');
             if (cart) cart.classList.add('hidden');
 
@@ -3461,8 +3469,8 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             const wishlistOpen = !!document.getElementById('wishlistModal') && !document.getElementById('wishlistModal').classList.contains('hidden');
             document.body.classList.toggle('delofia-cart-wishlist-open', cartOpen || wishlistOpen);
         }
-        function openWishlistModal() { const other = document.getElementById('cartModal'); if (other) other.classList.add('hidden'); window.__cartReturnProductId = null; renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
-        function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); syncCartWishlistOverlayState(); }
+        function openWishlistModal() { const other = document.getElementById('cartModal'); if (other) other.classList.add('hidden'); window.__cartReturnProductId = null; renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); pushModalState('wishlist'); }
+        function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); syncCartWishlistOverlayState(); if (history.state?.modal === 'wishlist' && history.state?.delofiaModal) history.back(); }
 
         const DELOFIA_PRODUCTS_PER_PAGE = 30;
         let delofiaCurrentProductPage = 1;
@@ -4902,11 +4910,12 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
         }
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => String(p.id) === String(item.productId)); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; savePersistedShoppingCart(); renderCartItems(); }
         function removeCartItem(index) { const removed = shoppingCart[index]; if (removed) cartCheckoutExcludedKeys.delete(String(removed.key || cartItemKey(removed.productId, removed.variants || {}))); shoppingCart.splice(index,1); savePersistedShoppingCart(); renderCartItems(); }
-        function openCartModal() { const other = document.getElementById('wishlistModal'); if (other) other.classList.add('hidden'); renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function openCartModal() { const other = document.getElementById('wishlistModal'); if (other) other.classList.add('hidden'); renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); pushModalState('cart'); }
         function closeCartModal() {
             const m = document.getElementById('cartModal');
             if (m) m.classList.add('hidden');
             syncCartWishlistOverlayState();
+            if (history.state?.modal === 'cart' && history.state?.delofiaModal) history.back();
             const returnId = window.__cartReturnProductId;
             window.__cartReturnProductId = null;
             if (returnId != null) openProductDetail(returnId);
