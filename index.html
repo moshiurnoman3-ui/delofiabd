@@ -2412,9 +2412,19 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             return { rows, count: Number(count) || rows.length, fromCache: false };
         }
         async function fetchAllSupabaseProducts() {
-            const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
-            if (error) throw error;
-            return data || [];
+            // Supabase/PostgREST can cap a single response (often 1,000 rows).
+            // Fetch in bounded batches to avoid silently dropping later products.
+            const rows = [];
+            const batchSize = 500;
+            for (let start = 0; ; start += batchSize) {
+                const { data, error } = await supabase.from('products').select('*')
+                    .order('id', { ascending: true }).range(start, start + batchSize - 1);
+                if (error) throw error;
+                const batch = data || [];
+                rows.push(...batch);
+                if (batch.length < batchSize) break;
+            }
+            return rows;
         }
         const payloadFor = (r, data) => {
             const name = r.segments[0], id = r.segments[1], table = tableName(name);
@@ -2964,22 +2974,35 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             // Storefront page loader. Admin intentionally continues to load the full catalog.
             window.__delofiaServerProductPaging = !isAdminUrl;
             window.__delofiaServerProductCount = 0;
+            let productPageRequestId = 0;
+            const pendingProductPageRequests = new Map();
+            const requestProductPage = (page, useCache) => {
+                const key = `${page}:${useCache}`;
+                if (pendingProductPageRequests.has(key)) return pendingProductPageRequests.get(key);
+                const promise = fetchSupabaseProductPage(page, useCache).finally(() => pendingProductPageRequests.delete(key));
+                pendingProductPageRequests.set(key, promise);
+                return promise;
+            };
             window.__delofiaLoadProductPage = async (page, refresh=false) => {
+                const requestId = ++productPageRequestId;
                 try {
-                    const result = await fetchSupabaseProductPage(page, true);
+                    const result = await requestProductPage(page, true);
+                    if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded) return;
                     const rows = result.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
                     window.__delofiaServerProductCount = result.count;
                     window.__delofiaServerProductPage = Math.max(1, Number(page) || 1);
                     window.__delofiaServerPagedCatalog = true;
                     applyProductList(rows);
                     if (refresh) {
-                        fetchSupabaseProductPage(page, false).then(fresh => {
+                        requestProductPage(page, false).then(fresh => {
+                            if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded) return;
                             const freshRows = fresh.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
                             window.__delofiaServerProductCount = fresh.count;
                             applyProductList(freshRows);
                         }).catch(err => console.warn('Background product refresh failed:', err));
                     }
                 } catch (error) {
+                    if (requestId !== productPageRequestId) return;
                     console.error('Supabase product page load failed:', error);
                     window.__productsLoadError = String(error?.message || error);
                     window.__productsSnapshotLoaded = true;
@@ -3482,7 +3505,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             // For the normal storefront, the database already returned exactly one page. Filtered
             // searches continue using the loaded set so existing filter behavior is not redefined.
             const isServerPage = !!window.__delofiaServerPagedCatalog && !hasClientFilters;
-            const totalItemsForPagination = isServerPage ? (Number(window.__delofiaServerProductCount) || filtered.length) : filtered.length;
+            const totalItemsForPagination = isServerPage ? (Number.isFinite(Number(window.__delofiaServerProductCount)) ? Number(window.__delofiaServerProductCount) : filtered.length) : filtered.length;
             const totalPages = Math.max(1, Math.ceil(totalItemsForPagination / DELOFIA_PRODUCTS_PER_PAGE));
             delofiaProductTotalPages = totalPages;
             delofiaCurrentProductPage = Math.max(1, Math.min(delofiaCurrentProductPage, totalPages));
