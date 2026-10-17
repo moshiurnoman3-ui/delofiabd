@@ -35,6 +35,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
+        // Define the admin URL flag globally because realtime snapshot callbacks may reference it outside setupRealtimeSync.
+        var isAdminUrl = new URLSearchParams(window.location.search).get("admin") === "1";
         tailwind.config = {
             theme: {
                 extend: {
@@ -2386,22 +2388,9 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
         function onSnapshot(r, next, fail=()=>{}) {
-            let active=true, timer=null, running=false;
-            const isProducts = r.segments[0] === 'products';
-            // Product catalog reads are large. Keep admin updates reasonably frequent,
-            // but avoid repeatedly downloading the entire catalog on every storefront visit.
-            const refreshMs = isProducts ? (isAdminUrl ? 20000 : 60000) : 20000;
-            const run=async()=>{
-                if(!active || running) return;
-                running=true;
-                try {
-                    const result=r.kind==='doc'?await getDoc(r):await getDocs(r);
-                    if(active) next(result);
-                } catch(e) { if(active) fail(e); }
-                finally { running=false; }
-            };
-            run();
-            timer=setInterval(run, refreshMs);
+            let active=true, timer=null;
+            const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
+            run(); timer=setInterval(run, r.segments[0]==='products'?12000:20000);
             return ()=>{active=false;if(timer)clearInterval(timer);};
         }
         const currentUserFrom = session => session?.user ? ({...session.user, uid:session.user.id, email:session.user.email}) : null;
@@ -3381,12 +3370,30 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400 font-semibold">No products found.</div>`;
+                // First visit: paint lightweight product-card placeholders immediately while
+                // the first Firestore snapshot is still loading. Do not show a false empty state.
+                if (!(window.__productsSnapshotLoaded === true) && !filterText && category === 'all' && subCategory === 'all' && minPrice === null && maxPrice === null) {
+                    grid.innerHTML = Array.from({ length: 8 }, () => `
+                      <div class="bg-white rounded-2xl overflow-hidden border border-purple-100 shadow-sm flex flex-col animate-pulse" aria-hidden="true">
+                        <div class="aspect-square bg-purple-50"></div>
+                        <div class="p-4 flex-1">
+                          <div class="h-4 w-2/3 rounded bg-purple-100 mb-3"></div>
+                          <div class="h-4 w-full rounded bg-gray-100 mb-2"></div>
+                          <div class="h-5 w-1/3 rounded bg-purple-100 mb-4"></div>
+                          <div class="h-10 w-full rounded-xl bg-purple-50"></div>
+                        </div>
+                      </div>`).join('');
+                    const loadingCount = document.getElementById('productCount');
+                    if (loadingCount) loadingCount.textContent = 'Loading products…';
+                    renderProductPagination(0);
+                    return;
+                }
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-gray-400 font-semibold">${window.__productsSnapshotLoaded === true ? 'No products found.' : 'Loading products…'}</div>`;
                 renderProductPagination(0);
                 return;
             }
 
-            pageProducts.forEach(product => {
+            pageProducts.forEach((product, productIndex) => {
                 const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean).filter(src=>!isAutoDelofiaPlaceholderImage(src)) : [];
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
@@ -3398,7 +3405,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" loading="lazy" decoding="async" fetchpriority="low" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
