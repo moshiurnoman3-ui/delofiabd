@@ -1160,6 +1160,23 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
 #cartModal #cartItemsList + div + div, #wishlistModal #wishlistItemsList + div { margin-top:auto !important; padding-top:16px; padding-bottom:max(8px,env(safe-area-inset-bottom)); flex-shrink:0; }
 #wishlistModal h2 { color:#7c3aed !important; }
 </style>
+<style id="delofia-cls-stability-v1">
+/* Reserve media and asynchronous storefront space before assets arrive. */
+#heroCarouselViewport { width:100%; aspect-ratio:16/6; }
+#heroCarouselImage { display:block; width:100%; height:100%; object-fit:cover; }
+#storefrontHeroFallback { min-height:250px; box-sizing:border-box; }
+#productsGrid { align-content:start; }
+#productsGrid .product-card-image { display:block; aspect-ratio:1/1; }
+#productsGrid .group h3 { min-height:2.5rem; }
+#productsGrid .group > div:last-child { min-width:0; }
+#delofiaProductLoading { min-height:300px; box-sizing:border-box; }
+#productCount { min-width:112px; text-align:center; }
+@media(max-width:640px) {
+ #heroCarouselViewport { aspect-ratio:4/3; }
+ #storefrontHeroFallback { min-height:300px; }
+ #delofiaProductLoading { min-height:320px; }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -1248,7 +1265,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
     <main id="mainContainer" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         <!-- Hero Banner -->
-        <section id="storefrontHeroCarousel" class="hidden relative mb-10 overflow-hidden rounded-3xl bg-purple-950 shadow-xl" aria-label="Featured offers carousel" aria-roledescription="carousel"><div id="heroCarouselViewport" class="relative w-full overflow-hidden"><button id="heroCarouselSlideLink" type="button" class="absolute inset-0 z-0 block h-full w-full cursor-default disabled:cursor-default" aria-label="Featured offer" disabled><img id="heroCarouselImage" src="" alt="Featured Delofia offer" class="h-full w-full object-cover" draggable="false"></button><button id="heroCarouselPrev" type="button" class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow hover:bg-black/65" aria-label="Previous offer"><i class="fas fa-chevron-left"></i></button><button id="heroCarouselNext" type="button" class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow hover:bg-black/65" aria-label="Next offer"><i class="fas fa-chevron-right"></i></button><div id="heroCarouselDots" class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/30 px-3 py-2"></div><div id="heroCarouselSlideCount" class="sr-only" aria-live="polite"></div></div></section>
+        <section id="storefrontHeroCarousel" class="hidden relative mb-10 overflow-hidden rounded-3xl bg-purple-950 shadow-xl" aria-label="Featured offers carousel" aria-roledescription="carousel"><div id="heroCarouselViewport" class="relative w-full overflow-hidden"><button id="heroCarouselSlideLink" type="button" class="absolute inset-0 z-0 block h-full w-full cursor-default disabled:cursor-default" aria-label="Featured offer" disabled><img id="heroCarouselImage" src="" width="1600" height="600" alt="Featured Delofia offer" class="h-full w-full object-cover" draggable="false"></button><button id="heroCarouselPrev" type="button" class="absolute left-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow hover:bg-black/65" aria-label="Previous offer"><i class="fas fa-chevron-left"></i></button><button id="heroCarouselNext" type="button" class="absolute right-3 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white shadow hover:bg-black/65" aria-label="Next offer"><i class="fas fa-chevron-right"></i></button><div id="heroCarouselDots" class="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/30 px-3 py-2"></div><div id="heroCarouselSlideCount" class="sr-only" aria-live="polite"></div></div></section>
 <div id="storefrontHeroFallback" class="bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-800 rounded-3xl p-6 sm:p-10 text-white mb-10 shadow-xl relative overflow-hidden">
             <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
             <div class="relative z-10 max-w-2xl">
@@ -3548,13 +3565,13 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
                 card.style.contentVisibility = 'auto';
-                card.style.containIntrinsicSize = '320px';
+                card.style.containIntrinsicSize = 'auto 420px';
                 
                 let subCategoryDisplay = Array.isArray(product.subCategory) ? product.subCategory.join(', ') : (product.subCategory || '');
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" width="600" height="600" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
