@@ -1143,7 +1143,7 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
     <!-- Mobile shortcuts: Wishlist above Cart; use the existing round WhatsApp button -->
     <nav id="delofiaMobileActionBar" aria-label="Quick shopping actions">
       <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Home"><i class="fas fa-house"></i><span>Home</span></button>
-      <button type="button" onclick="document.getElementById('categoryFilter').scrollIntoView({behavior:'smooth',block:'center'});document.getElementById('categoryFilter').focus({preventScroll:true})" aria-label="Category"><i class="fas fa-layer-group"></i><span>Category</span></button>
+      <button type="button" onclick="delofiaOpenCategoryPage()" aria-label="Category"><i class="fas fa-layer-group"></i><span>Category</span></button>
       <button type="button" onclick="openWishlistModal()" aria-label="Open wishlist" class="mobile-action-wishlist"><i class="fas fa-heart"></i><span>Wishlist</span><b id="mobileWishlistCountBadge">0</b></button>
       <button type="button" onclick="openCartModal()" aria-label="Open cart" class="mobile-action-cart"><i class="fas fa-shopping-cart"></i><span>Cart</span><b id="mobileCartCountBadge">0</b></button>
       <button type="button" onclick="openCustomerAccount()" aria-label="Account"><i class="fas fa-user"></i><span>Account</span></button>
@@ -1168,6 +1168,18 @@ body.delofia-cart-wishlist-open #mobileProductSearchBar { display: none !importa
             </div>
         </div>
 
+        <!-- Category browsing view: existing categoryTree and product filters remain the data source. -->
+        <section id="delofiaCategoryPage" class="hidden" aria-label="Browse categories">
+          <button type="button" onclick="delofiaCategoryHome()" class="delofia-cat-back"><i class="fas fa-arrow-left"></i> Home</button>
+          <h1 class="delofia-cat-title">Explore Categories</h1>
+          <p class="delofia-cat-caption">Find something lovely at Delofia</p>
+          <div id="delofiaCategoryTiles" class="delofia-category-tiles"></div>
+        </section>
+        <section id="delofiaCategoryResultsHead" class="hidden" aria-label="Selected category">
+          <button type="button" onclick="delofiaOpenCategoryPage()" class="delofia-cat-back"><i class="fas fa-arrow-left"></i> All Categories</button>
+          <h1 id="delofiaSelectedCategoryTitle" class="delofia-cat-title"></h1>
+          <div id="delofiaCategoryHorizontalChips" class="delofia-category-scroll" aria-label="Subcategories"></div>
+        </section>
         <!-- Compact category picker with inline subcategory chips and purple dual price slider -->
         <section id="productFilters" class="mb-6 bg-white border border-purple-100 rounded-2xl p-4 shadow-sm" aria-label="Product filters">
             <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
@@ -5813,6 +5825,41 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 }
 </style>
 
+<style id="delofia-category-pages-v1">
+#brandLogo > div:last-child span:first-child {font-style:italic !important}
+#productFilters > div > div:first-child {display:none !important}
+#delofiaCategoryPage,#delofiaCategoryResultsHead{padding:8px 0 22px}
+.delofia-cat-title{font-size:clamp(23px,4vw,34px);font-weight:800;color:#5b21b6;margin:12px 0 3px}
+.delofia-cat-caption{color:#7c3aed;font-size:13px;margin-bottom:22px}
+.delofia-cat-back{color:#6d28d9;font-weight:700;font-size:13px;padding:9px 0}
+.delofia-category-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,145px),1fr));gap:12px}
+.delofia-category-tile{min-width:0;min-height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;text-align:center;padding:14px 8px;border:1px solid #ddd6fe;border-radius:17px;background:linear-gradient(145deg,#faf5ff,#ede9fe);color:#5b21b6;font-weight:750;font-size:13px;overflow-wrap:anywhere;box-shadow:0 3px 10px #6d28d910}
+.delofia-category-tile i{font-size:22px}
+.delofia-category-scroll{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;padding:12px 1px 16px;scrollbar-width:thin}
+.delofia-category-scroll button{flex:0 0 auto;white-space:nowrap;scroll-snap-align:start;border-radius:999px;border:1px solid #ddd6fe;background:#f5f3ff;color:#6d28d9;font-size:12px;font-weight:700;padding:9px 15px}
+.delofia-category-scroll button[aria-pressed="true"]{background:#7c3aed;color:#fff;border-color:#7c3aed}
+body.delofia-category-landing #storefrontHeroCarousel,body.delofia-category-landing #storefrontHeroFallback,
+body.delofia-category-landing #productFilters,body.delofia-category-landing #productGrid,
+body.delofia-category-landing #delofiaProductLoading,body.delofia-category-landing #productsGrid,
+body.delofia-category-landing #productPagination{display:none!important}
+body.delofia-category-results #storefrontHeroCarousel,body.delofia-category-results #storefrontHeroFallback,
+body.delofia-category-results #productFilters{display:none!important}
+body.delofia-category-landing #delofiaCategoryPage,body.delofia-category-results #delofiaCategoryResultsHead{display:block!important}
+body.delofia-category-results #productGrid{margin-top:8px}
+@media(max-width:640px){.delofia-category-tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.delofia-category-tile{min-height:92px;font-size:11px;padding:10px 5px}.delofia-cat-title{font-size:24px}}
+</style>
+<script id="delofia-category-pages-logic-v1">
+(function(){
+ function ordered(){return typeof getOrderedCategoryNames==='function'?getOrderedCategoryNames():Object.keys(window.categoryTree||{});}
+ function resetView(){document.body.classList.remove('delofia-category-landing','delofia-category-results');}
+ function top(){window.scrollTo({top:0,behavior:'instant'});}
+ function button(label,icon,fn,cls){const b=document.createElement('button');b.type='button';b.className=cls||'';const i=document.createElement('i');i.className='fas '+icon;i.setAttribute('aria-hidden','true');const t=document.createElement('span');t.textContent=label;b.append(i,t);b.addEventListener('click',fn);return b;}
+ window.delofiaCategoryHome=function(){resetView();const cat=document.getElementById('categoryFilter'),sub=document.getElementById('subCategoryFilter');if(cat)cat.value='all';if(typeof onCustomerCategoryChange==='function')onCustomerCategoryChange();if(sub)sub.value='all';if(typeof filterProducts==='function')filterProducts();top();};
+ window.delofiaOpenCategoryPage=function(){if(typeof showPage==='function')showPage('home');resetView();document.body.classList.add('delofia-category-landing');const box=document.getElementById('delofiaCategoryTiles');if(!box)return;box.replaceChildren();const names=ordered();box.appendChild(button('All Categories','fa-border-all',()=>delofiaShowCategoryProducts('all'),'delofia-category-tile'));names.forEach(name=>box.appendChild(button(name,'fa-layer-group',()=>delofiaShowCategoryProducts(name),'delofia-category-tile')));top();};
+ window.delofiaShowCategoryProducts=function(category,sub='all'){if(typeof showPage==='function')showPage('home');const cat=document.getElementById('categoryFilter'),sf=document.getElementById('subCategoryFilter');if(!cat||!sf)return;cat.value=category;if(typeof onCustomerCategoryChange==='function')onCustomerCategoryChange();sf.value=Array.from(sf.options).some(o=>o.value===sub)?sub:'all';resetView();document.body.classList.add('delofia-category-results');document.getElementById('delofiaSelectedCategoryTitle').textContent=category==='all'?'All Categories':category;const chips=document.getElementById('delofiaCategoryHorizontalChips');chips.replaceChildren();const names=category==='all'?ordered():['All',...(window.categoryTree?.[category]||[])];names.forEach((name,index)=>{const targetCategory=category==='all'?name:category;const targetSub=category==='all'?'all':index===0?'all':name;const b=button(category==='all'?name:index===0?'All Subcategories':name,'fa-tag',()=>delofiaShowCategoryProducts(targetCategory,targetSub));b.setAttribute('aria-pressed',String(category==='all'?false:targetSub===sf.value));chips.appendChild(b);});if(typeof filterProducts==='function')filterProducts();top();};
+ document.addEventListener('click',function(e){const home=e.target.closest('#delofiaMobileActionBar button[aria-label="Home"],#brandLogo');if(home&&document.body.classList.contains('delofia-category-landing')||home&&document.body.classList.contains('delofia-category-results'))window.delofiaCategoryHome();});
+})();
+</script>
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
