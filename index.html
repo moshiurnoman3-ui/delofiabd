@@ -2484,7 +2484,26 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
         const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;const sessionUser=currentUserFrom(data.session);auth._setUser(sessionUser);return {user:sessionUser||currentUserFrom({user:data.user}),sessionCreated:!!data.session,needsEmailConfirmation:!!data.user&&!data.session};};
         const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
         const sendPasswordResetEmail=async(_a,email,options={})=>{const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
-        const onAuthStateChanged=(_a,callback)=>{let active=true;syncAuth(_a).then(()=>{if(active)callback(_a.currentUser);});const {data}=supabase.auth.onAuthStateChange((_e,session)=>{_a._setUser(currentUserFrom(session));if(active)callback(_a.currentUser);});return()=>{active=false;data.subscription.unsubscribe();};};
+        // Supabase emits INITIAL_SESSION after restoring browser storage. Do not race that
+        // restoration with a second getSession() or treat a temporary refresh/network
+        // failure as a logout. Only an explicit SIGNED_OUT event clears the UI session.
+        const onAuthStateChanged=(_a,callback)=>{
+            let active=true;
+            const {data}=supabase.auth.onAuthStateChange((event,session)=>{
+                if(!active) return;
+                if(event==='SIGNED_OUT') {
+                    _a._setUser(null);
+                } else if(session?.user) {
+                    _a._setUser(currentUserFrom(session));
+                } else if(event==='INITIAL_SESSION') {
+                    _a._setUser(null);
+                } else {
+                    return;
+                }
+                callback(_a.currentUser);
+            });
+            return()=>{active=false;data.subscription.unsubscribe();};
+        };
         const signOut=async(_a)=>{const {error}=await supabase.auth.signOut();if(error)throw error;auth._setUser(null);adminAuth._setUser(null);};
         const updatePassword=async(_u,password)=>{const {error}=await supabase.auth.updateUser({password});if(error)throw error;};
         const reauthenticateWithCredential=async(_user,credential)=>{
