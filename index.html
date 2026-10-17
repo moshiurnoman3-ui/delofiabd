@@ -1124,94 +1124,6 @@ body.delofia-dark-storefront .delofia-category-card i { background:#3f3f46; colo
 body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-storefront #delofiaCategoryProducts h2 { color:#f4f4f5; }
 </style>
 
-
-<style id="delofia-modal-scroll-and-fullscreen-fix">
-  /* Product details: the overlay does not scroll; its single content panel does. */
-  #productDetailModal {
-    overflow: hidden !important;
-    align-items: stretch !important;
-    justify-content: stretch !important;
-  }
-  #productDetailModal > div {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    min-height: 0 !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    border-radius: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Cart and Wishlist: full viewport overlay and exactly one scrollable content surface. */
-  #cartModal, #wishlistModal {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-width: none !important;
-    max-height: none !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    overscroll-behavior: contain !important;
-    z-index: 10020 !important;
-  }
-  #cartModal > div, #wishlistModal > div {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    max-height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-  #cartModal > div > div, #wishlistModal > div > div {
-    box-sizing: border-box !important;
-    width: 100% !important;
-    max-width: none !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    min-height: 0 !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
-    margin: 0 !important;
-    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)) !important;
-    border-radius: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  #cartModal > div > div > button[aria-label="Close cart"],
-  #wishlistModal > div > div > button[aria-label="Close wishlist"] {
-    position: sticky !important;
-    top: 0 !important;
-    float: right !important;
-    z-index: 5 !important;
-    margin-bottom: 4px !important;
-  }
-  body.delofia-cart-wishlist-open {
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-  }
-  @media (max-width: 640px) {
-    #productDetailModal > div {
-      padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
-    }
-    #cartModal > div > div, #wishlistModal > div > div {
-      padding-left: 12px !important;
-      padding-right: 12px !important;
-    }
-  }
-</style>
-
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -3385,7 +3297,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             const wishlistOpen = !!document.getElementById('wishlistModal') && !document.getElementById('wishlistModal').classList.contains('hidden');
             document.body.classList.toggle('delofia-cart-wishlist-open', cartOpen || wishlistOpen);
         }
-        function openWishlistModal() { document.getElementById('cartModal')?.classList.add('hidden'); renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
         function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); syncCartWishlistOverlayState(); }
 
         const DELOFIA_PRODUCTS_PER_PAGE = 30;
@@ -4802,7 +4714,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => String(p.id) === String(item.productId)); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; savePersistedShoppingCart(); renderCartItems(); }
         function removeCartItem(index) { const removed = shoppingCart[index]; if (removed) cartCheckoutExcludedKeys.delete(String(removed.key || cartItemKey(removed.productId, removed.variants || {}))); shoppingCart.splice(index,1); savePersistedShoppingCart(); renderCartItems(); }
-        function openCartModal() { document.getElementById('wishlistModal')?.classList.add('hidden'); renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
         function closeCartModal() {
             const m = document.getElementById('cartModal');
             if (m) m.classList.add('hidden');
@@ -5766,58 +5678,6 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   header #customerAccountHeaderBtn, header #headerWishlistButton, header #headerCartButton { padding-left:5px !important; padding-right:5px !important; gap:3px !important; font-size:9px !important; }
   header #customerAccountHeaderLabel, header #headerWishlistButton > span:not(#wishlistCountBadge), header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:9px !important; }
   header #delofiaMenuButton { left:6px !important; width:29px !important; min-width:29px !important; }
-}
-</style>
-<style id="delofia-cart-footer-bottom-and-green-button-fix">
-/* Keep cart content scrollable while subtotal and action buttons stay at the bottom. */
-#cartModal > div {
-  min-height: 100dvh !important;
-  height: 100dvh !important;
-  padding: 0 !important;
-  display: flex !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
-}
-#cartModal > div > div {
-  width: 100% !important;
-  max-width: none !important;
-  height: 100dvh !important;
-  min-height: 100dvh !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 16px !important;
-  border-radius: 0 !important;
-  overflow: hidden !important;
-}
-#cartModal #cartItemsList {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain;
-}
-#cartModal #cartSubtotalLabel {
-  flex-shrink: 0 !important;
-}
-#cartModal #cartItemsList + .flex.items-center.justify-between {
-  flex-shrink: 0 !important;
-  margin-top: 12px !important;
-}
-#cartModal #cartItemsList + .flex.items-center.justify-between + .grid {
-  flex-shrink: 0 !important;
-  margin-top: 16px !important;
-  padding-bottom: max(0px, env(safe-area-inset-bottom)) !important;
-}
-#cartModal #cartItemsList + .flex.items-center.justify-between + .grid button:first-child {
-  background: #16a34a !important;
-  color: #ffffff !important;
-}
-#cartModal #cartItemsList + .flex.items-center.justify-between + .grid button:first-child:hover {
-  background: #15803d !important;
-}
-@media (max-width: 640px) {
-  #cartModal > div > div { padding: 12px !important; }
-  #cartModal #cartItemsList + .flex.items-center.justify-between + .grid { grid-template-columns: 1fr !important; }
 }
 </style>
 </head><body><main class="memo"><div class="watermark">DELOFIA</div><div class="content">
