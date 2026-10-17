@@ -2386,22 +2386,9 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
         function onSnapshot(r, next, fail=()=>{}) {
-            let active=true, timer=null, running=false;
-            const isProducts = r.segments[0] === 'products';
-            // Product catalog reads are large. Keep admin updates reasonably frequent,
-            // but avoid repeatedly downloading the entire catalog on every storefront visit.
-            const refreshMs = isProducts ? (isAdminUrl ? 20000 : 60000) : 20000;
-            const run=async()=>{
-                if(!active || running) return;
-                running=true;
-                try {
-                    const result=r.kind==='doc'?await getDoc(r):await getDocs(r);
-                    if(active) next(result);
-                } catch(e) { if(active) fail(e); }
-                finally { running=false; }
-            };
-            run();
-            timer=setInterval(run, refreshMs);
+            let active=true, timer=null;
+            const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
+            run(); timer=setInterval(run, r.segments[0]==='products'?12000:20000);
             return ()=>{active=false;if(timer)clearInterval(timer);};
         }
         const currentUserFrom = session => session?.user ? ({...session.user, uid:session.user.id, email:session.user.email}) : null;
