@@ -2862,8 +2862,44 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                 if (isAdminUrl && typeof window.renderAdminProductsList === 'function') window.renderAdminProductsList();
                 if (isAdminUrl && typeof window.renderAdminHeroSlides === 'function') window.renderAdminHeroSlides();
             };
+            // Keep a lightweight catalog cache so product cards (name, price, category, stock)
+            // can render immediately on repeat visits even when product photos are large uploads.
+            // Uploaded base64 photos are intentionally omitted from this cache; the live catalog
+            // restores them shortly after startup and the browser loads the photos independently.
+            const makeLightweightProductCache = (list) => {
+                const stripEmbeddedImages = (value) => {
+                    if (typeof value === 'string') return /^data:image\//i.test(value) ? '' : value;
+                    if (Array.isArray(value)) return value.map(stripEmbeddedImages).filter(v => v !== '');
+                    if (value && typeof value === 'object') {
+                        const out = {};
+                        Object.keys(value).forEach(key => {
+                            const cleaned = stripEmbeddedImages(value[key]);
+                            if (cleaned !== '') out[key] = cleaned;
+                        });
+                        return out;
+                    }
+                    return value;
+                };
+                return (Array.isArray(list) ? list : []).map(product => {
+                    const hasEmbeddedPhoto = (() => {
+                        const scan = value => {
+                            if (typeof value === 'string') return /^data:image\\//i.test(value);
+                            if (Array.isArray(value)) return value.some(scan);
+                            if (value && typeof value === 'object') return Object.values(value).some(scan);
+                            return false;
+                        };
+                        return scan(product);
+                    })();
+                    const clean = stripEmbeddedImages(product);
+                    if (hasEmbeddedPhoto && clean && typeof clean === 'object') clean._cachedPhotoPending = true;
+                    return clean;
+                });
+            };
             const saveProductCache = (list) => {
-                try { localStorage.setItem(productCacheKey, JSON.stringify({ savedAt: Date.now(), products: list })); } catch (e) { /* Cache is optional; private browsing/storage limits must not break the store. */ }
+                try {
+                    const lightweight = makeLightweightProductCache(list);
+                    localStorage.setItem(productCacheKey, JSON.stringify({ savedAt: Date.now(), products: lightweight }));
+                } catch (e) { /* Cache is optional; storage limits must not break the store. */ }
             };
             const readProductCache = () => {
                 try {
@@ -3373,7 +3409,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                 return;
             }
 
-            pageProducts.forEach(product => {
+            pageProducts.forEach((product, productCardIndex) => {
                 const productPhotoList = Array.isArray(product.images) ? product.images.filter(Boolean).filter(src=>!isAutoDelofiaPlaceholderImage(src)) : [];
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
@@ -3384,9 +3420,9 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                 let subCategoryDisplay = Array.isArray(product.subCategory) ? product.subCategory.join(', ') : (product.subCategory || '');
 
                 card.innerHTML = `
-                    <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" loading="lazy" decoding="async" fetchpriority="low" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
-                        ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
+                    <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" style="contain:paint" onclick="openProductDetail('${product.id}')">
+                        <img src="${mainImg}" loading="${productCardIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productCardIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        ${mainImg || product._cachedPhotoPending ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
                         <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
