@@ -2312,8 +2312,17 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         const SUPABASE_URL = "https://uzlruxpbzncajgytwlnp.supabase.co";
         // Publishable/anon key is intended for browser use; access is controlled by Supabase RLS.
         const SUPABASE_ANON_KEY = "sb_publishable_3ohS1p1TTXb2gbfnx6Wm8w_BUMmheTg";
+        // Keep customer login persistent across reloads and normal visits.
+        // Use an explicit durable browser storage key and keep Supabase token refresh enabled.
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true,
+                storage: window.localStorage,
+                storageKey: 'delofia-customer-auth-v1',
+                flowType: 'pkce'
+            }
         });
         window.delofiaSupabase = supabase;
 
@@ -2389,9 +2398,19 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             return client;
         }
         const auth=makeAuthClient(), adminAuth=makeAuthClient();
-        async function syncAuth(client){ const {data}=await supabase.auth.getSession(); client._setUser(currentUserFrom(data.session)); }
+        let authStateEventReceived = false;
+        async function syncAuth(client){
+            const {data,error}=await supabase.auth.getSession();
+            if (error) { console.warn('Could not restore Delofia auth session:', error); return; }
+            // Do not let a delayed startup read overwrite a newer sign-in/token-refresh event.
+            if (!authStateEventReceived) client._setUser(currentUserFrom(data.session));
+        }
         syncAuth(auth); syncAuth(adminAuth);
-        supabase.auth.onAuthStateChange((_event,session)=>{const u=currentUserFrom(session);auth._setUser(u);adminAuth._setUser(u);});
+        supabase.auth.onAuthStateChange((_event,session)=>{
+            authStateEventReceived = true;
+            const u=currentUserFrom(session);
+            auth._setUser(u); adminAuth._setUser(u);
+        });
         const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;const sessionUser=currentUserFrom(data.session);auth._setUser(sessionUser);return {user:sessionUser||currentUserFrom({user:data.user}),sessionCreated:!!data.session,needsEmailConfirmation:!!data.user&&!data.session};};
         const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
         const sendPasswordResetEmail=async(_a,email,options={})=>{const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
