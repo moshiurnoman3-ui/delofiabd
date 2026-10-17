@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>try { localStorage.setItem('delofiaCustomerTheme', 'light'); } catch (_) {}
+    document.documentElement.classList.remove('dark');</script>
     <!-- Safe performance hints only; all existing application logic remains unchanged. -->
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
@@ -3967,23 +3969,23 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             Object.entries(fields).forEach(([id, pair]) => { const el = document.getElementById(id); if (el) el.textContent = String(storeSettings[pair[0]] ?? pair[1]); });
         }
         window.applyStorefrontContent = applyStorefrontContent;
-        function applyStorefrontTheme(theme) {
-            document.body.classList.toggle('delofia-dark-storefront', theme === 'dark');
+        // Storefront is intentionally locked to light theme to prevent a dark-to-light flash on first paint.
+        // Admin theme remains independently controlled by storeSettings.adminTheme.
+        function applyStorefrontTheme(_theme) {
+            document.body.classList.remove('delofia-dark-storefront');
+            try { localStorage.setItem('delofiaCustomerTheme', 'light'); } catch (_) {}
             const label = document.getElementById('delofiaCustomerThemeLabel');
-            if (label) label.textContent = theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+            if (label) label.textContent = 'Light Theme';
             const icon = document.querySelector('#delofiaCustomerThemeToggle i');
-            if (icon) icon.className = theme === 'dark' ? 'fas fa-sun text-amber-300' : 'fas fa-moon text-violet-300';
+            if (icon) icon.className = 'fas fa-sun text-amber-300';
         }
         function applyConfiguredThemes() {
-            let customerTheme = storeSettings.storefrontTheme === 'dark' ? 'dark' : 'light';
-            try { const saved = localStorage.getItem('delofiaCustomerTheme'); if (saved === 'dark' || saved === 'light') customerTheme = saved; } catch (_) {}
-            applyStorefrontTheme(customerTheme);
+            applyStorefrontTheme('light');
             document.body.classList.toggle('delofia-admin-dark', storeSettings.adminTheme === 'dark');
         }
         function toggleCustomerTheme() {
-            const next = document.body.classList.contains('delofia-dark-storefront') ? 'light' : 'dark';
-            try { localStorage.setItem('delofiaCustomerTheme', next); } catch (_) {}
-            applyStorefrontTheme(next);
+            // Customer storefront stays light as requested; this does not affect the Admin theme.
+            applyStorefrontTheme('light');
         }
         window.toggleCustomerTheme = toggleCustomerTheme;
         window.applyConfiguredThemes = applyConfiguredThemes;
