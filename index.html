@@ -2166,7 +2166,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                                             <i class="fas fa-plus-circle"></i> + Add Photos
                                         </button>
                                         <div id="productPhotoPreview" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3"></div>
-                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: select 1–5 clear product photos. Images are resized to help keep storage small.</p>
+                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: সর্বোচ্চ ১০টি ছবি। আসল ফাইলের সাইজ ও কোয়ালিটি অপরিবর্তিত রেখে Supabase Storage-এ আপলোড হবে।</p>
                                         <details class="mt-3">
                                             <summary class="cursor-pointer text-[11px] font-semibold text-purple-700">Advanced: use image links instead</summary>
                                             <textarea id="prodImages" rows="2" placeholder="Paste image URLs separated by commas (optional)" class="w-full border rounded-xl p-2.5 mt-2"></textarea>
@@ -2325,6 +2325,16 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             }
         });
         window.delofiaSupabase = supabase;
+        // Product photos are stored as original files in Supabase Storage; only public URLs go into product records.
+        window.delofiaUploadProductPhoto = async (file, productId) => {
+            if (!file) throw new Error('Product photo file is missing.');
+            const ext = ((file.name || 'photo.jpg').split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+            const safeId = String(productId || 'product').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const path = `${safeId}/${Date.now()}-${Math.random().toString(36).slice(2,10)}.${ext}`;
+            const { data, error } = await supabase.storage.from('product-images').upload(path, file, { contentType: file.type || 'image/jpeg', upsert: false, cacheControl: '31536000' });
+            if (error) throw new Error('Supabase Storage upload failed: ' + error.message + '. Check product-images bucket upload policy.');
+            return supabase.storage.from('product-images').getPublicUrl(data.path).data.publicUrl;
+        };
 
         const tableMap = {
             products: 'products', orders: 'orders', coupons: 'coupons', reviews: 'reviews',
@@ -6691,24 +6701,20 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 
         let selectedProductPhotoData = [];
 
-        function resizeProductPhoto(file) {
-            return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read image file.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('This image could not be opened.'));img.onload=()=>{let scale=Math.min(1,1200/Math.max(img.width,img.height)),quality=.84,data='';for(let i=0;i<14;i++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);data=c.toDataURL('image/jpeg',quality);if(data.length<=130000){resolve(data);return;}if(quality>.64)quality-=.06;else{scale*=.88;quality=.78;}}if(data.length<=155000)resolve(data);else reject(new Error('Image still too large; use a smaller photo.'));};img.src=reader.result;};reader.readAsDataURL(file);});
-        }
-
         async function handleProductPhotoSelection(event) {
             const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
             if (!files.length) return;
-            if (selectedProductPhotoData.length + files.length > 5) {
-                alert('Please choose up to 5 photos in total.'); event.target.value = ''; return;
+            if (selectedProductPhotoData.length + files.length > 10) {
+                alert('প্রতি প্রোডাক্টে সর্বোচ্চ ১০টি ছবি যোগ করা যাবে।'); event.target.value = ''; return;
             }
             const help = document.getElementById('productPhotoHelp');
-            help.textContent = 'Preparing your photos…';
+            help.textContent = 'ছবি প্রস্তুত হচ্ছে… আসল সাইজ ও কোয়ালিটি রাখা হবে।';
             try {
-                for (const file of files) selectedProductPhotoData.push(await resizeProductPhoto(file));
+                for (const file of files) selectedProductPhotoData.push({ file, preview: URL.createObjectURL(file) });
                 renderProductPhotoPreview();
-                help.textContent = selectedProductPhotoData.length + ' photo(s) selected.';
+                help.textContent = selectedProductPhotoData.length + 'টি ছবি নির্বাচিত (সর্বোচ্চ ১০টি)। Save Product চাপলে Supabase Storage-এ আপলোড হবে।';
             } catch (err) {
-                alert('Could not load a photo. Please try a JPG or PNG image.');
+                alert(err.message || 'ছবি নির্বাচন করা যায়নি।');
             }
             event.target.value = '';
         }
@@ -6750,7 +6756,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             const box = document.getElementById('productPhotoPreview');
             if (!box) return;
             box.innerHTML = '';
-            selectedProductPhotoData.forEach((src, i) => {
+            selectedProductPhotoData.forEach((item, i) => {
+                const src = typeof item === 'string' ? item : item.preview;
                 const wrap = document.createElement('div');
                 wrap.className = 'product-photo-tile relative aspect-square rounded-xl overflow-hidden border border-purple-200 bg-white select-none';
                 wrap.dataset.photoIndex = String(i);
@@ -7351,9 +7358,26 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 const subCategories = Array.from(subCatBoxes).map(cb => cb.value);
                 const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean).filter(src=>!isAutoDelofiaPlaceholderImage(src));
                 const existing = editId ? products.find(p => p.id === editId) : null;
-                const imagesArr = [...selectedProductPhotoData.filter(src=>!isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
-                const finalImages = imagesArr;
                 const prodId = editId || ('p-' + Date.now());
+                if (selectedProductPhotoData.length + linkedImages.length > 10) throw new Error('প্রতি প্রোডাক্টে সর্বোচ্চ ১০টি ছবি রাখা যাবে (আপলোড করা ছবি + image URL মিলিয়ে)।');
+                const help = document.getElementById('productPhotoHelp');
+                const uploadedImages = [];
+                for (let i = 0; i < selectedProductPhotoData.length; i++) {
+                    const item = selectedProductPhotoData[i];
+                    if (typeof item === 'string' && !item.startsWith('data:image/')) { uploadedImages.push(item); continue; }
+                    let file = item?.file;
+                    const legacyData = item?.legacyData || (typeof item === 'string' && item.startsWith('data:image/') ? item : null);
+                    if (!file && legacyData) {
+                        const response = await fetch(legacyData); const blob = await response.blob();
+                        file = new File([blob], `legacy-photo-${i+1}.jpg`, { type: blob.type || 'image/jpeg' });
+                    }
+                    if (file) {
+                        if (!window.delofiaUploadProductPhoto) throw new Error('Supabase Storage uploader load হয়নি। পেজ refresh করে আবার চেষ্টা করো।');
+                        if (help) help.textContent = `Supabase-এ ছবি আপলোড হচ্ছে ${i+1}/${selectedProductPhotoData.length}…`;
+                        uploadedImages.push(await window.delofiaUploadProductPhoto(file, prodId));
+                    }
+                }
+                const finalImages = [...uploadedImages.filter(src=>!isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
 
                 // Read names directly from the visible editor at save time so a just-edited
                 // option cannot be omitted because of a stale UI state.
@@ -7399,7 +7423,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 };
 
                 const serializedSize = new Blob([JSON.stringify(productDoc)]).size;
-                if (serializedSize > 900000) throw new Error('Product data is still too large (' + Math.round(serializedSize/1024) + ' KB). Please reduce the number of photos/variants or use image URLs. Firestore limit is 1 MiB.');
+                if (serializedSize > 900000) throw new Error('Product data is still too large (' + Math.round(serializedSize/1024) + ' KB). বড় variant image/data URL থাকলে সেটিও URL-এ সরাতে হবে; product photos এখন Supabase Storage URL হিসেবে সেভ হচ্ছে।');
                 await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('products', prodId), productDoc);
                 resetProductForm();
                 alert('✅ Product saved successfully!');
@@ -7538,7 +7562,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/') && !isAutoDelofiaPlaceholderImage(src)).join(', ');
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = p.photoAutoRotate === true;
             const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = String(p.photoInterval || 4);
-            selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
+            selectedProductPhotoData = (p.images || []).filter(src => typeof src === 'string' && src.startsWith('data:image/')).map(src => ({ file: null, preview: src, legacyData: src }));
             renderProductPhotoPreview();
             document.getElementById('prodDesc').value = p.description || '';
             const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = p.howToUse || '';
