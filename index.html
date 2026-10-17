@@ -5908,7 +5908,53 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 }
 </style>
 
-</body>
+
+
+<style id="delofia-requested-desktop-product-image-and-back-fix">
+/* Desktop only: keep the product detail card compact and the gallery image smaller. */
+@media (min-width: 641px) {
+  #productDetailModal {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px !important;
+    overflow-y: auto !important;
+  }
+  #productDetailModal > div {
+    width: min(92vw, 920px) !important;
+    max-width: 920px !important;
+    min-height: 0 !important;
+    max-height: 90vh !important;
+    margin: auto !important;
+    border-radius: 24px !important;
+    overflow-y: auto !important;
+  }
+  #productDetailModal > div > div.grid {
+    align-items: start !important;
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) !important;
+    column-gap: 28px !important;
+  }
+  /* Keep the desktop product photo roughly one-third of its previous size. */
+  #productDetailModal #detailMainImage {
+    max-width: 100% !important;
+    max-height: 230px !important;
+    object-fit: contain !important;
+  }
+  #productDetailModal #detailMainImage:only-child { max-height: 230px !important; }
+  #productDetailModal .aspect-square {
+    width: min(100%, 240px) !important;
+    max-height: 240px !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #productDetailModal .aspect-square img {
+    max-height: 230px !important;
+    object-fit: contain !important;
+  }
+}
+</style>
+\n</body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
   header > div.max-w-7xl {
@@ -7860,6 +7906,43 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   let activeCategory = 'all';
   let activeSubcategory = 'all';
   let savedHomeScroll = 0;
+  function saveCategoryHistory() {
+    try {
+      history.pushState({ ...(history.state || {}), delofiaCategoryView: true,
+        view: currentView, category: activeCategory, subcategory: activeSubcategory }, '', window.location.href);
+    } catch (_) {}
+  }
+  function restoreCategoryHistory(state) {
+    if (state && state.modal) return;
+    if (!state || !state.delofiaCategoryView) {
+      currentView = 'home'; activeCategory = 'all'; activeSubcategory = 'all';
+      const cat = $('categoryFilter'), sub = $('subCategoryFilter');
+      if (cat) cat.value = 'all';
+      if (sub) sub.value = 'all';
+      setHomepageSections(true);
+      if (typeof window.filterProducts === 'function') window.filterProducts();
+      return;
+    }
+    currentView = state.view || 'home';
+    activeCategory = state.category || 'all';
+    activeSubcategory = state.subcategory || 'all';
+    const cat = $('categoryFilter'), sub = $('subCategoryFilter');
+    if (cat) cat.value = activeCategory;
+    if (sub) {
+      if (activeSubcategory !== 'all' && ![...sub.options].some(o => o.value === activeSubcategory)) sub.add(new Option(activeSubcategory, activeSubcategory));
+      sub.value = activeSubcategory;
+    }
+    if (currentView === 'categories') renderCategoryCards();
+    if (currentView === 'categoryProducts') {
+      const heading = $('delofiaSelectedCategoryTitle');
+      if (heading) heading.textContent = activeCategory;
+      renderSubcategoryChips();
+      if (typeof window.filterProducts === 'function') window.filterProducts();
+    }
+    setHomepageSections(currentView === 'home');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  window.addEventListener('popstate', event => restoreCategoryHistory(event.state));
   const originalGridParent = $('productsGrid')?.parentElement;
   const originalGridNext = $('productsGrid')?.nextElementSibling;
 
@@ -7911,6 +7994,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     if (sub) sub.value = 'all';
     setHomepageSections(true);
     if (typeof window.filterProducts === 'function') window.filterProducts();
+    saveCategoryHistory();
     window.scrollTo({top:0, behavior:'smooth'});
   };
   window.delofiaShowCategoryLanding = function () {
@@ -7920,6 +8004,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     if (select) select.value = 'all'; if (sub) sub.value = 'all';
     renderCategoryCards();
     setHomepageSections(false);
+    saveCategoryHistory();
     window.scrollTo({top:0, behavior:'smooth'});
   };
   function renderCategoryCards() {
@@ -7944,6 +8029,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     if (cat) cat.value = activeCategory;
     if (sub) sub.value = activeSubcategory;
     if (typeof window.filterProducts === 'function') window.filterProducts();
+    saveCategoryHistory();
     window.scrollTo({top:0, behavior:'smooth'});
   };
   function getSubcategories() {
@@ -7973,6 +8059,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     }
     renderSubcategoryChips();
     if (typeof window.filterProducts === 'function') window.filterProducts();
+    saveCategoryHistory();
   };
   // Keep the existing product-grid renderer and database-driven category select authoritative.
   const originalCategoryChange = window.onCustomerCategoryChange;
@@ -8527,4 +8614,109 @@ body.delofia-product-detail-open {
 #productDetailModal:not(.hidden) > div { flex:1 0 auto !important; width:100% !important; max-width:none !important; min-height:100dvh !important; height:auto !important; max-height:none !important; margin:0 !important; border-radius:0 !important; border:0 !important; box-shadow:none !important; overflow:visible !important; }
 #productDetailModal > div > button[onclick="closeProductDetail()"] { position:sticky !important; top:12px !important; float:right !important; margin:12px 16px -52px 0 !important; z-index:30 !important; }
 @media(max-width:640px) { #productDetailModal:not(.hidden) { padding:0 !important; } #productDetailModal:not(.hidden) > div { width:100% !important; max-width:none !important; margin:0 !important; } }
+</style>
+
+<style id="delofia-desktop-product-gallery-final-fix">
+@media (min-width: 768px) {
+  #productDetailModal { padding: 20px !important; }
+  #productDetailModal > div {
+    width: min(94vw, 1040px) !important;
+    max-width: 1040px !important;
+    height: auto !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
+  #productDetailModal > div > div[class*="grid-cols-"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 320px) minmax(0, 1fr) !important;
+    align-items: start !important;
+    column-gap: 0 !important;
+  }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:first-child {
+    min-width: 0 !important;
+    padding: 18px !important;
+    justify-content: flex-start !important;
+  }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:first-child > div:first-child {
+    width: 100% !important;
+    flex: initial !important;
+    display: block !important;
+  }
+  #productDetailModal div.aspect-square {
+    width: 100% !important;
+    max-width: 280px !important;
+    height: 280px !important;
+    max-height: 280px !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: 0 auto 12px !important;
+    flex: none !important;
+  }
+  #productDetailModal #detailMainImage {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+  #productDetailModal #detailThumbnails { max-width: 280px !important; margin: 0 auto !important; }
+}
+</style>
+
+<style id="delofia-desktop-product-layout-user-marked-fix">
+/* Desktop product detail: left gallery gets the green-box area; all product info stays in the red-box area. */
+@media (min-width: 768px) {
+  #productDetailModal:not(.hidden) {
+    padding: 14px !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+  }
+  #productDetailModal:not(.hidden) > div {
+    width: 100% !important;
+    max-width: 1560px !important;
+    height: calc(100vh - 28px) !important;
+    max-height: calc(100vh - 28px) !important;
+    margin: 0 auto !important;
+    overflow-y: auto !important;
+  }
+  #productDetailModal:not(.hidden) > div > div[class*="grid-cols-"],
+  #productDetailModal:not(.hidden) > div > div.grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 40%) minmax(0, 60%) !important;
+    column-gap: 0 !important;
+    align-items: start !important;
+  }
+  #productDetailModal:not(.hidden) > div > div[class*="grid-cols-"] > div:first-child,
+  #productDetailModal:not(.hidden) > div > div.grid > div:first-child {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+  }
+  #productDetailModal:not(.hidden) div.aspect-square {
+    width: min(100%, 480px) !important;
+    max-width: 480px !important;
+    height: 480px !important;
+    max-height: 62vh !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: 0 auto 12px !important;
+    flex: none !important;
+  }
+  #productDetailModal:not(.hidden) #detailMainImage {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+  #productDetailModal:not(.hidden) #detailThumbnails {
+    max-width: 480px !important;
+    margin: 0 auto !important;
+  }
+  #productDetailModal:not(.hidden) > div > div[class*="grid-cols-"] > div:nth-child(2),
+  #productDetailModal:not(.hidden) > div > div.grid > div:nth-child(2) {
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
 </style>
