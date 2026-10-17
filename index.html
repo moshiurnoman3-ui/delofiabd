@@ -2350,6 +2350,36 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         const orderBy = (field, direction='asc') => ({ field, direction });
         const query = (base, ...constraints) => ({ ...base, constraints });
         const tableName = name => tableMap[name] || name;
+        // Public storefront uses server-side pages. Cache each page briefly in localStorage
+        // so repeat visits can paint products immediately while Supabase refreshes in background.
+        const DELOFIA_DB_PAGE_SIZE = 30;
+        const DELOFIA_PRODUCT_CACHE_TTL = 5 * 60 * 1000;
+        const productPageCacheKey = page => `delofia_supabase_products_page_v1_${page}`;
+        async function fetchSupabaseProductPage(page=1, useCache=true) {
+            const safePage = Math.max(1, Number(page) || 1);
+            const cacheKey = productPageCacheKey(safePage);
+            if (useCache) {
+                try {
+                    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+                    if (cached && Array.isArray(cached.rows) && Date.now() - cached.savedAt < DELOFIA_PRODUCT_CACHE_TTL) {
+                        // Return cached data immediately; caller may refresh it in the background.
+                        return { rows: cached.rows, count: Number(cached.count) || cached.rows.length, fromCache: true };
+                    }
+                } catch (_) {}
+            }
+            const start = (safePage - 1) * DELOFIA_DB_PAGE_SIZE;
+            const { data, error, count } = await supabase.from('products').select('*', { count: 'exact' })
+                .order('id', { ascending: true }).range(start, start + DELOFIA_DB_PAGE_SIZE - 1);
+            if (error) throw error;
+            const rows = data || [];
+            try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), rows, count: Number(count) || 0 })); } catch (_) {}
+            return { rows, count: Number(count) || rows.length, fromCache: false };
+        }
+        async function fetchAllSupabaseProducts() {
+            const { data, error } = await supabase.from('products').select('*').order('id', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        }
         const payloadFor = (r, data) => {
             const name = r.segments[0], id = r.segments[1], table = tableName(name);
             if (table === 'products') return { id, data, active: data.active !== false, updated_at: new Date().toISOString() };
@@ -2390,29 +2420,10 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
         function onSnapshot(r, next, fail=()=>{}) {
-            // Supabase compatibility polling: avoid repeated full-table reads while the tab
-            // is in the background, and reduce public catalog polling frequency.
-            let active=true, timer=null, inFlight=false, lastRun=0;
-            const isProductsCollection = r.kind !== 'doc' && r.segments[0] === 'products';
-            const intervalMs = isProductsCollection ? 60000 : 30000;
-            const run=async(force=false)=>{
-                if(!active || document.visibilityState === 'hidden' || inFlight) return;
-                if(!force && Date.now()-lastRun < intervalMs) return;
-                inFlight=true; lastRun=Date.now();
-                try {
-                    const result=r.kind==='doc'?await getDoc(r):await getDocs(r);
-                    if(active) next(result);
-                } catch(e) {
-                    if(active) fail(e);
-                } finally {
-                    inFlight=false;
-                }
-            };
-            const onVisibilityChange=()=>{ if(document.visibilityState === 'visible') run(false); };
-            document.addEventListener('visibilitychange', onVisibilityChange);
-            run(true);
-            timer=setInterval(()=>run(false), 5000);
-            return ()=>{active=false;if(timer)clearInterval(timer);document.removeEventListener('visibilitychange',onVisibilityChange);};
+            let active=true, timer=null;
+            const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
+            run(); timer=setInterval(run, r.segments[0]==='products'?60000:20000);
+            return ()=>{active=false;if(timer)clearInterval(timer);};
         }
         const currentUserFrom = session => session?.user ? ({...session.user, uid:session.user.id, email:session.user.email}) : null;
         function makeAuthClient() {
@@ -2895,7 +2906,33 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                 } catch (e) { /* Ignore malformed or unavailable cache. */ }
                 return null;
             };
+            // Storefront page loader. Admin intentionally continues to load the full catalog.
+            window.__delofiaServerProductPaging = !isAdminUrl;
+            window.__delofiaServerProductCount = 0;
+            window.__delofiaLoadProductPage = async (page, refresh=false) => {
+                try {
+                    const result = await fetchSupabaseProductPage(page, true);
+                    const rows = result.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
+                    window.__delofiaServerProductCount = result.count;
+                    window.__delofiaServerProductPage = Math.max(1, Number(page) || 1);
+                    window.__delofiaServerPagedCatalog = true;
+                    applyProductList(rows);
+                    if (refresh) {
+                        fetchSupabaseProductPage(page, false).then(fresh => {
+                            const freshRows = fresh.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
+                            window.__delofiaServerProductCount = fresh.count;
+                            applyProductList(freshRows);
+                        }).catch(err => console.warn('Background product refresh failed:', err));
+                    }
+                } catch (error) {
+                    console.error('Supabase product page load failed:', error);
+                    window.__productsLoadError = String(error?.message || error);
+                    window.__productsSnapshotLoaded = true;
+                    window.dispatchEvent(new Event('delofia-products-updated'));
+                }
+            };
             if (isAdminUrl) {
+                window.__delofiaServerPagedCatalog = false;
                 // Admin gets live product updates so edits are reflected immediately.
                 onSnapshot(collection(adminDb, "products"), (snapshot) => {
                     const list = [];
@@ -2911,33 +2948,21 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                     if (list) list.innerHTML = '<div class="p-4 rounded-xl bg-red-50 text-red-700 text-sm">Products load হয়নি: ' + String(error?.message || error).replace(/[<>]/g, '') + '</div>';
                 });
             } else {
-                // Render the last known catalog immediately, even if it is older than five minutes.
-                // A realtime listener then replaces it with server-confirmed data without requiring refresh.
-                // This avoids an empty/slow storefront on first visit and keeps admin edits in sync for visitors.
+                // Load only the first 30 rows for the public catalog, using a short-lived cache.
+                // Search/filter actions can request the full catalog on demand to preserve existing behavior.
                 const cachedProducts = readProductCache();
-                if (cachedProducts) applyProductList(cachedProducts);
-                onSnapshot(collection(db, "products"), (snapshot) => {
-                    // The local Firestore cache may be older than localStorage. Keep the immediately
-                    // rendered catalog until the server responds, but use Firestore cache if no local cache exists.
-                    if (snapshot.metadata?.fromCache && cachedProducts) return;
-                    const list = [];
-                    snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
-                    if (!snapshot.metadata?.fromCache) {
-                        saveProductCache(list);
+                if (cachedProducts) {
+                    // Legacy cache may contain the full catalog; render it immediately until the paged result arrives.
+                    applyProductList(cachedProducts.slice(0, DELOFIA_DB_PAGE_SIZE));
+                }
+                window.__delofiaLoadProductPage(1, true);
+                // Refresh only occasionally instead of polling every 12 seconds. Supabase Realtime can
+                // replace this polling later without changing the storefront renderer.
+                window.__delofiaProductRefreshTimer = setInterval(() => {
+                    if (document.visibilityState === 'visible' && window.__delofiaServerPagedCatalog) {
+                        window.__delofiaLoadProductPage(window.__delofiaServerProductPage || 1, true);
                     }
-                    // Do not briefly replace a saved catalog with an empty offline cache.
-                    if (snapshot.metadata?.fromCache && snapshot.empty && cachedProducts?.length) return;
-                    applyProductList(list);
-                }, (error) => {
-                    console.error('Products realtime listener failed:', error);
-                    window.__productsLoadError = String(error?.message || error);
-                    window.__productsSnapshotLoaded = true;
-                    window.dispatchEvent(new Event('delofia-products-updated'));
-                    if (!cachedProducts) {
-                        const grid = document.getElementById('productsGrid');
-                        if (grid) grid.innerHTML = '<div class="col-span-full py-12 text-center text-gray-500">Products could not load. Check your connection and refresh.</div>';
-                    }
-                });
+                }, 60000);
             }
 
             // IMPORTANT: Do not read the entire orders collection on every customer's storefront visit.
@@ -3338,7 +3363,11 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             const next = Math.max(1, Math.min(delofiaProductTotalPages, delofiaCurrentProductPage + Number(delta || 0)));
             if (next === delofiaCurrentProductPage) return;
             delofiaCurrentProductPage = next;
-            renderProducts(delofiaCurrentProductFilterText);
+            if (window.__delofiaServerPagedCatalog && typeof window.__delofiaLoadProductPage === 'function') {
+                window.__delofiaLoadProductPage(next, false);
+            } else {
+                renderProducts(delofiaCurrentProductFilterText);
+            }
             const target = document.getElementById('productGrid');
             if (target) window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - 145), behavior: 'smooth' });
         }
@@ -3357,6 +3386,22 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             const maxPriceRaw = document.getElementById('maxPriceFilter')?.value ?? '';
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
+            const needsFullCatalogForFilter = !!filterText || category !== 'all' || subCategory !== 'all' || minPrice !== null || maxPrice !== null;
+            if (needsFullCatalogForFilter && window.__delofiaServerPagedCatalog && !window.__delofiaFullCatalogLoaded) {
+                if (!window.__delofiaLoadingFullCatalog) {
+                    window.__delofiaLoadingFullCatalog = fetchAllSupabaseProducts().then(rows => {
+                        const allProducts = rows.map(row => ({ ...unwrap('products', row), id: row.id }));
+                        window.__delofiaServerPagedCatalog = false;
+                        window.__delofiaFullCatalogLoaded = true;
+                        window.products = allProducts;
+                        window.__productsSnapshotLoaded = true;
+                        window.dispatchEvent(new Event('delofia-products-updated'));
+                        if (typeof window.renderProducts === 'function') window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
+                    }).catch(error => console.error('Could not load full catalog for filtering:', error)).finally(() => { window.__delofiaLoadingFullCatalog = null; });
+                }
+                grid.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500">Loading products for search/filter…</div>';
+                return;
+            }
 
             const filtered = (products || []).slice().sort((a, b) => {
                 const ao = Number.isFinite(Number(a.displayOrder)) && a.displayOrder !== undefined && a.displayOrder !== null ? Number(a.displayOrder) : Number.MAX_SAFE_INTEGER;
@@ -3378,16 +3423,21 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                     (maxPrice === null || price <= maxPrice)));
                 return matchesText && matchesCategory && matchesSubCategory && matchesPrice;
             });
-            const totalPages = Math.max(1, Math.ceil(filtered.length / DELOFIA_PRODUCTS_PER_PAGE));
+            const hasClientFilters = !!filterText || category !== 'all' || subCategory !== 'all' || minPrice !== null || maxPrice !== null;
+            // For the normal storefront, the database already returned exactly one page. Filtered
+            // searches continue using the loaded set so existing filter behavior is not redefined.
+            const isServerPage = !!window.__delofiaServerPagedCatalog && !hasClientFilters;
+            const totalItemsForPagination = isServerPage ? (Number(window.__delofiaServerProductCount) || filtered.length) : filtered.length;
+            const totalPages = Math.max(1, Math.ceil(totalItemsForPagination / DELOFIA_PRODUCTS_PER_PAGE));
             delofiaProductTotalPages = totalPages;
             delofiaCurrentProductPage = Math.max(1, Math.min(delofiaCurrentProductPage, totalPages));
-            const firstVisible = filtered.length ? (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE : 0;
-            const pageProducts = filtered.slice(firstVisible, firstVisible + DELOFIA_PRODUCTS_PER_PAGE);
-            renderProductPagination(filtered.length);
+            const firstVisible = totalItemsForPagination ? (delofiaCurrentProductPage - 1) * DELOFIA_PRODUCTS_PER_PAGE : 0;
+            const pageProducts = isServerPage ? filtered : filtered.slice(firstVisible, firstVisible + DELOFIA_PRODUCTS_PER_PAGE);
+            renderProductPagination(totalItemsForPagination);
 
             const countEl = document.getElementById('productCount');
             if (countEl) {
-                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : (filtered.length === 0 ? 'No matching products' : `Showing ${firstVisible + 1}–${Math.min(filtered.length, firstVisible + DELOFIA_PRODUCTS_PER_PAGE)} of ${filtered.length} items`);
+                countEl.innerText = filtered.length === 0 && products.length === 0 ? 'No products available' : (filtered.length === 0 ? 'No matching products' : `Showing ${firstVisible + 1}–${Math.min(totalItemsForPagination, firstVisible + pageProducts.length)} of ${totalItemsForPagination} items`);
             }
 
             if (filtered.length === 0) {
@@ -3426,7 +3476,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" loading="${productIndex < 2 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 2 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
@@ -4098,7 +4148,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                     ? `<span class="block mt-0.5 text-xs font-bold text-pink-600">৳${Number(p.price).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
                     : '<span class="block mt-0.5 text-xs font-semibold text-pink-600">Price জানতে যোগাযোগ করুন</span>';
                 const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
-                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" decoding="async" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
+                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
             }).join('');
             box.classList.remove('hidden');
             box.querySelectorAll('[data-search-product-id]').forEach(button => {
@@ -8818,3 +8868,4 @@ body.delofia-product-detail-open {
   }
 }
 </style>
+
