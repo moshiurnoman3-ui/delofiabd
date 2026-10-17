@@ -2390,10 +2390,29 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
         function onSnapshot(r, next, fail=()=>{}) {
-            let active=true, timer=null;
-            const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
-            run(); timer=setInterval(run, r.segments[0]==='products'?12000:20000);
-            return ()=>{active=false;if(timer)clearInterval(timer);};
+            // Supabase compatibility polling: avoid repeated full-table reads while the tab
+            // is in the background, and reduce public catalog polling frequency.
+            let active=true, timer=null, inFlight=false, lastRun=0;
+            const isProductsCollection = r.kind !== 'doc' && r.segments[0] === 'products';
+            const intervalMs = isProductsCollection ? 60000 : 30000;
+            const run=async(force=false)=>{
+                if(!active || document.visibilityState === 'hidden' || inFlight) return;
+                if(!force && Date.now()-lastRun < intervalMs) return;
+                inFlight=true; lastRun=Date.now();
+                try {
+                    const result=r.kind==='doc'?await getDoc(r):await getDocs(r);
+                    if(active) next(result);
+                } catch(e) {
+                    if(active) fail(e);
+                } finally {
+                    inFlight=false;
+                }
+            };
+            const onVisibilityChange=()=>{ if(document.visibilityState === 'visible') run(false); };
+            document.addEventListener('visibilitychange', onVisibilityChange);
+            run(true);
+            timer=setInterval(()=>run(false), 5000);
+            return ()=>{active=false;if(timer)clearInterval(timer);document.removeEventListener('visibilitychange',onVisibilityChange);};
         }
         const currentUserFrom = session => session?.user ? ({...session.user, uid:session.user.id, email:session.user.email}) : null;
         function makeAuthClient() {
@@ -3407,7 +3426,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
 
                 card.innerHTML = `
                     <div class="relative aspect-square overflow-hidden bg-purple-50 cursor-pointer" onclick="openProductDetail('${product.id}')">
-                        <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
+                        <img src="${mainImg}" loading="${productIndex < 2 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 2 ? 'high' : 'low'}" alt="${product.title || 'Product'}" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
                         ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
@@ -4079,7 +4098,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
                     ? `<span class="block mt-0.5 text-xs font-bold text-pink-600">৳${Number(p.price).toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`
                     : '<span class="block mt-0.5 text-xs font-semibold text-pink-600">Price জানতে যোগাযোগ করুন</span>';
                 const photo = Array.isArray(p.images) ? p.images.find(Boolean) : '';
-                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
+                return `<button type="button" role="option" aria-selected="false" data-search-product-id="${escapeHtml(String(p.id))}" class="w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 text-left hover:bg-pink-50 active:bg-pink-100 border-b border-gray-100 last:border-b-0" style="min-height:64px"><span class="w-11 h-11 rounded-lg bg-gray-50 border border-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">${photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" decoding="async" class="w-full h-full object-contain" onerror="this.style.display='none'">` : '<i class="fas fa-box text-gray-300"></i>'}</span><span class="min-w-0 flex-1"><span class="block text-[13px] sm:text-sm font-semibold text-gray-900 leading-snug">${title}</span>${price}</span><i class="fas fa-chevron-right text-[10px] text-gray-400"></i></button>`;
             }).join('');
             box.classList.remove('hidden');
             box.querySelectorAll('[data-search-product-id]').forEach(button => {
