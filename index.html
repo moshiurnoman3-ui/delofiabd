@@ -1177,6 +1177,19 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
  #delofiaProductLoading { min-height:320px; }
 }
 </style>
+<style id="delofia-mobile-cls-stability-v2">
+/* Match the carousel and fallback's reserved geometry before async settings arrive. */
+#storefrontHeroCarousel, #storefrontHeroFallback { box-sizing:border-box; width:100%; min-height:max(250px, calc((100vw - 32px) * 6 / 16)); }
+#heroCarouselViewport { min-height:max(250px, calc((100vw - 32px) * 6 / 16)); }
+#productsGrid > .group { min-width:0; }
+#productsGrid .product-card-image { width:100%; height:100%; aspect-ratio:1/1; object-fit:contain; }
+#productPhotoPreview > * { aspect-ratio:1/1; min-width:0; }
+@media(max-width:640px) {
+ #storefrontHeroCarousel, #storefrontHeroFallback { min-height:max(300px, calc((100vw - 32px) * 3 / 4)); }
+ #heroCarouselViewport { min-height:max(300px, calc((100vw - 32px) * 3 / 4)); }
+ #productsGrid .group h3 { min-height:2.5rem; }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -2223,7 +2236,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                                             <i class="fas fa-plus-circle"></i> + Add Photos
                                         </button>
                                         <div id="productPhotoPreview" class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-3"></div>
-                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: select 1–5 clear product photos. Images are resized to help keep storage small.</p>
+                                        <p id="productPhotoHelp" class="text-[11px] text-gray-500 mt-2">Tip: select 1–10 clear product photos. Images are resized to help keep storage small.</p>
                                         <details class="mt-3">
                                             <summary class="cursor-pointer text-[11px] font-semibold text-purple-700">Advanced: use image links instead</summary>
                                             <textarea id="prodImages" rows="2" placeholder="Paste image URLs separated by commas (optional)" class="w-full border rounded-xl p-2.5 mt-2"></textarea>
@@ -2502,11 +2515,23 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             // Do not let a delayed startup read overwrite a newer sign-in/token-refresh event.
             if (!authStateEventReceived) client._setUser(currentUserFrom(data.session));
         }
-        syncAuth(auth); syncAuth(adminAuth);
+        // INITIAL_SESSION is the authoritative startup restoration event; avoid parallel getSession races.
         supabase.auth.onAuthStateChange((_event,session)=>{
             authStateEventReceived = true;
-            const u=currentUserFrom(session);
-            auth._setUser(u); adminAuth._setUser(u);
+            if (_event === 'SIGNED_OUT' || session?.user || _event === 'INITIAL_SESSION') {
+                const u=currentUserFrom(session);
+                auth._setUser(u); adminAuth._setUser(u);
+            }
+        });
+        // On mobile, a suspended tab can miss token-refresh time. Recheck on resume;
+        // getSession uses the SDK refresh mechanism and transient errors never sign users out.
+        let delofiaSessionResumePending = false;
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState !== 'visible' || delofiaSessionResumePending) return;
+            delofiaSessionResumePending = true;
+            try { const {error} = await supabase.auth.getSession(); if (error) console.warn('Session resume check:', error.message); }
+            catch (error) { console.warn('Session resume unavailable:', error); }
+            finally { delofiaSessionResumePending = false; }
         });
         const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;const sessionUser=currentUserFrom(data.session);auth._setUser(sessionUser);return {user:sessionUser||currentUserFrom({user:data.user}),sessionCreated:!!data.session,needsEmailConfirmation:!!data.user&&!data.session};};
         const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
@@ -3564,8 +3589,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                 const mainImg = productPhotoList[0] || '';
                 const card = document.createElement('div');
                 card.className = 'bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition border border-purple-100 flex flex-col group';
-                card.style.contentVisibility = 'auto';
-                card.style.containIntrinsicSize = 'auto 420px';
+                // Keep actual card geometry available to avoid mobile layout jumps.
                 
                 let subCategoryDisplay = Array.isArray(product.subCategory) ? product.subCategory.join(', ') : (product.subCategory || '');
 
@@ -6922,8 +6946,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         async function handleProductPhotoSelection(event) {
             const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
             if (!files.length) return;
-            if (selectedProductPhotoData.length + files.length > 5) {
-                alert('Please choose up to 5 photos in total.'); event.target.value = ''; return;
+            if (selectedProductPhotoData.length + files.length > 10) {
+                alert('Please choose up to 10 photos in total.'); event.target.value = ''; return;
             }
             const help = document.getElementById('productPhotoHelp');
             help.textContent = 'Preparing your photos…';
@@ -7576,6 +7600,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 const linkedImages = imagesStr.split(',').map(s => s.trim()).filter(Boolean).filter(src=>!isAutoDelofiaPlaceholderImage(src));
                 const existing = editId ? products.find(p => p.id === editId) : null;
                 const imagesArr = [...selectedProductPhotoData.filter(src=>!isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
+                if (imagesArr.length > 10) throw new Error('A product can have up to 10 images total, including image links.');
                 const finalImages = imagesArr;
                 const prodId = editId || ('p-' + Date.now());
 
