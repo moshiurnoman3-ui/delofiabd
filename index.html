@@ -7752,6 +7752,27 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   }
 })();
 </script>
+
+<!-- Delofia mobile bottom navigation -->
+<nav id="delofiaMobileBottomNav" aria-label="Mobile navigation">
+  <button type="button" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Home"><i class="fas fa-house"></i><span>Home</span></button>
+  <button type="button" onclick="(function(){var e=document.getElementById('categoryFilter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){e.focus();if(e.click)e.click();},250);}})()" aria-label="Category"><i class="fas fa-layer-group"></i><span>Category</span></button>
+  <button type="button" onclick="openWishlistModal()" aria-label="Wishlist"><span class="delofia-nav-icon"><i class="fas fa-heart"></i><b id="delofiaMobileWishlistCount">0</b></span><span>Wishlist</span></button>
+  <button type="button" onclick="openCartModal()" aria-label="Cart"><span class="delofia-nav-icon"><i class="fas fa-shopping-cart"></i><b id="delofiaMobileCartCount">0</b></span><span>Cart</span></button>
+  <button type="button" onclick="openCustomerAccount()" aria-label="Account"><i class="fas fa-user"></i><span>Account</span></button>
+</nav>
+<script id="delofiaMobileBottomNavSync">
+(function(){
+  function sync(){
+    var pairs=[['wishlistCountBadge','delofiaMobileWishlistCount'],['cartCountBadge','delofiaMobileCartCount']];
+    pairs.forEach(function(p){var a=document.getElementById(p[0]),b=document.getElementById(p[1]);if(a&&b){b.textContent=(a.textContent||'0').trim();b.style.display=(parseInt(b.textContent,10)>0)?'flex':'none';}});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync);else sync();
+  var obs=new MutationObserver(sync);obs.observe(document.body,{subtree:true,childList:true,characterData:true});
+  window.addEventListener('storage',sync);
+})();
+</script>
+
 </body>
 
 <style id="delofia-mobile-header-buttons-v36">
@@ -7876,6 +7897,57 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   header #headerWishlistButton, header #headerCartButton { padding:0 4px !important; gap:2px !important; font-size:8px !important; }
   header #headerWishlistButton > span:not(#wishlistCountBadge),
   header #headerCartButton > span:not(#cartCountBadge):not(#cartValueLabel) { font-size:8px !important; }
+}
+</style>
+
+
+<style id="delofia-mobile-bottom-nav-and-fullscreen-detail-v1">
+#delofiaMobileBottomNav { display:none; }
+@media (max-width:640px) {
+  header #customerAccountHeaderBtn,
+  header #headerWishlistButton,
+  header #headerCartButton { display:none !important; }
+  body { padding-bottom:72px !important; }
+  #delofiaMobileBottomNav {
+    position:fixed; z-index:99999; left:0; right:0; bottom:0;
+    display:grid; grid-template-columns:repeat(5,minmax(0,1fr));
+    align-items:center; gap:0; min-height:64px;
+    padding:7px 3px calc(7px + env(safe-area-inset-bottom));
+    background:#fff; border-top:1px solid #e9d5ff;
+    box-shadow:0 -4px 18px rgba(76,29,149,.12);
+  }
+  #delofiaMobileBottomNav button {
+    min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; padding:2px 0; border:0; background:transparent; color:#6d28d9;
+    font-size:10px; line-height:1.15; font-weight:700; white-space:nowrap;
+  }
+  #delofiaMobileBottomNav button > i { font-size:18px; line-height:20px; }
+  #delofiaMobileBottomNav .delofia-nav-icon { position:relative; display:flex; align-items:center; justify-content:center; height:20px; }
+  #delofiaMobileBottomNav .delofia-nav-icon > i { font-size:18px; }
+  #delofiaMobileBottomNav .delofia-nav-icon > b {
+    position:absolute; top:-7px; right:-12px; min-width:15px; height:15px; padding:0 3px;
+    border-radius:999px; background:#7e22ce; color:white; font-size:9px; line-height:15px; text-align:center;
+  }
+  #productDetailModal:not(.hidden) {
+    position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; height:100dvh !important;
+    padding:0 !important; margin:0 !important; display:flex !important; align-items:stretch !important; justify-content:stretch !important;
+    overflow-y:auto !important; border-radius:0 !important; background:#fff !important; backdrop-filter:none !important;
+  }
+  #productDetailModal:not(.hidden) > div {
+    width:100% !important; max-width:none !important; min-height:100% !important; height:auto !important; max-height:none !important;
+    margin:0 !important; border-radius:0 !important; overflow:visible !important; box-shadow:none !important;
+  }
+}
+@media (min-width:641px) {
+  #productDetailModal:not(.hidden) {
+    position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important;
+    padding:0 !important; margin:0 !important; display:flex !important; align-items:stretch !important; justify-content:stretch !important;
+    overflow-y:auto !important; background:#fff !important; backdrop-filter:none !important;
+  }
+  #productDetailModal:not(.hidden) > div {
+    width:100% !important; max-width:none !important; min-height:100vh !important; height:auto !important; max-height:none !important;
+    margin:0 !important; border-radius:0 !important; overflow:visible !important; box-shadow:none !important;
+  }
 }
 </style>
 
