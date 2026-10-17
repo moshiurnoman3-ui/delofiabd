@@ -1123,6 +1123,43 @@ body.delofia-dark-storefront .delofia-category-card i { background:#3f3f46; colo
 body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-storefront #delofiaCategoryProducts h2 { color:#f4f4f5; }
 </style>
 
+<style id="delofia-fullscreen-cart-wishlist-v1">
+/* Dedicated full-viewport pages, preserving existing cart/wishlist contents. */
+#cartModal:not(.hidden), #wishlistModal:not(.hidden) {
+  position: fixed !important; inset: 0 !important; width: 100vw !important;
+  height: 100vh !important; height: 100dvh !important;
+  z-index: 11000 !important; background: #fff !important;
+  overflow-x: hidden !important; overflow-y: auto !important;
+  padding: 0 !important; margin: 0 !important; border-radius: 0 !important;
+}
+#cartModal > div, #wishlistModal > div {
+  display: block !important; width: 100% !important; min-height: 100% !important;
+  padding: 0 !important; margin: 0 !important;
+}
+#cartModal > div > div, #wishlistModal > div > div {
+  width: 100% !important; max-width: none !important; min-height: 100vh !important;
+  min-height: 100dvh !important; margin: 0 !important;
+  border-radius: 0 !important; box-shadow: none !important;
+  padding: 24px max(16px, calc((100vw - 1100px) / 2)) !important;
+  padding-bottom: max(32px, env(safe-area-inset-bottom)) !important;
+  box-sizing: border-box !important;
+}
+#cartModal > div > div > button:first-child,
+#wishlistModal > div > div > button:first-child { z-index: 2; }
+body:has(#cartModal:not(.hidden)) #delofiaFloatingWhatsapp,
+body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !important; }
+@media(max-width:640px) {
+  #cartModal > div > div, #wishlistModal > div > div { padding: 20px 14px 32px !important; }
+  #cartModal h2, #wishlistModal h2 { padding-right: 42px !important; }
+}
+</style>
+<style id="delofia-cart-wishlist-bottom-actions-v2">
+#cartModal > div > div, #wishlistModal > div > div { display:flex !important; flex-direction:column !important; }
+#cartModal #cartItemsList, #wishlistModal #wishlistItemsList { flex: 1 0 auto; }
+#cartModal #cartItemsList + div { flex-shrink:0; }
+#cartModal #cartItemsList + div + div, #wishlistModal #wishlistItemsList + div { margin-top:auto !important; padding-top:16px; padding-bottom:max(8px,env(safe-area-inset-bottom)); flex-shrink:0; }
+#wishlistModal h2 { color:#7c3aed !important; }
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -1417,7 +1454,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         <h2 class="text-xl font-extrabold text-purple-900 mb-4"><i class="fas fa-shopping-cart mr-2"></i>Your Cart</h2>
         <div id="cartItemsList" class="space-y-3"></div>
         <div class="flex items-center justify-between border-t mt-4 pt-4"><span class="font-bold">Subtotal</span><strong class="text-purple-800 text-xl" id="cartSubtotalLabel">৳0.00</strong></div>
-        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="closeCartModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 py-3 font-bold text-sm">Continue Shopping</button><button onclick="window.checkoutCart?.()" id="cartCheckoutBtn" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 font-bold text-sm">Checkout</button></div>
+        <div class="grid grid-cols-2 gap-2 mt-4"><button onclick="closeCartModal()" class="rounded-xl bg-green-600 hover:bg-green-700 text-white py-3 font-bold text-sm">Continue Shopping</button><button onclick="window.checkoutCart?.()" id="cartCheckoutBtn" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white py-3 font-bold text-sm">Checkout</button></div>
       </div></div>
     </div>
 
@@ -1425,10 +1462,10 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
     <div id="wishlistModal" class="fixed inset-0 z-[75] bg-black/60 backdrop-blur-sm hidden overflow-y-auto" onclick="if(event.target===this) closeWishlistModal()">
       <div class="min-h-screen flex items-center justify-center p-3"><div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl p-4 sm:p-6 relative">
         <button type="button" onclick="closeWishlistModal()" class="absolute right-3 top-3 w-9 h-9 rounded-full bg-gray-100 text-gray-700 text-xl" aria-label="Close wishlist">×</button>
-        <h2 class="text-xl font-extrabold text-pink-700 mb-1"><i class="fas fa-heart mr-2"></i>My Wishlist</h2>
+        <h2 class="text-xl font-extrabold text-purple-700 mb-1"><i class="fas fa-heart mr-2"></i>My Wishlist</h2>
         <p class="text-sm text-gray-500 mb-4">পছন্দের পণ্যগুলো এখানে সেভ থাকবে।</p>
         <div id="wishlistItemsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-        <div class="mt-4 text-right"><button type="button" onclick="closeWishlistModal()" class="rounded-xl bg-gray-100 hover:bg-gray-200 px-5 py-3 font-bold text-sm">Continue Shopping</button></div>
+        <div class="mt-4 text-right"><button type="button" onclick="closeWishlistModal()" class="rounded-xl bg-green-600 hover:bg-green-700 text-white px-5 py-3 font-bold text-sm">Continue Shopping</button></div>
       </div></div>
     </div>
 
@@ -3340,7 +3377,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
             const wishlistOpen = !!document.getElementById('wishlistModal') && !document.getElementById('wishlistModal').classList.contains('hidden');
             document.body.classList.toggle('delofia-cart-wishlist-open', cartOpen || wishlistOpen);
         }
-        function openWishlistModal() { renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function openWishlistModal() { const other = document.getElementById('cartModal'); if (other) other.classList.add('hidden'); window.__cartReturnProductId = null; renderWishlistItems(); const m = document.getElementById('wishlistModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
         function closeWishlistModal() { const m = document.getElementById('wishlistModal'); if (m) m.classList.add('hidden'); syncCartWishlistOverlayState(); }
 
         const DELOFIA_PRODUCTS_PER_PAGE = 30;
@@ -4782,7 +4819,7 @@ body.delofia-dark-storefront #delofiaCategoryLanding h2, body.delofia-dark-store
         }
         function changeCartQty(index, delta) { if (!shoppingCart[index]) return; const item = shoppingCart[index]; const next = Math.max(1, Number(item.qty || 1) + delta); const product = products.find(p => String(p.id) === String(item.productId)); if (delta > 0 && product && next > getAvailableStock(product, item.variants || {})) { alert('Stock Out — এই ভ্যারিয়েন্টের পর্যাপ্ত স্টক নেই।'); return; } item.qty = next; savePersistedShoppingCart(); renderCartItems(); }
         function removeCartItem(index) { const removed = shoppingCart[index]; if (removed) cartCheckoutExcludedKeys.delete(String(removed.key || cartItemKey(removed.productId, removed.variants || {}))); shoppingCart.splice(index,1); savePersistedShoppingCart(); renderCartItems(); }
-        function openCartModal() { renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
+        function openCartModal() { const other = document.getElementById('wishlistModal'); if (other) other.classList.add('hidden'); renderCartItems(); const m = document.getElementById('cartModal'); if (m) m.classList.remove('hidden'); syncCartWishlistOverlayState(); }
         function closeCartModal() {
             const m = document.getElementById('cartModal');
             if (m) m.classList.add('hidden');
