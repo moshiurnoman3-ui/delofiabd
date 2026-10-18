@@ -1190,6 +1190,10 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
  #productsGrid .group h3 { min-height:2.5rem; }
 }
 </style>
+<style id="delofia-mobile-category-card-fix">
+.delofia-category-image{width:48px;height:48px;object-fit:cover;border-radius:12px;flex:none}
+@media(max-width:640px){#delofiaCategoryCards{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;direction:rtl;gap:10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px}#delofiaCategoryCards .delofia-category-card{direction:ltr;flex:0 0 145px;min-height:125px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;scroll-snap-align:start}#delofiaCategoryCards .delofia-category-card span{flex:none!important}#delofiaCategoryCards .delofia-category-card>i:last-child{display:none!important}}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -3870,7 +3874,8 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             filterProducts();
         }
 
-        function onAdminCategorySelectChange(selectedSubCats = []) {
+        function onAdminCategorySelectChange(selectedSubCats) {
+            if (!Array.isArray(selectedSubCats)) selectedSubCats = [...document.querySelectorAll('#prodSubCategoriesContainer input[name="adminProdSubCat"]:checked')].map(el => el.value);
             const cat = document.getElementById('prodCategory')?.value;
             const container = document.getElementById('prodSubCategoriesContainer');
             if (!container) return;
@@ -8290,8 +8295,10 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     const categories = getCategories();
     $('delofiaCategoryEmpty')?.classList.toggle('hidden', categories.length > 0);
     container.innerHTML = categories.map(name => {
-      const count = productList().filter(p => String(p.category || 'Other') === name).length;
-      return `<button type="button" class="delofia-category-card" data-delofia-category="${esc(name)}"><i class="fas fa-layer-group" aria-hidden="true"></i><span class="min-w-0 flex-1">${esc(name)}<small class="block mt-1 text-xs font-semibold opacity-70">${count} product${count===1?'':'s'}</small></span><i class="fas fa-chevron-right !w-7 !h-7 !flex-none !bg-transparent"></i></button>`;
+      const categoryProducts = productList().filter(p => String(p.category || 'Other') === name);
+      const count = categoryProducts.length;
+      const categoryImage = categoryProducts.map(p => p.image || p.imageUrl || p.images?.[0]).find(v => typeof v === 'string' && /^https?:\/\//.test(v));
+      return `<button type="button" class="delofia-category-card" data-delofia-category="${esc(name)}">${categoryImage ? `<img class="delofia-category-image" src="${esc(categoryImage)}" alt="" loading="lazy">` : `<i class="fas fa-layer-group" aria-hidden="true"></i>`}<span class="min-w-0 flex-1">${esc(name)}<small class="block mt-1 text-xs font-semibold opacity-70">${count} product${count===1?'':'s'}</small></span><i class="fas fa-chevron-right !w-7 !h-7 !flex-none !bg-transparent"></i></button>`;
     }).join('');
     container.querySelectorAll('[data-delofia-category]').forEach(button => button.addEventListener('click', () => window.delofiaOpenCategory(button.getAttribute('data-delofia-category'))));
   }
