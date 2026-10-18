@@ -2461,6 +2461,8 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             }
             return rows;
         }
+        window.delofiaFetchAllSupabaseProducts = fetchAllSupabaseProducts;
+        window.delofiaUnwrapProductRow = row => ({ ...unwrap('products', row), id: row.id });
         const payloadFor = (r, data) => {
             const name = r.segments[0], id = r.segments[1], table = tableName(name);
             if (table === 'products') return { id, data, active: data.active !== false, updated_at: new Date().toISOString() };
@@ -3524,8 +3526,8 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             const needsFullCatalogForFilter = !!filterText || category !== 'all' || subCategory !== 'all' || minPrice !== null || maxPrice !== null;
             if (needsFullCatalogForFilter && window.__delofiaServerPagedCatalog && !window.__delofiaFullCatalogLoaded) {
                 if (!window.__delofiaLoadingFullCatalog) {
-                    window.__delofiaLoadingFullCatalog = fetchAllSupabaseProducts().then(rows => {
-                        const allProducts = rows.map(row => ({ ...unwrap('products', row), id: row.id }));
+                    window.__delofiaLoadingFullCatalog = window.delofiaFetchAllSupabaseProducts().then(rows => {
+                        const allProducts = rows.map(window.delofiaUnwrapProductRow);
                         window.__delofiaServerPagedCatalog = false;
                         window.__delofiaFullCatalogLoaded = true;
                         window.products = allProducts;
