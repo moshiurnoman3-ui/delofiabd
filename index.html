@@ -8183,6 +8183,14 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 </script>
 
 
+<style id="delofia-category-page-visibility-repair">
+body.delofia-category-navigation #storefrontHeroCarousel,
+body.delofia-category-navigation #storefrontHeroFallback,
+body.delofia-category-navigation #productFilters { display:none !important; }
+body.delofia-category-navigation #mainContainer { min-height:calc(100dvh - 160px); }
+body.delofia-category-navigation #productsGrid:not(.hidden) { display:grid !important; visibility:visible !important; opacity:1 !important; }
+body.delofia-category-navigation #productsGrid > .group { display:flex !important; visibility:visible !important; opacity:1 !important; }
+</style>
 <script id="delofia-requested-navigation-logic-v1">
 (function () {
   'use strict';
@@ -8249,6 +8257,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   function setHomepageSections(showHome) {
     const main = $('mainContainer');
     if (!main) return;
+    document.body.classList.toggle('delofia-category-navigation', currentView !== 'home');
     const keep = new Set(['delofiaCategoryLanding','delofiaCategoryProducts','productGrid','delofiaProductLoading','productsGrid','productPagination']);
     Array.from(main.children).forEach(el => {
       if (el.id === 'productFilters') { el.classList.toggle('hidden', currentView !== 'home'); return; }
@@ -8259,6 +8268,10 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     $('delofiaCategoryProducts')?.classList.toggle('hidden', currentView !== 'categoryProducts');
     $('productGrid')?.classList.toggle('hidden', currentView === 'categories');
     $('productsGrid')?.classList.toggle('hidden', currentView === 'categories');
+    if (currentView === 'categoryProducts') {
+      $('productsGrid')?.classList.remove('hidden');
+      $('productGrid')?.classList.remove('hidden');
+    }
     $('productPagination')?.classList.toggle('hidden', currentView === 'categories');
     if ($('productGrid')) {
       const title = $('productGrid').querySelector('h2');
