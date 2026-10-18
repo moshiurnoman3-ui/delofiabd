@@ -1273,6 +1273,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
       <button type="button" onclick="openWishlistModal()" aria-label="Open wishlist" class="mobile-action-wishlist"><i class="fas fa-heart"></i><span>Wishlist</span><b id="mobileWishlistCountBadge">0</b></button>
       <button type="button" onclick="openCartModal()" aria-label="Open cart" class="mobile-action-cart"><i class="fas fa-shopping-cart"></i><span>Cart</span><b id="mobileCartCountBadge">0</b></button>
       <button type="button" onclick="openCustomerAccount()" aria-label="Account"><i class="fas fa-user"></i><span>Account</span></button>
+      <button type="button" id="delofiaBottomSearchButton" onclick="delofiaToggleBottomSearch()" aria-label="Search products" aria-expanded="false" aria-controls="mobileProductSearchBar"><i class="fas fa-search"></i><span>Search</span></button>
     </nav>
 
     <main id="mainContainer" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -8997,3 +8998,28 @@ body.delofia-product-detail-open {
   }
 }
 </style>
+
+<style id="delofia-requested-mobile-search-image-fix">
+@media (max-width:640px) {
+  #mobileProductSearchBar { display:none !important; }
+  #mobileProductSearchBar.delofia-search-open { display:block !important; position:fixed !important; top:auto !important; bottom:calc(65px + env(safe-area-inset-bottom)) !important; left:8px !important; right:8px !important; width:auto !important; max-width:none !important; padding:10px !important; margin:0 !important; z-index:100 !important; background:#fff !important; border:1px solid #ddd6fe !important; border-radius:14px !important; box-shadow:0 8px 30px #0003 !important; }
+  #mobileProductSearchBar.delofia-search-open #mobileSearchInput { display:block !important; width:100% !important; min-height:44px !important; font-size:16px !important; }
+  #delofiaMobileActionBar { display:grid !important; grid-template-columns:repeat(6,minmax(0,1fr)) !important; }
+  #productsGrid .group .aspect-square { aspect-ratio:1/1 !important; }
+  #productsGrid .product-card-image { width:100% !important; height:100% !important; object-fit:contain !important; }
+  #heroCarouselImage { width:100% !important; height:100% !important; object-fit:cover !important; }
+}
+</style>
+<script id="delofia-requested-bottom-search-handler">
+function delofiaToggleBottomSearch(force) {
+  const bar=document.getElementById('mobileProductSearchBar');
+  const btn=document.getElementById('delofiaBottomSearchButton');
+  if(!bar)return;
+  const open=typeof force==='boolean'?force:!bar.classList.contains('delofia-search-open');
+  bar.classList.toggle('delofia-search-open',open);
+  if(btn)btn.setAttribute('aria-expanded',String(open));
+  if(open){const input=document.getElementById('mobileSearchInput');if(input)input.focus();}
+  else {const suggestions=document.getElementById('mobileSearchSuggestions');if(suggestions)suggestions.classList.add('hidden');}
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')delofiaToggleBottomSearch(false);});
+</script>
