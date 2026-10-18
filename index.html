@@ -3034,7 +3034,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                 const requestId = ++productPageRequestId;
                 try {
                     const result = await requestProductPage(page, true);
-                    if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded) return;
+                    if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded || window.__delofiaLoadingFullCatalog) return;
                     const rows = result.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
                     window.__delofiaServerProductCount = result.count;
                     window.__delofiaServerProductPage = Math.max(1, Number(page) || 1);
@@ -3042,7 +3042,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                     applyProductList(rows);
                     if (refresh) {
                         requestProductPage(page, false).then(fresh => {
-                            if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded) return;
+                            if (requestId !== productPageRequestId || window.__delofiaFullCatalogLoaded || window.__delofiaLoadingFullCatalog) return;
                             const freshRows = fresh.rows.map(row => ({ ...unwrap('products', row), id: row.id }));
                             window.__delofiaServerProductCount = fresh.count;
                             applyProductList(freshRows);
@@ -3506,6 +3506,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
         }
         window.changeDelofiaProductPage = changeDelofiaProductPage;
 
+        let delofiaFilterGeneration = 0;
         function renderProducts(filterText = '') {
             filterText = String(filterText || '');
             if (filterText !== delofiaCurrentProductFilterText) { delofiaCurrentProductPage = 1; delofiaCurrentProductFilterText = filterText; }
@@ -3519,6 +3520,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             const maxPriceRaw = document.getElementById('maxPriceFilter')?.value ?? '';
             const minPrice = minPriceRaw === '' ? null : Number(minPriceRaw);
             const maxPrice = maxPriceRaw === '' ? null : Number(maxPriceRaw);
+            const filterGeneration = ++delofiaFilterGeneration;
             const needsFullCatalogForFilter = !!filterText || category !== 'all' || subCategory !== 'all' || minPrice !== null || maxPrice !== null;
             if (needsFullCatalogForFilter && window.__delofiaServerPagedCatalog && !window.__delofiaFullCatalogLoaded) {
                 if (!window.__delofiaLoadingFullCatalog) {
@@ -3529,7 +3531,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
                         window.products = allProducts;
                         window.__productsSnapshotLoaded = true;
                         window.dispatchEvent(new Event('delofia-products-updated'));
-                        if (typeof window.renderProducts === 'function') window.renderProducts(document.getElementById('mobileSearchInput')?.value || document.getElementById('searchInput')?.value || '');
+                        if (typeof window.filterProducts === 'function') window.filterProducts();
                     }).catch(error => console.error('Could not load full catalog for filtering:', error)).finally(() => { window.__delofiaLoadingFullCatalog = null; });
                 }
                 grid.innerHTML = '<div class="col-span-full py-8 text-center text-gray-500">Loading products for search/filter…</div>';
@@ -8249,7 +8251,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
     if (!main) return;
     const keep = new Set(['delofiaCategoryLanding','delofiaCategoryProducts','productGrid','delofiaProductLoading','productsGrid','productPagination']);
     Array.from(main.children).forEach(el => {
-      if (el.id === 'productFilters') { el.classList.toggle('hidden', currentView === 'categories'); return; }
+      if (el.id === 'productFilters') { el.classList.toggle('hidden', currentView !== 'home'); return; }
       if (el.id === 'productGrid' || el.id === 'productsGrid' || el.id === 'productPagination' || el.id === 'delofiaProductLoading' || el.id === 'delofiaCategoryLanding' || el.id === 'delofiaCategoryProducts') return;
       el.classList.toggle('hidden', !showHome);
     });
@@ -8304,6 +8306,9 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   }
   window.delofiaOpenCategory = function (name) {
     activeCategory = String(name || 'Other'); activeSubcategory = 'all'; currentView = 'categoryProducts';
+    ['minPriceFilter','maxPriceFilter'].forEach(id => { const el = $(id); if (el) el.value = ''; });
+    if (typeof window.syncPriceSliderFromFields === 'function') window.syncPriceSliderFromFields();
+
     const cat = $('categoryFilter'), sub = $('subCategoryFilter');
     if (cat) cat.value = activeCategory;
     if (sub) sub.value = 'all';
