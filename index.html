@@ -1328,6 +1328,34 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
   #storefrontHeroFallback a { padding-top: .45rem !important; padding-bottom: .45rem !important; }
 }
 </style>
+<style id="delofia-desktop-purple-banner-height-fix">
+/* Desktop-only: shrink the entire purple hero/banner box, not just its text. */
+@media (min-width: 768px) {
+  #storefrontHeroCarousel:not(.hidden) {
+    height: auto !important;
+    min-height: 0 !important;
+    margin-bottom: 1.25rem !important;
+  }
+  #heroCarouselViewport {
+    aspect-ratio: 16 / 3.5 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 300px !important;
+  }
+  #heroCarouselSlideLink,
+  #heroCarouselImage {
+    height: 100% !important;
+    max-height: 300px !important;
+  }
+  #storefrontHeroFallback {
+    min-height: 0 !important;
+    height: auto !important;
+    padding-top: .6rem !important;
+    padding-bottom: .6rem !important;
+    margin-bottom: 1.25rem !important;
+  }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
