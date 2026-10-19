@@ -7132,6 +7132,27 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             });
         }
 
+        // Store product and variant photos in Supabase Storage instead of Base64 in the products row.
+        async function uploadDelofiaProductImage(src, productId, label) {
+            if (typeof src !== 'string' || !src.startsWith('data:image/')) return src || '';
+            const client = window.delofiaSupabase;
+            if (!client?.storage) throw new Error('Supabase Storage client পাওয়া যায়নি। পেজ reload করে আবার চেষ্টা করো।');
+            const response = await fetch(src);
+            const blob = await response.blob();
+            const extension = blob.type === 'image/png' ? 'png' : (blob.type === 'image/webp' ? 'webp' : 'jpg');
+            const safeId = String(productId || 'product').replace(/[^a-zA-Z0-9_-]/g, '_');
+            const path = safeId + '/' + Date.now() + '-' + label + '-' + Math.random().toString(36).slice(2, 8) + '.' + extension;
+            const { error } = await client.storage.from('product-images').upload(path, blob, {
+                contentType: blob.type || 'image/jpeg',
+                cacheControl: '31536000',
+                upsert: false
+            });
+            if (error) throw new Error('ছবি Storage-এ upload হয়নি (' + (error.message || 'permission/policy সমস্যা') + ')। Supabase Storage → Policies-এ product-images-এর INSERT permission পরীক্ষা করতে হবে।');
+            const { data } = client.storage.from('product-images').getPublicUrl(path);
+            if (!data?.publicUrl) throw new Error('Storage image URL পাওয়া যায়নি।');
+            return data.publicUrl;
+        }
+
         async function handleProductPhotoSelection(event) {
             const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
             if (!files.length) return;
@@ -7790,8 +7811,10 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 const existing = editId ? products.find(p => p.id === editId) : null;
                 const imagesArr = [...selectedProductPhotoData.filter(src=>!isAutoDelofiaPlaceholderImage(src)), ...linkedImages];
                 if (imagesArr.length > 10) throw new Error('A product can have up to 10 images total, including image links.');
-                const finalImages = imagesArr;
                 const prodId = editId || ('p-' + Date.now());
+                const finalImages = await Promise.all(imagesArr.map((src, index) =>
+                    uploadDelofiaProductImage(src, prodId, 'product-' + index)
+                ));
 
                 // Read names directly from the visible editor at save time so a just-edited
                 // option cannot be omitted because of a stale UI state.
@@ -7835,6 +7858,19 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     stockQty: Math.max(0, parseInt(document.getElementById('prodStockQty')?.value || '0', 10) || 0),
                     displayOrder: document.getElementById('prodDisplayOrder').value.trim() === '' ? (existing?.displayOrder ?? null) : Math.max(1, parseInt(document.getElementById('prodDisplayOrder').value, 10) || 1)
                 };
+
+                // Move variant option and child-variant Base64 photos to Storage too.
+                productDoc.variantGroups = await Promise.all((productDoc.variantGroups || []).map(async (group, gi) => ({
+                    ...group,
+                    options: await Promise.all((group.options || []).map(async (option, oi) => ({
+                        ...option,
+                        image: await uploadDelofiaProductImage(option.image, prodId, 'variant-' + gi + '-' + oi),
+                        childVariants: await Promise.all((option.childVariants || []).map(async (child, ci) => ({
+                            ...child,
+                            image: await uploadDelofiaProductImage(child.image, prodId, 'child-' + gi + '-' + oi + '-' + ci)
+                        })))
+                    })))
+                })));
 
                 const serializedSize = new Blob([JSON.stringify(productDoc)]).size;
                 if (serializedSize > 900000) throw new Error('Product data is still too large (' + Math.round(serializedSize/1024) + ' KB). Please reduce the number of photos/variants or use image URLs. Firestore limit is 1 MiB.');
