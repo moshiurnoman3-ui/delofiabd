@@ -2395,6 +2395,12 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                             <!-- Existing Products Table -->
                             <div id="adminProductsCatalogCard" class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                                 <h4 class="font-bold text-gray-900 mb-4">Catalog Items</h4>
+                                <div class="mb-4 rounded-xl border border-purple-200 bg-purple-50 p-3">
+                                    <p class="text-sm font-bold text-purple-950">Speed up product loading</p>
+                                    <p class="mt-1 text-xs text-purple-800">One-time migration: move existing Base64 product photos to Supabase Storage. Products are only updated after their images upload successfully.</p>
+                                    <button type="button" onclick="migrateDelofiaExistingProductImages()" id="delofiaImageMigrationButton" class="mt-3 rounded-lg bg-purple-700 px-4 py-2 text-sm font-bold text-white hover:bg-purple-800">Migrate existing product photos</button>
+                                    <p id="delofiaImageMigrationStatus" role="status" class="mt-2 text-xs text-purple-950"></p>
+                                </div>
                                 <div id="adminProductsList" class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar"></div>
                             </div>
                         </div>
@@ -7933,6 +7939,84 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 
         // Explicit bridge: Firebase module calls this function through window.
         window.renderAdminProductsList = renderAdminProductsList;
+
+        // One-time, resumable migration of existing Base64 product/variant images to Supabase Storage.
+        // A product row is updated only after every image for that product has uploaded successfully.
+        async function migrateDelofiaExistingProductImages() {
+            const button = document.getElementById('delofiaImageMigrationButton');
+            const status = document.getElementById('delofiaImageMigrationStatus');
+            const client = window.delofiaSupabase;
+            if (!button || !status) return;
+            if (!client?.storage || typeof window.delofiaFetchAllSupabaseProducts !== 'function') {
+                status.textContent = 'Supabase connection is not ready. Reload the admin page and try again.';
+                return;
+            }
+            if (!confirm('This will upload existing Base64 product photos to the product-images bucket and update product records to use URLs. Original records are kept unless all images for that product upload successfully. Continue?')) return;
+            button.disabled = true;
+            const oldLabel = button.textContent;
+            button.textContent = 'Migration running…';
+            let changed = 0, skipped = 0, failed = 0;
+            const uploadValue = async (src, productId, label) => {
+                if (typeof src !== 'string' || !src.startsWith('data:image/')) return src || '';
+                return await uploadDelofiaProductImage(src, productId, 'migration-' + label);
+            };
+            try {
+                const rows = await window.delofiaFetchAllSupabaseProducts();
+                if (!rows.length) throw new Error('No products were returned. Check the Supabase connection and permissions.');
+                for (let index = 0; index < rows.length; index++) {
+                    const row = rows[index];
+                    const product = window.delofiaUnwrapProductRow(row);
+                    const id = String(product?.id || row?.id || '');
+                    if (!id) { skipped++; continue; }
+                    status.textContent = 'Checking product ' + (index + 1) + ' of ' + rows.length + ': ' + (product.title || id);
+                    try {
+                        let imageCount = 0;
+                        const images = await Promise.all((Array.isArray(product.images) ? product.images : []).map(async (src, i) => {
+                            const next = await uploadValue(src, id, 'product-' + i);
+                            if (typeof src === 'string' && src.startsWith('data:image/') && next !== src) imageCount++;
+                            return next;
+                        }));
+                        const variantGroups = await Promise.all((Array.isArray(product.variantGroups) ? product.variantGroups : []).map(async (group, gi) => ({
+                            ...group,
+                            options: await Promise.all((Array.isArray(group.options) ? group.options : []).map(async (option, oi) => {
+                                const nextImage = await uploadValue(option.image, id, 'variant-' + gi + '-' + oi);
+                                if (typeof option.image === 'string' && option.image.startsWith('data:image/') && nextImage !== option.image) imageCount++;
+                                const childVariants = await Promise.all((Array.isArray(option.childVariants) ? option.childVariants : []).map(async (child, ci) => {
+                                    const nextChildImage = await uploadValue(child.image, id, 'child-' + gi + '-' + oi + '-' + ci);
+                                    if (typeof child.image === 'string' && child.image.startsWith('data:image/') && nextChildImage !== child.image) imageCount++;
+                                    return { ...child, image: nextChildImage };
+                                }));
+                                return { ...option, image: nextImage, childVariants };
+                            }))
+                        })));
+                        if (!imageCount) { skipped++; continue; }
+                        const migrated = { ...product, images, variantGroups };
+                        const { error } = await client.from('products').update({
+                            data: migrated,
+                            active: migrated.active !== false,
+                            updated_at: new Date().toISOString()
+                        }).eq('id', id);
+                        if (error) throw error;
+                        changed++;
+                        status.textContent = 'Migrated ' + changed + ' product(s); checked ' + (index + 1) + ' of ' + rows.length + '.';
+                    } catch (productError) {
+                        failed++;
+                        console.error('Delofia image migration failed for product', id, productError);
+                        status.textContent = 'Stopped safely at product ' + (product.title || id) + ': ' + (productError?.message || productError) + '. Original product record was not updated for this product. Fix the permission/error and run again.';
+                        break;
+                    }
+                }
+                if (!failed) status.textContent = 'Finished. Updated ' + changed + ' product(s), no Base64 photos found in ' + skipped + ' product(s). Reload the storefront and test on a new phone. If the count is unexpectedly zero, check whether the product rows contain Base64 images.';
+                else status.textContent += ' Completed ' + changed + ', skipped ' + skipped + ', failed ' + failed + '.';
+            } catch (error) {
+                console.error('Delofia image migration could not start:', error);
+                status.textContent = 'Migration did not complete: ' + (error?.message || error) + '. No product records were changed unless a previous product had already completed.';
+            } finally {
+                button.disabled = false;
+                button.textContent = oldLabel;
+            }
+        }
+        window.migrateDelofiaExistingProductImages = migrateDelofiaExistingProductImages;
 
         async function saveProductOrder(id) {
             const input = document.getElementById('order-' + id); if (!input) return;
