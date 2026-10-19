@@ -1277,6 +1277,46 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 }
 </style>
 
+
+<style id="delofia-final-mobile-admin-layout-fix">
+/* Mobile must use a single column; the desktop 252px sidebar grid caused the blank/white half-screen. */
+@media (max-width: 700px) {
+  body.admin-only-mode #adminModal {
+    position:fixed !important; inset:0 !important; width:100vw !important;
+    height:100dvh !important; min-height:0 !important; padding:0 !important;
+    display:flex !important; align-items:stretch !important; overflow:hidden !important;
+  }
+  body.admin-only-mode #adminModal > div {
+    display:flex !important; flex-direction:column !important;
+    width:100vw !important; max-width:none !important; height:100dvh !important;
+    min-height:0 !important; max-height:100dvh !important; margin:0 !important;
+    border-radius:0 !important; overflow:hidden !important;
+  }
+  body.admin-only-mode #adminDashboardView:not(.hidden) {
+    display:flex !important; flex:1 1 auto !important; flex-direction:column !important;
+    grid-template-columns:none !important; grid-template-rows:none !important;
+    width:100% !important; height:100% !important; min-width:0 !important;
+    min-height:0 !important; max-height:100% !important; overflow:hidden !important;
+  }
+  body.admin-only-mode #adminDashboardView > .bg-purple-900:first-child { display:none !important; }
+  body.admin-only-mode #delofiaMobileAdminHeader {
+    display:flex !important; position:relative !important; flex:0 0 auto !important;
+    width:100% !important; box-sizing:border-box !important; z-index:2 !important;
+  }
+  body.admin-only-mode #adminTabsScroller { display:none !important; }
+  body.admin-only-mode #adminDashboardView > div.flex-1.min-h-0 {
+    display:block !important; position:relative !important; flex:1 1 0% !important;
+    width:100% !important; min-width:0 !important; min-height:0 !important;
+    height:auto !important; grid-column:auto !important; grid-row:auto !important;
+    box-sizing:border-box !important; overflow-y:auto !important; overflow-x:hidden !important;
+    padding:14px !important; padding-bottom:calc(24px + env(safe-area-inset-bottom)) !important;
+  }
+  body.admin-only-mode #adminTabDashboard { width:100% !important; min-width:0 !important; }
+  body.admin-only-mode #delofiaAdminDrawer { z-index:10002 !important; }
+  body.admin-only-mode #delofiaAdminDrawerBackdrop { z-index:10001 !important; }
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
