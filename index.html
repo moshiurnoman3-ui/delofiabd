@@ -2231,7 +2231,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         <p class="text-xs text-gray-500 mb-5">Refresh করলে login থাকবে। নির্ধারিত সময় শেষ হলে আবার password দিতে হবে।</p>
                         <form onsubmit="saveSessionSettings(event)" class="flex flex-col sm:flex-row gap-3 items-end border-b border-purple-100 pb-6 mb-6">
                             <div class="flex-1 w-full"><label for="adminSessionDuration" class="block text-xs font-bold text-gray-700 mb-2">Auto logout after</label>
-                                <select id="adminSessionDuration" class="w-full border rounded-xl p-3 text-sm"><option value="120">2 hours</option></select>
+                                <select id="adminSessionDuration" class="w-full border rounded-xl p-3 text-sm"><option value="720">12 hours</option></select>
                             </div><button class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-3 rounded-xl text-sm" type="submit">Save Duration</button>
                         </form>
                         <div class="flex items-center justify-between gap-3 mb-3"><h5 class="font-bold text-gray-900">Active sessions in this browser</h5><button type="button" onclick="renderAdminSessions()" class="text-xs font-bold text-purple-700 underline">Refresh list</button></div>
@@ -6595,7 +6595,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         const ADMIN_SESSION_KEY = 'delofia_admin_session_v1';
         const ADMIN_SESSIONS_KEY = 'delofia_admin_sessions_v1';
         const ADMIN_DURATION_KEY = 'delofia_admin_session_duration_minutes';
-        const ADMIN_SESSION_DURATION_MINUTES = 120;
+        const ADMIN_SESSION_DURATION_MINUTES = 720; // Keep the Admin session active for 12 hours before timeout.
         let adminSessionHeartbeat = null;
         let thisAdminSessionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('sess-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 
@@ -6727,7 +6727,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(current));
                 const sessions = getAdminSessions(); sessions[current.id] = current; saveAdminSessions(sessions);
             }
-            alert('Admin session is set to 2 hours. Reload will not sign you out during this time.');
+            alert('Admin session is set to 12 hours. Reload will not sign you out during this time.');
             renderAdminSessions();
         }
         function renderAdminSessions() {
