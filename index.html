@@ -9948,3 +9948,98 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')delofiaToggl
         }
 </style>
 </html>
+
+<style id="delofia-desktop-product-detail-balanced-layout-v1">
+/* Desktop product details: balance the product gallery and information panel.
+   Mobile styling is intentionally untouched. */
+@media (min-width: 641px) {
+  #productDetailModal {
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 28px !important;
+    overflow-y: auto !important;
+  }
+
+  #productDetailModal > div {
+    width: min(94vw, 1120px) !important;
+    max-width: 1120px !important;
+    max-height: 92vh !important;
+    min-height: 0 !important;
+    margin: auto !important;
+    border-radius: 26px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  #productDetailModal > div > div.grid {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr) !important;
+    align-items: stretch !important;
+    column-gap: 0 !important;
+  }
+
+  #productDetailModal > div > div.grid > div:first-child {
+    min-width: 0 !important;
+    padding: 32px !important;
+    justify-content: flex-start !important;
+    gap: 18px !important;
+  }
+
+  #productDetailModal > div > div.grid > div:first-child > div:first-child {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+  }
+
+  #productDetailModal .aspect-square {
+    width: 100% !important;
+    max-width: 390px !important;
+    max-height: none !important;
+    aspect-ratio: 1 / 1 !important;
+    margin: 0 auto 16px !important;
+    border-radius: 22px !important;
+    flex: 0 0 auto !important;
+  }
+
+  #productDetailModal #detailMainImage,
+  #productDetailModal .aspect-square img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    padding: 10px !important;
+  }
+
+  #productDetailModal #detailThumbnails {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    max-width: 100% !important;
+  }
+
+  #productDetailModal > div > div.grid > div:nth-child(2) {
+    min-width: 0 !important;
+    padding: 34px 36px 30px !important;
+    justify-content: flex-start !important;
+    gap: 24px !important;
+  }
+
+  #productDetailModal #detailTitle {
+    font-size: clamp(24px, 2vw, 32px) !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  #productDetailModal #detailPrice {
+    font-size: clamp(26px, 2vw, 34px) !important;
+    line-height: 1.15 !important;
+  }
+
+  #productDetailModal #detailVariantOptions {
+    max-width: 100% !important;
+  }
+
+  #productDetailModal > div > section {
+    padding: 26px 34px !important;
+  }
+}
+</style>
+
