@@ -117,6 +117,10 @@ body.delofia-admin-dark #productFormCard.product-edit-active label.block.font-bo
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor th,
 body.delofia-admin-dark #productFormCard.product-edit-active #baseDescriptionTableEditor td { color:#f4f4f5 !important; }
 #heroCarouselViewport{aspect-ratio:16/6;min-height:250px;max-height:540px;touch-action:pan-y}#heroCarouselImage{user-select:none;-webkit-user-drag:none}#heroCarouselSlideLink:disabled{pointer-events:none}#heroCarouselDots button{width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.55);transition:all .18s ease}#heroCarouselDots button[aria-current="true"]{width:24px;background:#fff}@media(max-width:640px){#heroCarouselViewport{aspect-ratio:4/3;min-height:0;max-height:none}#heroCarouselPrev,#heroCarouselNext{width:34px;height:34px}}
+
+/* Keep per-color size/variant editor visible and the add control reachable in product admin. */
+#adminVariantsEditor .delofia-nested-variants { display:block !important; visibility:visible !important; opacity:1 !important; height:auto !important; max-height:none !important; overflow:visible !important; }
+#adminVariantsEditor .delofia-nested-variants > button { display:inline-flex !important; visibility:visible !important; opacity:1 !important; position:relative; z-index:2; cursor:pointer; }
 </style>
 <style>
 .product-photo-tile { cursor: default; transition: transform .12s ease, outline-color .12s ease; }
@@ -1194,6 +1198,75 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
 .delofia-category-image{width:48px;height:48px;object-fit:cover;border-radius:12px;flex:none}
 @media(max-width:640px){#delofiaCategoryCards{display:flex!important;flex-wrap:nowrap!important;overflow-x:auto;direction:rtl;gap:10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;padding-bottom:12px}#delofiaCategoryCards .delofia-category-card{direction:ltr;flex:0 0 145px;min-height:125px;display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;scroll-snap-align:start}#delofiaCategoryCards .delofia-category-card span{flex:none!important}#delofiaCategoryCards .delofia-category-card>i:last-child{display:none!important}}
 </style>
+
+
+
+<style id="delofia-admin-layout-redesign-v2">
+/* Actual Admin Panel layout redesign: retain existing IDs and onclick handlers */
+body.admin-only-mode #adminModal { background:#f6f5fb !important; }
+body.admin-only-mode #adminDashboardView {
+  display:grid !important; grid-template-columns:252px minmax(0,1fr); grid-template-rows:auto minmax(0,1fr);
+  height:100vh !important; max-height:100vh !important; min-height:100vh !important; overflow:hidden !important;
+  background:#f7f6fb; color:#20143b;
+}
+body.admin-only-mode #adminDashboardView > div:first-child {
+  grid-column:1 / -1; grid-row:1; background:#fff !important; color:#251640 !important;
+  border-bottom:1px solid #e9e3f5; padding:17px 24px !important; min-height:74px;
+}
+body.admin-only-mode #adminDashboardView > div:first-child .bg-purple-700 { background:#eee7ff !important; color:#6d28d9 !important; }
+body.admin-only-mode #adminDashboardView > div:first-child button { background:#6d3be8 !important; color:#fff !important; }
+body.admin-only-mode #adminTabsScroller {
+  grid-column:1; grid-row:2; display:flex !important; flex-direction:column; align-items:stretch; gap:5px !important;
+  overflow-y:auto !important; overflow-x:hidden !important; white-space:normal !important; padding:18px 12px !important;
+  background:#fff !important; border-right:1px solid #e9e3f5 !important; border-bottom:0 !important; min-width:0;
+}
+body.admin-only-mode #adminTabsScroller button {
+  flex:none !important; width:100%; min-height:43px; text-align:left; white-space:normal; padding:11px 12px !important;
+  border:0 !important; border-radius:10px; color:#5d5470 !important; font-size:12px; line-height:1.35;
+}
+body.admin-only-mode #adminTabsScroller button:hover { background:#f5f0ff !important; color:#6d3be8 !important; }
+body.admin-only-mode #adminTabsScroller button.border-b-2 { background:#eee7ff !important; color:#6335d9 !important; box-shadow:inset 3px 0 #7040e8; }
+body.admin-only-mode #adminDashboardView > div.flex-1.min-h-0 {
+  grid-column:2; grid-row:2; min-width:0; min-height:0; overflow:auto !important; padding:26px !important;
+  background:#f7f6fb !important;
+}
+body.admin-only-mode #adminTabOrders h4, body.admin-only-mode #adminDashboardView h4 { color:#21143c; }
+body.admin-only-mode #adminTabOrders .bg-white.rounded-2xl,
+body.admin-only-mode #adminDashboardView #adminTabCustomers > div,
+body.admin-only-mode #adminDashboardView #adminTabShipping,
+body.admin-only-mode #adminDashboardView #adminTabPayment > div,
+body.admin-only-mode #adminDashboardView #adminTabReviews,
+body.admin-only-mode #adminDashboardView #adminTabStore,
+body.admin-only-mode #adminDashboardView #adminTabPassword,
+body.admin-only-mode #adminDashboardView #adminTabSessions {
+  border-color:#e8e2f1 !important; border-radius:16px !important; box-shadow:0 3px 12px rgba(48,24,86,.035) !important;
+}
+body.admin-only-mode #adminTabOrders input { border-color:#e2d9f1 !important; }
+@media(max-width:700px){
+ body.admin-only-mode #adminDashboardView { display:flex !important; flex-direction:column !important; height:100dvh !important; max-height:100dvh !important; min-height:100dvh !important; }
+ body.admin-only-mode #adminDashboardView > div:first-child { min-height:64px; padding:12px 14px !important; }
+ body.admin-only-mode #adminDashboardView > div:first-child .rounded-full { display:none; }
+ body.admin-only-mode #adminTabsScroller { display:flex !important; flex-direction:row !important; align-items:center; gap:7px !important; padding:8px 10px !important; overflow-x:auto !important; overflow-y:hidden !important; border-right:0 !important; border-bottom:1px solid #e9e3f5 !important; }
+ body.admin-only-mode #adminTabsScroller button { width:auto; min-width:max-content; max-width:220px; min-height:40px; padding:9px 12px !important; border-radius:9px; }
+ body.admin-only-mode #adminTabsScroller button.border-b-2 { box-shadow:inset 0 -3px #7040e8 !important; }
+ body.admin-only-mode #adminDashboardView > div.flex-1.min-h-0 { flex:1 1 auto !important; width:100%; padding:15px 12px !important; overflow:auto !important; }
+ body.admin-only-mode #adminTabOrders > div:first-child { align-items:stretch; }
+ body.admin-only-mode #adminTabOrders table { min-width:900px; }
+}
+</style>
+
+
+<style id="delofia-targeted-hero-and-admin-login-fix">
+/* Targeted fix: never let the admin dashboard's layout override the hidden class. */
+body.admin-only-mode #adminDashboardView.hidden { display:none !important; }
+body.admin-only-mode #adminLoginView.hidden { display:none !important; }
+body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important; }
+/* Desktop storefront hero: reduce only the purple box's vertical padding. Keep all text and button typography unchanged. */
+@media (min-width: 701px) {
+  #storefrontHeroFallback { padding:14px 30px !important; margin-bottom:24px !important; border-radius:22px !important; }
+}
+</style>
+
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -1209,7 +1282,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
             <a href="#" id="brandLogo" class="flex items-center gap-2 group" aria-label="Delofia home">
                 <div id="brandLogoMark" class="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition overflow-hidden">D</div>
                 <div>
-                    <span class="text-2xl font-black tracking-wider text-purple-900 block leading-none">DELOFIA</span>
+                    <span class="text-2xl font-black tracking-wider text-purple-900 block leading-none">Delofia</span>
                     <span class="text-[10px] text-purple-500 font-semibold uppercase tracking-widest">𝒟𝓇𝒶𝒻𝓉 . 𝒟𝓇ℯ𝒶𝓂𝓎 . 𝒟ℯ𝓁𝒾𝒸𝒶𝒸𝓎 .</span>
                 </div>
             </a>
@@ -4103,7 +4176,7 @@ body:has(#wishlistModal:not(.hidden)) #delofiaFloatingWhatsapp { display: none !
         function resizeHeroBannerFile(file,mobile=false){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('ছবিটি পড়া যায়নি।'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('ছবিটি খোলা যায়নি। JPG/PNG ব্যবহার করো।'));img.onload=()=>{const maxW=mobile?850:1400,maxH=mobile?1100:700;let scale=Math.min(1,maxW/img.width,maxH/img.height),quality=.68,data='';for(let n=0;n<10;n++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);data=c.toDataURL('image/jpeg',quality);if(data.length<=60000){resolve(data);return;}if(quality>.43)quality-=.08;else scale*=.82;}if(data.length<=80000)resolve(data);else reject(new Error('ছবিটি compress করেও বড় থাকছে; ছোট ছবি ব্যবহার করো।'));};img.src=reader.result;};reader.readAsDataURL(file);});}
         function renderAdminHeroSlides(){const host=document.getElementById('adminHeroSlidesEditor');if(!host)return;adminHeroSlides=normalizeAdminHeroSlides(adminHeroSlides);host.innerHTML=adminHeroSlides.map((s,i)=>{const options=['<option value="">কোনো product-এ link নয়</option>',...(window.products||[]).map(p=>`<option value="${escapeHtml(String(p.id))}" ${String(p.id)===s.productId?'selected':''}>${escapeHtml(p.title||'Product')}</option>`)].join('');const dp=s.desktopImage?`<img src="${escapeHtml(s.desktopImage)}" alt="Desktop slide ${i+1}" class="mt-2 h-24 w-full rounded-lg border object-cover">`:'<div class="mt-2 flex h-24 items-center justify-center rounded-lg border border-dashed text-xs text-gray-400">Desktop preview</div>';const mp=s.mobileImage?`<img src="${escapeHtml(s.mobileImage)}" alt="Mobile slide ${i+1}" class="mt-2 h-24 w-20 rounded-lg border object-cover">`:'<div class="mt-2 flex h-24 w-20 items-center justify-center rounded-lg border border-dashed text-[10px] text-gray-400">Mobile<br>optional</div>';return `<article class="rounded-2xl border border-purple-200 bg-white p-3 sm:p-4 space-y-3"><div class="flex items-center justify-between gap-2"><strong class="text-sm text-purple-900">Slide ${i+1}</strong><button type="button" data-hero-remove="${i}" title="${adminHeroSlides.length<=ADMIN_HERO_SLIDE_MIN?'Clear this slide; keep the 5 minimum':'Remove this slide'}" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100">Remove</button></div><div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3"><div><label class="block text-xs font-bold">Desktop banner *</label><input type="file" accept="image/*" data-hero-upload-index="${i}" data-hero-upload-kind="desktopImage" class="mt-1 block w-full text-xs">${dp}</div><div><label class="block text-xs font-bold">Mobile banner (optional)</label><input type="file" accept="image/*" data-hero-upload-index="${i}" data-hero-upload-kind="mobileImage" class="mt-1 block w-full max-w-full text-xs">${mp}</div></div><label class="flex items-center gap-2 rounded-lg bg-blue-50 p-2 text-xs font-bold text-blue-800"><input type="checkbox" data-hero-field="clickable" data-hero-index="${i}" ${s.clickable?'checked':''} class="h-4 w-4"> Click slide to open a product</label><label class="block text-xs font-bold">Product to open</label><select data-hero-field="productId" data-hero-index="${i}" class="w-full rounded-xl border p-2.5 text-sm" ${s.clickable?'':'disabled'}>${options}</select></article>`;}).join('');const add=document.getElementById('addHeroSlideButton');if(add)add.disabled=adminHeroSlides.length>=ADMIN_HERO_SLIDE_MAX;}
         window.renderAdminHeroSlides=renderAdminHeroSlides;
-        function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
+        function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.dataset.delofiaFailedSrc===nextSrc){box.classList.add('hidden');if(fallback)fallback.classList.remove('hidden');return;}if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
         window.applyStorefrontHeroCarousel=applyStorefrontHeroCarousel;
         function moveHeroCarousel(delta){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));if(slides.length<2)return;heroCarouselCurrentIndex=(heroCarouselCurrentIndex+delta+slides.length)%slides.length;applyStorefrontHeroCarousel();}
         function openHeroCarouselProduct(){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const slide=slides[heroCarouselCurrentIndex];if(slide?.clickable&&slide.productId)window.openProductDetail?.(slide.productId);}
@@ -5887,6 +5960,113 @@ body.delofia-admin-dark #productFormCard.product-edit-active select option { bac
   header #delofiaMenuButton { left:6px !important; width:29px !important; min-width:29px !important; }
 }
 </style>
+
+<style id="delofia-purple-admin-redesign-v1">
+/* Purple admin dashboard redesign — preserves existing tab IDs and JavaScript handlers. */
+body.admin-only-mode #adminModal { background:#f6f5fb !important; }
+body.admin-only-mode #adminModal > div { background:#f6f5fb !important; border:0 !important; box-shadow:none !important; }
+#adminDashboardView { background:#f6f5fb !important; }
+#adminDashboardView > div:first-child {
+  background:#fff !important; color:#17122b !important; border-bottom:1px solid #e8e4f2;
+  min-height:72px; padding:16px 28px !important; gap:12px;
+}
+#adminDashboardView > div:first-child .font-black { color:#2b1857 !important; letter-spacing:.02em; }
+#adminDashboardView > div:first-child .bg-purple-700 { background:#efe8ff !important; color:#6332d4 !important; }
+#adminDashboardView > div:first-child button { background:#6d3be8 !important; color:white !important; border-radius:10px !important; padding:9px 14px !important; }
+#adminTabsScroller {
+  background:#fff !important; border:0 !important; border-right:1px solid #e7e2f0 !important;
+  padding:20px 12px !important; display:flex !important; flex-direction:column !important;
+  align-items:stretch !important; gap:5px !important; overflow-y:auto !important; overflow-x:hidden !important;
+  white-space:normal !important; scrollbar-width:thin;
+}
+#adminTabsScroller button {
+  width:100% !important; flex:0 0 auto !important; min-height:43px !important; text-align:left !important;
+  display:flex !important; align-items:center !important; gap:10px !important; padding:11px 12px !important;
+  border:0 !important; border-radius:10px !important; background:transparent !important;
+  color:#625a78 !important; font-size:13px !important; font-weight:600 !important; white-space:normal !important;
+}
+#adminTabsScroller button:hover { background:#f5f0ff !important; color:#6332d4 !important; }
+#adminTabsScroller button.border-b-2, #adminTabsScroller button[class*="text-purple-800"] {
+  background:#eee7ff !important; color:#6938df !important; border:0 !important;
+}
+#adminDashboardView > div.flex-1.min-h-0 {
+  background:#f6f5fb !important; padding:26px !important; min-width:0;
+}
+#adminDashboardView #adminTabOrders > .flex h4,
+#adminDashboardView #adminDashboardView h4 { color:#21143f; }
+#adminDashboardView #adminTabOrders .bg-white,
+#adminDashboardView #adminTabCustomers .bg-white,
+#adminDashboardView #adminTabShipping .bg-white,
+#adminDashboardView #adminTabPayment .bg-white,
+#adminDashboardView #adminTabProducts .bg-white,
+#adminDashboardView #adminTabReviews .bg-white,
+#adminDashboardView #adminTabStore .bg-white,
+#adminDashboardView #adminTabPassword .bg-white,
+#adminDashboardView #adminTabSessions .bg-white {
+  border-color:#e7e2f0 !important; border-radius:15px !important; box-shadow:0 2px 8px rgba(42,24,82,.035);
+}
+#adminDashboardView input:not([type=checkbox]):not([type=radio]),
+#adminDashboardView select, #adminDashboardView textarea {
+  border-color:#e1d9f1 !important; border-radius:10px !important;
+}
+#adminDashboardView button.bg-purple-700, #adminDashboardView button.bg-purple-800,
+#adminDashboardView button[class*="bg-purple-700"] { border-radius:10px !important; }
+#adminDashboardView table thead { background:#faf9fd !important; }
+#adminDashboardView table th { color:#6d6385 !important; font-size:10px; letter-spacing:.06em; }
+#adminDashboardView table td { border-color:#eeeaf5 !important; }
+@media(min-width:641px) {
+  body.admin-only-mode #adminModal { min-height:100vh !important; }
+  body.admin-only-mode #adminDashboardView {
+    display:grid !important; grid-template-columns:248px minmax(0,1fr); grid-template-rows:72px minmax(0,1fr);
+    height:100vh !important; max-height:100vh !important; min-height:100vh !important; overflow:hidden !important;
+  }
+  body.admin-only-mode #adminDashboardView > div:first-child { grid-column:1 / -1; grid-row:1; }
+  body.admin-only-mode #adminTabsScroller { grid-column:1; grid-row:2; min-height:0; }
+  body.admin-only-mode #adminDashboardView > div.flex-1.min-h-0 { grid-column:2; grid-row:2; overflow:auto !important; min-height:0; }
+}
+@media(max-width:640px) {
+  body.admin-only-mode #adminDashboardView {
+    display:flex !important; height:100dvh !important; max-height:none !important; min-height:100dvh !important;
+    overflow:hidden !important;
+  }
+  body.admin-only-mode #adminDashboardView > div:first-child {
+    min-height:60px !important; padding:12px 14px !important; flex-shrink:0;
+  }
+  #adminDashboardView > div:first-child .bg-purple-700 { display:none !important; }
+  #adminTabsScroller {
+    flex-direction:row !important; align-items:center !important; gap:7px !important;
+    padding:8px 10px !important; border-right:0 !important; border-bottom:1px solid #e7e2f0 !important;
+    overflow-x:auto !important; overflow-y:hidden !important; white-space:nowrap !important; flex-shrink:0;
+  }
+  #adminTabsScroller button {
+    width:auto !important; min-width:max-content !important; min-height:38px !important;
+    padding:9px 12px !important; font-size:12px !important; border-radius:9px !important;
+  }
+  body.admin-only-mode #adminDashboardView > div.flex-1.min-h-0 {
+    padding:14px 12px !important; overflow:auto !important; min-height:0; flex:1 1 auto;
+  }
+  #adminDashboardView table { min-width:720px; }
+}
+</style>
+
+<style id="delofia-hero-compact-final-v1">
+/* Keep the homepage hero compact on desktop; avoid a large empty area below the CTA buttons. */
+#storefrontHeroFallback { min-height: 0 !important; height: auto !important; padding-top: clamp(1.25rem, 2.5vw, 2rem) !important; padding-bottom: clamp(1.25rem, 2.5vw, 2rem) !important; margin-bottom: 1.5rem !important; }
+#storefrontHeroFallback > .relative.z-10 { max-width: 46rem !important; }
+#storefrontHeroBadge { margin-bottom: .65rem !important; }
+#storefrontHeroTitle { font-size: clamp(1.65rem, 3vw, 2.75rem) !important; line-height: 1.12 !important; margin-bottom: .65rem !important; }
+#storefrontHeroDescription { margin-bottom: 1rem !important; line-height: 1.5 !important; }
+#storefrontHeroFallback .flex.flex-wrap.gap-3 a { padding: .65rem 1.1rem !important; }
+#storefrontHeroCarousel { margin-bottom: 1.5rem !important; }
+#heroCarouselViewport { aspect-ratio: 16 / 5 !important; min-height: 0 !important; max-height: 430px !important; }
+#heroCarouselImage { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+@media (max-width: 640px) {
+ #storefrontHeroFallback { padding: 1.25rem !important; margin-bottom: 1.25rem !important; }
+ #storefrontHeroTitle { font-size: clamp(1.55rem, 7vw, 2rem) !important; }
+ #storefrontHeroDescription { margin-bottom: .9rem !important; }
+ #heroCarouselViewport { aspect-ratio: 4 / 3 !important; min-height: 0 !important; max-height: none !important; }
+}
+</style>
 </head><body><main class="memo"><div class="watermark">DELOFIA</div><div class="content">
 <div class="head"><div><h1>DELOFIA</h1><small>Premium Fashion & Lifestyle Store</small><br><small>Customer Order Memo</small></div><div><span class="tag">${escapeHtml(o.paymentMethod === 'advance' ? 'ADVANCE PAYMENT' : 'CASH ON DELIVERY')}</span><p><strong>Order ID:</strong> ${escapeHtml(o.orderId)}<br><strong>Date:</strong> ${escapeHtml(o.date)}</p></div></div>
 <h2>Customer Information</h2><div class="grid">
@@ -6202,7 +6382,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
   }
 }
 </style>
-\n</body>
+\n
+</body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
   header > div.max-w-7xl {
@@ -6460,29 +6641,15 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         const DELOFIA_ADMIN_UIDS = ['1925abce-f8ec-48f1-ad2f-f30a77d51987'];
         function isAuthorizedDelofiaAdmin(user) { return !!user && DELOFIA_ADMIN_UIDS.includes(user.uid); }
         function restoreAdminSession() {
-            // Firebase may still be restoring its local login at page startup. Do not erase the saved session yet.
-            const user = window.delofiaAdminAuth?.currentUser;
-            if (!user) return false;
-            const session = getCurrentAdminSession();
-            if (!isAuthorizedDelofiaAdmin(user)) {
-                localStorage.removeItem(ADMIN_SESSION_KEY);
-                sessionStorage.removeItem(ADMIN_SESSION_KEY);
-                return false;
-            }
-            if (!session || session.expiresAt <= Date.now() || session.revoked || getAdminSessions()[session.id]?.revoked) {
-                localStorage.removeItem(ADMIN_SESSION_KEY);
-                sessionStorage.removeItem(ADMIN_SESSION_KEY);
-                window.delofiaFirebaseAuthMethods.signOut(window.delofiaAdminAuth).catch(() => {});
-                return false;
-            }
-            thisAdminSessionId = session.id;
+            // Security/UI fix: always require an explicit login when opening the Admin URL.
+            // Do not silently bypass the login screen using a persisted browser session.
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            const login = document.getElementById('adminLoginView');
             const dashboard = document.getElementById('adminDashboardView');
-            const alreadyVisible = dashboard && !dashboard.classList.contains('hidden');
-            document.getElementById('adminLoginView').classList.add('hidden');
-            if (dashboard) dashboard.classList.remove('hidden');
-            if (!alreadyVisible) loadAdminData();
-            startAdminSessionHeartbeat();
-            return true;
+            if (login) login.classList.remove('hidden');
+            if (dashboard) dashboard.classList.add('hidden');
+            return false;
         }
         window.tryRestoreDelofiaAdminSession = restoreAdminSession;
         async function resetDelofiaAdminPassword() {
@@ -7350,12 +7517,13 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     descControls.append(addRowBtn, addColBtn, copyBaseBtn, copySelect);
                     const descEditor = document.createElement('div'); descEditor.id = `variantDescTable-${gi}-${oi}`; descEditor.className = 'overflow-x-auto';
                     const nestedWrap = document.createElement('div');
-                    const isColorGroup = /color|colour|রং/i.test(group.name || '');
-                    if (isColorGroup) {
-                        nestedWrap.className = 'mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2';
-                        const nestedTitle = document.createElement('p'); nestedTitle.className = 'text-xs font-extrabold text-indigo-900'; nestedTitle.textContent = 'Sizes / variants available ONLY for ' + (option.name || 'this color');
-                        const nestedHelp = document.createElement('p'); nestedHelp.className = 'text-[10px] text-gray-600'; nestedHelp.textContent = 'Add 100 ml, 500 ml, etc. Each color has its own list. Customer clicks this color to see its image and only these options.';
-                        nestedWrap.append(nestedTitle, nestedHelp);
+                    // Always show child size/variant controls for every group name.
+                    // Previously this editor was created only when the group name contained 'color',
+                    // so renaming the group made the Add size / variant box disappear.
+                    nestedWrap.className = 'delofia-nested-variants mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-3 space-y-2';
+                    const nestedTitle = document.createElement('p'); nestedTitle.className = 'text-xs font-extrabold text-indigo-900'; nestedTitle.textContent = 'Sizes / variants available ONLY for ' + (option.name || 'this option');
+                    const nestedHelp = document.createElement('p'); nestedHelp.className = 'text-[10px] text-gray-600'; nestedHelp.textContent = 'Add sizes or sub-variants such as 100 ml, 500 ml, small, large, etc. Each option has its own list.';
+                    nestedWrap.append(nestedTitle, nestedHelp);
                         option.childVariants = Array.isArray(option.childVariants) ? option.childVariants : [];
                         option.childVariants.forEach((child, ci) => {
                             const childRow = document.createElement('div'); childRow.className = 'grid grid-cols-1 sm:grid-cols-[1fr_100px_auto] gap-2 items-center bg-white p-2 rounded border';
@@ -7376,8 +7544,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                             nestedWrap.append(childRow, childImageLabel, childImageControls, childDetails, childStockLabel, childStock);
                         });
                         const addChild = document.createElement('button'); addChild.type = 'button'; addChild.className = 'rounded bg-indigo-700 text-white px-3 py-2 text-xs font-bold'; addChild.textContent = '+ Add size / variant'; addChild.onclick = () => { option.childVariants.push({name:'',price:'',originalPrice:'',image:'',details:''}); renderAdminVariantEditor(); };
-                        nestedWrap.appendChild(addChild);
-                    }
+                    nestedWrap.appendChild(addChild);
                     left.append(optName, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, variantRegularLabel, variantRegularInput, stockLabel, stockInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
                     setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
                     if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
@@ -8396,6 +8563,7 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
 })();
 </script>
 
+
 </body>
 
 <style id="delofia-mobile-header-buttons-v36">
@@ -8523,7 +8691,6 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
 }
 </style>
 
-</html>
 <style id="delofia-reset-visibility-fix">
 /* Keep the storefront Reset filter button readable in both themes. */
 #mainContainer button[onclick="resetProductFilters()"] { color:#374151 !important; background:#e5e7eb !important; border:1px solid #d1d5db !important; }
@@ -9050,3 +9217,257 @@ function delofiaToggleBottomSearch(force) {
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape')delofiaToggleBottomSearch(false);});
 </script>
+<style id="delofia-targeted-layout-fix">
+#heroCarouselImage { display:block; width:100%; height:100%; object-fit:cover; }
+#heroCarouselImage:not([src]), #heroCarouselImage[src=""] { visibility:hidden; }
+@media (min-width:768px) {
+  #heroCarousel, .hero-carousel, [data-hero-carousel] {
+    height:clamp(300px,34vw,480px)!important;
+    min-height:300px!important; max-height:480px!important;
+  }
+}
+@media (max-width:640px) {
+  header { position:relative; }
+  header #brandLogo {
+    position:absolute!important; left:50%!important; transform:translateX(-50%)!important;
+    justify-content:center!important; width:max-content!important; max-width:58vw!important;
+    margin:0!important; gap:3px!important;
+  }
+  header #brandLogoMark { width:24px!important; height:24px!important; }
+  header #brandLogo span:first-child { font-style:italic!important; }
+  #announcementBar, .announcement-bar, [data-announcement-bar] { display:none!important; }
+  #mobileProductSearchBar.delofia-search-open {
+    position:fixed!important; top:calc(env(safe-area-inset-top,0px) + 58px)!important;
+    bottom:auto!important; left:10px!important; right:10px!important; width:auto!important;
+    z-index:10050!important; display:block!important;
+    max-height:calc(100dvh - 130px)!important; overflow-y:auto!important;
+    box-shadow:0 8px 28px rgba(0,0,0,.2)!important;
+  }
+  #mobileSearchSuggestions { max-height:55dvh; overflow-y:auto; }
+}
+</style>
+
+<!-- Delofia storefront targeted fixes: consolidated final rules and safe interaction repairs -->
+<style id="delofia-storefront-final-fixes">
+  /* Banner: use a predictable desktop ratio and keep image proportions intact. */
+  #storefrontHeroCarousel:not(.hidden) { width:100%; }
+  #heroCarouselViewport { width:100%; aspect-ratio:16/6; min-height:0; max-height:460px; }
+  #heroCarouselSlideLink, #heroCarouselImage { width:100%; height:100%; }
+  #heroCarouselImage { display:block; object-fit:cover; object-position:center; }
+  #storefrontHeroCarousel.banner-image-error { display:none !important; }
+  @media (min-width:641px) {
+    #storefrontHeroCarousel { border-radius:20px; }
+    #heroCarouselViewport { aspect-ratio:16/5.5; max-height:440px; }
+  }
+  @media (max-width:640px) {
+    /* Mobile header: no announcement/menu; centered mark and word stacked vertically. */
+    body > div:first-child { display:none !important; }
+    header { position:relative !important; top:auto !important; }
+    header > div.max-w-7xl {
+      position:relative !important; height:94px !important; min-height:94px !important;
+      padding:6px 8px !important; display:flex !important; align-items:center !important;
+      justify-content:flex-end !important; overflow:visible !important;
+    }
+    header #delofiaMenuButton { display:none !important; }
+    header #brandLogo {
+      position:absolute !important; left:50% !important; top:5px !important;
+      transform:translateX(-50%) !important; width:auto !important; max-width:42vw !important;
+      min-width:0 !important; margin:0 !important; padding:0 !important;
+      display:flex !important; flex-direction:column !important; align-items:center !important;
+      justify-content:center !important; gap:2px !important; overflow:visible !important;
+      flex:none !important; z-index:2 !important;
+    }
+    header #brandLogoMark {
+      display:flex !important; width:34px !important; height:34px !important;
+      min-width:34px !important; font-size:19px !important; border-radius:10px !important;
+      flex:none !important;
+    }
+    header #brandLogo > div { display:contents !important; overflow:visible !important; }
+    header #brandLogo span:first-child {
+      display:block !important; font-size:14px !important; line-height:1.1 !important;
+      font-style:italic !important; letter-spacing:.06em !important; white-space:nowrap !important;
+    }
+    header #brandLogo span:last-child { display:none !important; }
+    header #delofiaHeaderActions {
+      position:relative !important; z-index:3 !important; margin-left:auto !important;
+      display:flex !important; flex-flow:row nowrap !important; align-items:center !important;
+      justify-content:flex-end !important; gap:5px !important; width:auto !important;
+      min-width:0 !important; flex:0 1 auto !important; overflow:visible !important;
+    }
+    header #customerAccountHeaderBtn { min-width:28px !important; padding:4px !important; font-size:10px !important; }
+    header #headerWishlistButton, header #headerCartButton { min-width:26px !important; padding:4px !important; }
+    /* Bottom search opens at the top; suggestions flow directly below the input. */
+    #mobileProductSearchBar { display:none !important; }
+    #mobileProductSearchBar.delofia-search-open {
+      display:block !important; position:fixed !important;
+      top:calc(env(safe-area-inset-top, 0px) + 98px) !important; bottom:auto !important;
+      left:8px !important; right:8px !important; width:auto !important; max-width:none !important;
+      z-index:10050 !important; padding:10px !important; margin:0 !important;
+      background:#fff !important; border:1px solid #ddd6fe !important; border-radius:14px !important;
+      box-shadow:0 8px 28px rgba(0,0,0,.22) !important;
+      max-height:calc(100dvh - 120px) !important; overflow:visible !important;
+    }
+    #mobileProductSearchBar.delofia-search-open > div { position:relative !important; }
+    #mobileProductSearchBar.delofia-search-open #mobileSearchInput {
+      display:block !important; width:100% !important; min-height:46px !important; font-size:16px !important;
+    }
+    #mobileSearchSuggestions {
+      position:absolute !important; top:calc(100% + 6px) !important; left:0 !important; right:0 !important;
+      z-index:10060 !important; width:100% !important; max-height:calc(100dvh - 205px) !important;
+      overflow-y:auto !important; background:#fff !important; border-radius:12px !important;
+      box-shadow:0 8px 24px rgba(0,0,0,.18) !important; overscroll-behavior:contain;
+    }
+    #mobileSearchSuggestions.hidden { display:none !important; }
+    #mobileSearchSuggestions img { display:block; }
+  }
+</style>
+<script id="delofia-storefront-final-interaction-fixes">
+(function () {
+  'use strict';
+  const mobileQuery = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null;
+
+  /* Hide a broken remote banner instead of leaving a blank purple carousel block.
+     The existing configured fallback content is preserved and shown unchanged. */
+  function bindBannerImageError() {
+    const img = document.getElementById('heroCarouselImage');
+    if (!img || img.dataset.delofiaErrorBound === '1') return;
+    img.dataset.delofiaErrorBound = '1';
+    img.addEventListener('error', function () {
+      const carousel = document.getElementById('storefrontHeroCarousel');
+      const fallback = document.getElementById('storefrontHeroFallback');
+      img.dataset.delofiaFailedSrc = img.currentSrc || img.src || '';
+      if (carousel) {
+        carousel.classList.add('banner-image-error');
+        carousel.classList.add('hidden');
+      }
+      if (fallback) fallback.classList.remove('hidden');
+      console.warn('Delofia banner image failed to load; showing the existing storefront fallback.');
+    });
+    img.addEventListener('load', function () {
+      img.dataset.delofiaFailedSrc = '';
+      const carousel = document.getElementById('storefrontHeroCarousel');
+      if (carousel) carousel.classList.remove('banner-image-error');
+    });
+  }
+  bindBannerImageError();
+
+  /* One close path for search, called by bottom navigation and outside clicks. */
+  window.delofiaToggleBottomSearch = function (force) {
+    const bar = document.getElementById('mobileProductSearchBar');
+    const btn = document.getElementById('delofiaBottomSearchButton');
+    if (!bar) return;
+    const shouldOpen = typeof force === 'boolean' ? force : !bar.classList.contains('delofia-search-open');
+    bar.classList.toggle('delofia-search-open', shouldOpen);
+    if (btn) btn.setAttribute('aria-expanded', String(shouldOpen));
+    if (shouldOpen) {
+      const input = document.getElementById('mobileSearchInput');
+      if (input) input.focus({ preventScroll: true });
+    } else {
+      document.getElementById('mobileSearchSuggestions')?.classList.add('hidden');
+      const input = document.getElementById('mobileSearchInput');
+      if (input) input.blur();
+    }
+  };
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') window.delofiaToggleBottomSearch(false);
+  });
+
+  document.addEventListener('click', function (event) {
+    const bar = document.getElementById('mobileProductSearchBar');
+    if (!bar || !bar.classList.contains('delofia-search-open')) return;
+    const target = event.target;
+    if (target && target.closest && (
+      target.closest('#mobileProductSearchBar') ||
+      target.closest('#delofiaBottomSearchButton')
+    )) return;
+    /* Any other bottom-navigation or page action closes the search surface. */
+    window.delofiaToggleBottomSearch(false);
+  }, true);
+
+  /* Re-open the configured image source normally if the user changes viewport
+     between desktop and mobile; do not invent or replace banner URLs. */
+  let lastMobile = mobileQuery ? mobileQuery.matches : false;
+  if (mobileQuery && mobileQuery.addEventListener) {
+    mobileQuery.addEventListener('change', function (event) {
+      if (event.matches === lastMobile) return;
+      lastMobile = event.matches;
+      const img = document.getElementById('heroCarouselImage');
+      if (img) img.dataset.delofiaErrorBound = '';
+      bindBannerImageError();
+      if (typeof window.applyStorefrontHeroCarousel === 'function') {
+        window.applyStorefrontHeroCarousel();
+      }
+    });
+  }
+})();
+</script>
+
+
+<style id="delofia-mobile-logo-true-center-v32">
+/* Mobile-only header alignment. Targets verified existing IDs: #brandLogo, #brandLogoMark, #delofiaMenuButton, #delofiaHeaderActions. */
+@media (max-width: 640px) {
+  html body header > div.max-w-7xl {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: 100% !important; max-width: 100% !important; margin-left: 0 !important;
+    box-sizing: border-box !important;
+    height: 78px !important; min-height: 78px !important;
+    padding: 5px 8px !important; gap: 0 !important;
+    overflow: visible !important;
+  }
+  html body html body header > div.max-w-7xl #delofiaMenuButton { display: none !important; }
+  html body header > div.max-w-7xl #brandLogo {
+    position: absolute !important; left: 50vw !important; top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: flex !important; flex-direction: column !important;
+    flex: 0 0 auto !important; align-items: center !important; justify-content: center !important;
+    width: max-content !important; min-width: 0 !important; max-width: 48% !important;
+    margin: 0 !important; padding: 0 !important; gap: 3px !important;
+    overflow: visible !important; text-align: center !important;
+    z-index: 3 !important;
+  }
+  html body header > div.max-w-7xl #brandLogoMark {
+    display: flex !important; flex: 0 0 36px !important;
+    width: 36px !important; min-width: 36px !important;
+    height: 36px !important; min-height: 36px !important;
+    align-items: center !important; justify-content: center !important;
+    border-radius: 10px !important; font-size: 20px !important; line-height: 1 !important;
+    margin: 0 !important;
+  }
+  html body html body header > div.max-w-7xl #brandLogo > div {
+    display: block !important; width: auto !important; min-width: 0 !important;
+    max-width: 100% !important; overflow: visible !important; text-align: center !important;
+  }
+  html body html body header > div.max-w-7xl #brandLogo span:first-child {
+    display: block !important; font-size: 15px !important; line-height: 1.1 !important;
+    font-weight: 800 !important; font-style: italic !important; letter-spacing: .01em !important;
+    text-transform: none !important; white-space: nowrap !important;
+  }
+  html body html body header > div.max-w-7xl #brandLogo span:last-child { display: none !important; }
+  html body html body header > div.max-w-7xl #delofiaHeaderActions {
+    position: relative !important; z-index: 4 !important;
+    display: flex !important; flex: 0 0 auto !important;
+    width: auto !important; min-width: 0 !important; max-width: 45% !important;
+    margin: 0 0 0 auto !important; padding: 0 !important;
+    flex-flow: row nowrap !important; align-items: center !important;
+    justify-content: flex-end !important; gap: 3px !important; overflow: visible !important;
+  }
+  html body html body header > div.max-w-7xl #customerAccountHeaderBtn {
+    flex: 0 0 25px !important; width: 25px !important; min-width: 25px !important;
+    height: 28px !important; padding: 0 !important; justify-content: center !important;
+  }
+  html body html body header > div.max-w-7xl #customerAccountHeaderLabel { display: none !important; }
+  html body html body header > div.max-w-7xl #delofiaHeaderActions > a[href*="wa.me"],
+  html body html body header > div.max-w-7xl #headerWishlistButton, html body html body header > div.max-w-7xl #headerCartButton {
+    flex: 0 0 24px !important; width: 24px !important; min-width: 24px !important;
+    max-width: 24px !important; height: 28px !important; padding: 0 !important;
+    margin: 0 !important; justify-content: center !important;
+  }
+  html body html body header > div.max-w-7xl #headerWishlistButton > span, html body html body header > div.max-w-7xl #headerCartButton > span,
+  html body html body header > div.max-w-7xl #wishlistCountBadge, html body header > div.max-w-7xl #cartCountBadge, html body header > div.max-w-7xl #cartValueLabel { display: none !important; }
+}
+</style>
+</html>
