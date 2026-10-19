@@ -2394,7 +2394,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 
                             <!-- Existing Products Table -->
                             <div id="adminProductsCatalogCard" class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h4 class="font-bold text-gray-900">Catalog Items</h4><button type="button" id="delofiaMigrateImagesBtn" onclick="window.migrateDelofiaLegacyProductImages()" class="rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-2">Optimize existing product images</button></div><p class="text-xs text-gray-500 mb-3">One-time: moves old Base64 product/variant images to Storage so the shop loads faster. Keep this page open until it finishes.</p>
+                                <h4 class="font-bold text-gray-900 mb-4">Catalog Items</h4>
                                 <div id="adminProductsList" class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar"></div>
                             </div>
                         </div>
@@ -7152,62 +7152,6 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if (!data?.publicUrl) throw new Error('Storage image URL পাওয়া যায়নি।');
             return data.publicUrl;
         }
-
-        // One-time admin migration: move legacy Base64 product and variant images to Storage.
-        window.migrateDelofiaLegacyProductImages = async function() {
-            const client = window.delofiaSupabase;
-            const button = document.getElementById('delofiaMigrateImagesBtn');
-            if (!client?.storage || !client?.from) { alert('Supabase is not ready. Reload the Admin page and try again.'); return; }
-            if (!confirm('পুরোনো product ও variant image-গুলো Supabase Storage-এ সরিয়ে products table আপডেট করা হবে। কাজ চলাকালে Admin page বন্ধ করবে না। শুরু করব?')) return;
-            if (button) { button.disabled = true; button.textContent = 'Working…'; }
-            const walk = async (value, productId, label, state) => {
-                if (typeof value === 'string') {
-                    if (value.startsWith('data:image/')) {
-                        state.total++;
-                        const url = await uploadDelofiaProductImage(value, productId, (label + '-' + state.total).replace(/[^a-zA-Z0-9_-]/g, '_'));
-                        state.uploaded++;
-                        return url;
-                    }
-                    return value;
-                }
-                if (Array.isArray(value)) {
-                    const out = [];
-                    for (let i = 0; i < value.length; i++) out.push(await walk(value[i], productId, label + '-' + i, state));
-                    return out;
-                }
-                if (value && typeof value === 'object') {
-                    const out = {};
-                    for (const [key, child] of Object.entries(value)) out[key] = await walk(child, productId, label + '-' + key, state);
-                    return out;
-                }
-                return value;
-            };
-            const state = { total: 0, uploaded: 0, changed: 0 };
-            try {
-                const { data: products, error } = await client.from('products').select('*').order('id', { ascending: true });
-                if (error) throw error;
-                for (const product of (products || [])) {
-                    const oldImages = product.images;
-                    const oldVariants = product.variantGroups;
-                    const newImages = await walk(oldImages, product.id, 'image', state);
-                    const newVariants = await walk(oldVariants, product.id, 'variant', state);
-                    if (JSON.stringify(newImages) === JSON.stringify(oldImages) && JSON.stringify(newVariants) === JSON.stringify(oldVariants)) continue;
-                    const { error: updateError } = await client.from('products').update({ images: newImages, variantGroups: newVariants }).eq('id', product.id);
-                    if (updateError) throw new Error('Product ' + product.id + ' upload হয়েছে, কিন্তু database update হয়নি: ' + updateError.message);
-                    state.changed++;
-                    if (button) button.textContent = 'Updated ' + state.changed + '/' + products.length;
-                }
-                alert('Migration complete! ' + state.uploaded + ' image(s) uploaded; ' + state.changed + ' product(s) updated. এখন Admin page একবার reload করো, তারপর নতুন ফোনে shop test করো।');
-                if (typeof window.__delofiaLoadProductPage === 'function') {
-                    try { localStorage.removeItem('delofia_products_cache_v3'); for (let p=1;p<=10;p++) localStorage.removeItem('delofia_supabase_products_page_v1_' + p); } catch (_) {}
-                }
-            } catch (error) {
-                console.error('Legacy product image migration failed:', error);
-                alert('Migration থেমে গেছে। ' + (error?.message || error) + '\nকিছু image Storage-এ upload হয়ে থাকতে পারে; আবার চালালে existing URL skip হবে, তাই retry করতে পারো।');
-            } finally {
-                if (button) { button.disabled = false; button.textContent = 'Optimize existing product images'; }
-            }
-        };
 
         async function handleProductPhotoSelection(event) {
             const files = Array.from(event.target.files || []).filter(f => f.type.startsWith('image/'));
