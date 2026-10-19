@@ -2512,12 +2512,15 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                 } catch (_) {}
             }
             const start = (safePage - 1) * DELOFIA_DB_PAGE_SIZE;
-            const { data, error, count } = await supabase.from('products').select('*', { count: 'exact' })
+            // Fetch product rows without an exact-count scan on the critical first-load path.
+            // The storefront currently has fewer rows than one page, so the returned row count is sufficient.
+            const { data, error } = await supabase.from('products').select('*')
                 .order('id', { ascending: true }).range(start, start + DELOFIA_DB_PAGE_SIZE - 1);
             if (error) throw error;
             const rows = data || [];
-            try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), rows, count: Number(count) || 0 })); } catch (_) {}
-            return { rows, count: Number(count) || rows.length, fromCache: false };
+            const count = rows.length;
+            try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), rows, count })); } catch (_) {}
+            return { rows, count, fromCache: false };
         }
         async function fetchAllSupabaseProducts() {
             // Supabase/PostgREST can cap a single response (often 1,000 rows).
