@@ -1319,12 +1319,13 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 
 <style id="delofia-desktop-hero-compact">
 @media (min-width: 768px) {
-  #storefrontHeroFallback { padding: 1.5rem 2.25rem !important; margin-bottom: 1.5rem !important; border-radius: 1.25rem !important; }
+  /* Make the whole purple banner shorter, not just its text. */
+  #storefrontHeroFallback { padding: .7rem 2rem !important; margin-bottom: 1.25rem !important; border-radius: 1.1rem !important; }
   #storefrontHeroFallback > div.relative { max-width: 52rem !important; }
-  #storefrontHeroTitle { font-size: clamp(2rem, 2.7vw, 2.75rem) !important; line-height: 1.15 !important; margin-bottom: .65rem !important; }
-  #storefrontHeroBadge { margin-bottom: .65rem !important; }
-  #storefrontHeroDescription { margin-bottom: 1rem !important; }
-  #storefrontHeroFallback a { padding-top: .65rem !important; padding-bottom: .65rem !important; }
+  #storefrontHeroTitle { font-size: clamp(1.8rem, 2.35vw, 2.35rem) !important; line-height: 1.08 !important; margin-top: 0 !important; margin-bottom: .35rem !important; }
+  #storefrontHeroBadge { margin-top: 0 !important; margin-bottom: .35rem !important; padding-top: .15rem !important; padding-bottom: .15rem !important; }
+  #storefrontHeroDescription { margin-top: 0 !important; margin-bottom: .55rem !important; line-height: 1.35 !important; }
+  #storefrontHeroFallback a { padding-top: .45rem !important; padding-bottom: .45rem !important; }
 }
 </style>
 </head>
