@@ -2497,7 +2497,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         // Public storefront uses server-side pages. Cache each page briefly in localStorage
         // so repeat visits can paint products immediately while Supabase refreshes in background.
         const DELOFIA_DB_PAGE_SIZE = 30;
-        const DELOFIA_PRODUCT_CACHE_TTL = 5 * 60 * 1000;
+        const DELOFIA_PRODUCT_CACHE_TTL = 30 * 60 * 1000;
         const productPageCacheKey = page => `delofia_supabase_products_page_v1_${page}`;
         async function fetchSupabaseProductPage(page=1, useCache=true) {
             const safePage = Math.max(1, Number(page) || 1);
