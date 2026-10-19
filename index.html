@@ -1378,6 +1378,20 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
   #productFilters > div > div.rounded-xl.border { width: 100% !important; }
 }
 </style>
+
+<style id="delofia-admin-products-full-page-v1">
+/* Product management: full-width catalog; add/edit form opens only as a modal. */
+#adminTabProducts > #adminProductsMobileAddButton { display:none !important; }
+#adminTabProducts > .grid { display:block !important; }
+#adminTabProducts #productFormCard:not(.product-edit-active) { display:none !important; }
+#adminTabProducts #adminProductsCatalogCard { width:100% !important; max-width:none !important; }
+#adminTabProducts #adminProductsList { max-height:none !important; overflow:visible !important; }
+#adminTabProducts #adminProductsCatalogCard { padding:clamp(12px,2vw,24px) !important; }
+@media(max-width:640px) {
+  #adminTabProducts #adminProductsAddButton { width:100%; }
+  #adminTabProducts #adminProductsCatalogCard { padding:12px !important; }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
@@ -2558,7 +2572,13 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 
                             <!-- Existing Products Table -->
                             <div id="adminProductsCatalogCard" class="lg:col-span-7 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                                <h4 class="font-bold text-gray-900 mb-4">Catalog Items</h4>
+                                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-lg">All Products</h4>
+                                        <p class="text-xs text-gray-500 mt-1">সব product ও stock এক জায়গায় দেখো</p>
+                                    </div>
+                                    <button type="button" id="adminProductsAddButton" onclick="openNewProductForm()" class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 hover:bg-purple-800 px-4 py-2.5 text-sm font-bold text-white shadow-sm"><i class="fas fa-plus"></i> Add New Product</button>
+                                </div>
                                 <div class="mb-4 rounded-xl border border-purple-200 bg-purple-50 p-3">
                                     <p class="text-sm font-bold text-purple-950">Speed up product loading</p>
                                     <p class="mt-1 text-xs text-purple-800">One-time migration: move existing Base64 product photos to Supabase Storage. Products are only updated after their images upload successfully.</p>
@@ -8223,22 +8243,30 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 const hasVideo = !!(p.videoUrl && p.videoUrl.trim());
 
                 const item = document.createElement('div');
-                item.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs';
+                const variantStock = Array.isArray(p.variantGroups) ? p.variantGroups.reduce((sum, group) => sum + (Array.isArray(group.options) ? group.options.reduce((sub, option) => sub + (Number(option.stockQty) || 0) + (Array.isArray(option.childVariants) ? option.childVariants.reduce((childSum, child) => childSum + (Number(child.stockQty) || 0), 0) : 0), 0) : 0), 0) : 0;
+                const stockQty = p.variantEnabled ? variantStock : (Number(p.stockQty) || 0);
+                const stockLabel = p.stockOut ? 'STOCK OUT' : (stockQty <= 0 ? '0 in stock' : stockQty + ' in stock');
+                const stockClass = p.stockOut || stockQty <= 0 ? 'bg-red-100 text-red-700' : stockQty <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800';
+                item.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white border border-gray-200 rounded-xl text-xs shadow-sm';
                 item.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="${img}" class="w-10 h-10 object-contain bg-white rounded-lg border">
-                        <div>
-                            <strong class="block text-gray-800">${p.title}</strong>
-                            <span class="text-purple-700 font-bold">৳${p.price}</span>
-                            <span class="block text-gray-500 mt-0.5">${p.category || 'Other'}${subDisplay ? ' > ' + subDisplay : ''}${p.stockOut ? ' • STOCK OUT' : ''}</span>
-                            ${hasVideo ? `<span class="inline-block mt-1 text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
+                    <div class="flex items-start gap-3 min-w-0 flex-1">
+                        <img src="${img}" class="w-14 h-14 object-contain bg-white rounded-lg border shrink-0" alt="">
+                        <div class="min-w-0 flex-1">
+                            <strong class="block text-gray-900 text-sm break-words">${p.title}</strong>
+                            <span class="text-purple-700 font-extrabold text-sm">৳${p.price}</span>
+                            <span class="block text-gray-500 mt-1">${p.category || 'Other'}${subDisplay ? ' > ' + subDisplay : ''}</span>
+                            <div class="flex flex-wrap items-center gap-2 mt-2">
+                                <span class="inline-flex rounded-full px-2.5 py-1 font-extrabold ${stockClass}"><i class="fas fa-boxes-stacked mr-1"></i>${stockLabel}</span>
+                                ${p.variantEnabled ? '<span class="text-[10px] text-purple-700 font-semibold">Variant stock total</span>' : ''}
+                                ${hasVideo ? `<span class="inline-block text-[10px] ${p.videoApproved !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'} font-bold px-1.5 py-0.5 rounded"><i class="fas fa-video mr-1"></i> Video: ${p.videoApproved !== false ? 'Approved' : 'Disabled'}</span>` : ''}
+                            </div>
                         </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex flex-wrap items-center gap-2 sm:justify-end shrink-0">
                         <label class="text-[10px] text-gray-500">Position <input type="number" min="1" step="1" id="order-${p.id}" value="${p.displayOrder ?? ''}" placeholder="Auto" class="w-16 border rounded-md px-1.5 py-1 text-xs"></label>
-                        <button onclick="saveProductOrder('${p.id}')" class="bg-emerald-100 text-emerald-700 font-bold px-2.5 py-1 rounded-lg">Save order</button>
-                        <button onclick="editProduct('${p.id}')" class="bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-lg">Edit</button>
-                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-lg">Delete</button>
+                        <button onclick="saveProductOrder('${p.id}')" class="bg-emerald-100 text-emerald-700 font-bold px-2.5 py-2 rounded-lg">Save order</button>
+                        <button onclick="editProduct('${p.id}')" class="bg-purple-100 text-purple-700 font-bold px-3 py-2 rounded-lg">Edit</button>
+                        <button onclick="deleteProduct('${p.id}')" class="bg-red-100 text-red-700 font-bold px-3 py-2 rounded-lg">Delete</button>
                     </div>
                 `;
                 list.appendChild(item);
