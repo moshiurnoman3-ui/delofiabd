@@ -9692,5 +9692,23 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')delofiaToggl
   html body html body header > div.max-w-7xl #headerWishlistButton > span, html body html body header > div.max-w-7xl #headerCartButton > span,
   html body html body header > div.max-w-7xl #wishlistCountBadge, html body header > div.max-w-7xl #cartCountBadge, html body header > div.max-w-7xl #cartValueLabel { display: none !important; }
 }
+
+        /* Final mobile-admin overlap fixes */
+        #delofiaAdminDrawer { box-sizing:border-box; max-height:100dvh; padding-bottom:env(safe-area-inset-bottom); }
+        #delofiaAdminDrawerBackdrop { position:fixed; inset:0; }
+        @media(max-width:640px) {
+          body.admin-only-mode #adminModal { position:fixed !important; inset:0 !important; width:100vw !important; height:100dvh !important; min-height:0 !important; overflow:hidden !important; z-index:9999 !important; }
+          body.admin-only-mode #adminModal > div,
+          #adminModal > div { box-sizing:border-box !important; height:100dvh !important; min-height:0 !important; max-height:100dvh !important; overflow:hidden !important; display:flex !important; flex-direction:column !important; }
+          #adminDashboardView { box-sizing:border-box !important; width:100% !important; height:100dvh !important; min-height:0 !important; max-height:100dvh !important; flex:1 1 auto !important; overflow:hidden !important; }
+          #delofiaMobileAdminHeader { position:relative !important; z-index:2 !important; width:100% !important; min-height:58px !important; flex:0 0 auto !important; box-sizing:border-box !important; padding-top:max(10px, env(safe-area-inset-top)) !important; }
+          #adminDashboardView > #adminTabsScroller { display:none !important; }
+          #adminDashboardView > .flex-1.min-h-0.p-3 { position:relative !important; display:block !important; width:100% !important; min-width:0 !important; min-height:0 !important; height:auto !important; flex:1 1 0% !important; overflow-y:auto !important; overflow-x:hidden !important; box-sizing:border-box !important; padding:14px !important; padding-bottom:calc(24px + env(safe-area-inset-bottom)) !important; }
+          #adminTabDashboard { width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
+          #adminTabDashboard > div, #adminTabDashboard .grid > div { min-width:0 !important; box-sizing:border-box !important; overflow-wrap:anywhere; }
+          #adminTabDashboard .grid { width:100% !important; }
+          #delofiaAdminDrawer { z-index:10002 !important; }
+          #delofiaAdminDrawerBackdrop { z-index:10001 !important; }
+        }
 </style>
 </html>
