@@ -5865,7 +5865,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                 quantity: cartCheckoutMode ? shoppingCart.reduce((sum, i) => sum + Number(i.qty || 0), 0) : currentCheckoutQty,
                 unitPrice: cartCheckoutMode ? subtotal : (Number(currentCheckoutUnitPrice) || 0),
                 variantUnitPrice: Number(currentCheckoutUnitPrice) || 0,
-                items: cartCheckoutMode ? shoppingCart.map(i => ({ productId:i.productId, productTitle:i.title, variantSelection:Object.values(i.variants || {}).filter(Boolean).join(' / '), quantity:Number(i.qty)||1, unitPrice:Number(i.unitPrice)||0, lineTotal:(Number(i.qty)||1)*(Number(i.unitPrice)||0), image:i.image||'' })) : [{ productId:currentCheckoutProduct.id, productTitle:currentCheckoutProduct.title, variantSelection:Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '), quantity:currentCheckoutQty, unitPrice:Number(currentCheckoutUnitPrice)||0, lineTotal:(Number(currentCheckoutUnitPrice)||0)*currentCheckoutQty }],
+                items: cartCheckoutMode ? shoppingCart.map(i => ({ productId:i.productId, productTitle:i.title, variants:{...(i.variants||{})}, variantSelection:Object.values(i.variants || {}).filter(Boolean).join(' / '), quantity:Number(i.qty)||1, unitPrice:Number(i.unitPrice)||0, lineTotal:(Number(i.qty)||1)*(Number(i.unitPrice)||0), image:i.image||'' })) : [{ productId:currentCheckoutProduct.id, productTitle:currentCheckoutProduct.title, variants:{...(currentCheckoutVariants||{})}, variantSelection:Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '), quantity:currentCheckoutQty, unitPrice:Number(currentCheckoutUnitPrice)||0, lineTotal:(Number(currentCheckoutUnitPrice)||0)*currentCheckoutQty }],
                 subtotal: subtotal,
                 discount: discount,
                 couponCode: appliedCouponCode || '',
@@ -5889,10 +5889,14 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                 if (typeof window.fsDoc !== 'function' || typeof window.fsSetDoc !== 'function') {
                     throw new Error('Firebase Firestore setup is incomplete on this page. Make sure the latest index.html is deployed to Firebase Hosting.');
                 }
-                // Security-first no-cost mode: customer browsers may create their own orders,
-                // but may not modify shared product stock. Admin must update stock in Admin Panel
-                // after reviewing each order. A trusted server function is required for secure auto-deduction.
-                await window.fsSetDoc(window.fsDoc(window.db, 'orders', orderId), orderObj);
+                // Atomically save the order and decrement inventory through a Supabase RPC.
+                // The database function locks product rows and validates stock before committing.
+                const { data: placedOrder, error: placeOrderError } = await window.delofiaSupabase.rpc('delofia_place_order', {
+                    p_order_id: orderId,
+                    p_order: orderObj
+                });
+                if (placeOrderError) throw placeOrderError;
+                if (!placedOrder) throw new Error('Supabase did not confirm the order. Please check Orders before retrying.');
             } catch (error) {
                 console.error('Could not save order:', { code: error?.code || 'unknown', message: error?.message || String(error), error });
                 const errorCode = String(error?.code || '');
@@ -7355,8 +7359,24 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         }
 
         async function updateOrderStatus(id, status) {
-            if (window.db && id) {
-                await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc("orders", id), { status: status }, { merge: true });
+            if (!window.delofiaSupabase || !id) return;
+            const order = (window.orders || []).find(o => String(o.id) === String(id));
+            const currentStatus = order?.status || 'Pending';
+            try {
+                if (status === 'Cancelled' && currentStatus !== 'Cancelled') {
+                    const { error } = await window.delofiaSupabase.rpc('delofia_cancel_order', { p_order_id: id });
+                    if (error) throw error;
+                } else if (currentStatus === 'Cancelled' && status !== 'Cancelled') {
+                    alert('এই অর্ডারটি ইতিমধ্যে Cancelled। Stock ফেরত দেওয়া হয়েছে কি না যাচাই না করে status পরিবর্তন করা যাচ্ছে না।');
+                    renderAdminOrders?.();
+                    return;
+                } else {
+                    await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc("orders", id), { status: status }, { merge: true });
+                }
+            } catch (error) {
+                console.error('Could not update order status:', error);
+                alert('Order status বা stock update হয়নি। Supabase SQL function setup হয়েছে কি না দেখুন।\n\n' + (error?.message || error));
+                if (typeof renderAdminOrders === 'function') renderAdminOrders();
             }
         }
 
