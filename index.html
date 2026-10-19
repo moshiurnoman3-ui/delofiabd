@@ -3127,6 +3127,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             // Use the last known catalog immediately; the live Firestore listener below refreshes it.
             const applyProductList = (list) => {
                 window.products = Array.isArray(list) ? list : [];
+                if (document.getElementById('adminTabDashboard') && !document.getElementById('adminTabDashboard').classList.contains('hidden')) refreshDelofiaAdminDashboard();
                 window.refreshPriceRangeBounds?.();
                 window.__productsSnapshotLoaded = true;
                 window.__productsLoadError = "";
@@ -3228,6 +3229,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                     snapshot.forEach(docSnap => list.push({ ...docSnap.data(), id: docSnap.id }));
                     list.sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0));
                     window.orders = list;
+                    if (document.getElementById('adminTabDashboard') && !document.getElementById('adminTabDashboard').classList.contains('hidden')) refreshDelofiaAdminDashboard();
                     if (!document.getElementById('adminModal').classList.contains('hidden')) {
                         window.renderOrdersTable();
                     }
@@ -6744,7 +6746,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 error.classList.add('hidden');
                 document.getElementById('adminLoginView').classList.add('hidden');
                 document.getElementById('adminDashboardView').classList.remove('hidden');
-                writeCurrentAdminSession(); loadAdminData();
+                writeCurrentAdminSession(); loadAdminData(); switchAdminTab('dashboard');
             } catch (err) {
                 console.error('Admin sign-in failed:', err);
                 error.textContent = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password' || err?.code === 'auth/user-not-found'
