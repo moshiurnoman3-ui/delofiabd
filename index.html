@@ -2040,6 +2040,21 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Total Order Amount</div><div id="adminDashOrderAmount" class="mt-3 text-xl font-black text-green-800">—</div><div class="mt-1 text-[11px] text-gray-500">All saved orders</div></div>
                         <div class="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Cancelled Order Amount</div><div id="adminDashCancelledAmount" class="mt-3 text-xl font-black text-orange-700">—</div><div class="mt-1 text-[11px] text-gray-500">Orders marked Cancelled</div></div>
                       </div>
+                      <section class="mt-5 rounded-2xl border border-purple-100 bg-white p-4 shadow-sm">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"><div><h3 class="font-bold text-purple-950">Order Analytics</h3><p class="text-xs text-gray-500 mt-1">মাস বা নির্দিষ্ট তারিখ বেছে অর্ডার দেখুন</p></div>
+                          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                            <label class="text-xs font-semibold text-gray-600">Month<select id="adminDashMonth" onchange="refreshDelofiaAdminDashboard()" class="mt-1 block w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm"><option value="all">All months</option></select></label>
+                            <label class="text-xs font-semibold text-gray-600">From date<input id="adminDashFrom" type="date" onchange="refreshDelofiaAdminDashboard()" class="mt-1 block w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm"></label>
+                            <label class="text-xs font-semibold text-gray-600">To date<input id="adminDashTo" type="date" onchange="refreshDelofiaAdminDashboard()" class="mt-1 block w-full rounded-lg border border-purple-200 bg-white px-3 py-2 text-sm"></label>
+                          </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mt-4"><div class="rounded-xl bg-purple-50 p-3"><div class="text-xs text-purple-700">Selected period orders</div><div id="adminDashPeriodOrders" class="mt-1 text-xl font-black text-purple-950">—</div></div><div class="rounded-xl bg-green-50 p-3"><div class="text-xs text-green-700">Selected period amount</div><div id="adminDashPeriodAmount" class="mt-1 text-xl font-black text-green-800">—</div></div></div>
+                        <div class="mt-5"><h4 class="font-bold text-sm text-gray-800">Monthly order amount</h4><p class="text-xs text-gray-500 mt-1">সাম্প্রতিক ৬ মাসের অর্ডারের টাকার তুলনা</p><div id="adminDashMonthlyChart" class="mt-3 grid grid-cols-6 gap-2 items-end min-h-40"></div></div>
+                      </section>
+                      <div class="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <section class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm"><h3 class="font-bold text-purple-950">Delivery Status</h3><p class="text-xs text-gray-500 mt-1">কতটি অর্ডার ডেলিভারি হয়েছে, বাকি আছে বা বাতিল হয়েছে</p><div class="flex flex-col sm:flex-row items-center gap-5 mt-4"><div id="adminDashDeliveryDonut" class="relative h-40 w-40 shrink-0 rounded-full flex items-center justify-center" style="background:conic-gradient(#16a34a 0% 0%,#7c3aed 0% 0%,#f97316 0% 0%)"><div class="h-24 w-24 rounded-full bg-white flex flex-col items-center justify-center"><strong id="adminDashDeliveredCount" class="text-2xl text-purple-950">0</strong><span class="text-xs text-gray-500">Delivered</span></div></div><div id="adminDashDeliveryLegend" class="space-y-3 text-sm w-full"></div></div></section>
+                        <section class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm"><h3 class="font-bold text-purple-950">Delivery Amount</h3><p class="text-xs text-gray-500 mt-1">ডেলিভারি হওয়া ও না হওয়া অর্ডারের টাকার হিসাব</p><div class="mt-4 space-y-3"><div class="flex justify-between gap-3"><span class="text-sm text-gray-600">Delivered amount</span><strong id="adminDashDeliveredAmount" class="text-green-700">—</strong></div><div class="flex justify-between gap-3"><span class="text-sm text-gray-600">Not delivered amount</span><strong id="adminDashUndeliveredAmount" class="text-purple-700">—</strong></div><div class="flex justify-between gap-3"><span class="text-sm text-gray-600">Cancelled amount</span><strong id="adminDashChartCancelledAmount" class="text-orange-700">—</strong></div></div></section>
+                      </div>
                       <div class="mt-5 rounded-2xl border border-purple-100 bg-white p-4 shadow-sm"><h3 class="font-bold text-purple-950">Quick Actions</h3><div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onclick="switchAdminTab('orders')" class="rounded-xl bg-purple-700 px-4 py-3 text-left text-sm font-bold text-white"><i class="fas fa-shopping-cart mr-2"></i>Manage Orders</button><button onclick="switchAdminTab('products')" class="rounded-xl bg-purple-50 px-4 py-3 text-left text-sm font-bold text-purple-900"><i class="fas fa-boxes mr-2"></i>Manage Products</button></div></div>
                       <p id="adminDashNote" class="mt-3 text-xs text-gray-500">Stock totals depend on saved stock quantity fields.</p>
                     </div>
@@ -7034,7 +7049,61 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             }
             return 0;
         }
-        function delofiaIsCancelled(order) { return /cancel/i.test(String(order?.status || order?.orderStatus || '')); }
+        function delofiaOrderDate(order) {
+            const raw = order?.createdAt || order?.created_at || order?.date || order?.timestamp || order?.orderDate || '';
+            if (raw && typeof raw.toDate === 'function') { const d=raw.toDate(); return Number.isNaN(d.getTime())?null:d; }
+            if (raw && typeof raw === 'object' && Number.isFinite(raw.seconds)) { const d=new Date(raw.seconds*1000); return Number.isNaN(d.getTime())?null:d; }
+            if (typeof raw === 'number') { const d=new Date(raw); return Number.isNaN(d.getTime())?null:d; }
+            if (!raw) return null;
+            let d=new Date(raw);
+            if (!Number.isNaN(d.getTime())) return d;
+            const m=String(raw).match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/);
+            if(m) { d=new Date(Number(m[3]),Number(m[1])-1,Number(m[2])); if(!Number.isNaN(d.getTime())) return d; }
+            return null;
+        }
+        function delofiaOrderStatus(order) { return String(order?.status || order?.orderStatus || 'Pending').trim().toLowerCase(); }
+        function delofiaIsCancelled(order) { return /cancel/i.test(delofiaOrderStatus(order)); }
+        function delofiaIsDelivered(order) { return /deliver|complete|received/i.test(delofiaOrderStatus(order)) && !delofiaIsCancelled(order); }
+        function delofiaMoney(value) { return '৳ ' + Math.round(Number(value)||0).toLocaleString('en-BD'); }
+        function delofiaInitDashboardMonths(orders) {
+            const select=document.getElementById('adminDashMonth'); if(!select) return;
+            const previous=select.value || 'all';
+            const keys=new Set();
+            (orders||[]).forEach(o=>{const d=delofiaOrderDate(o);if(d)keys.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));});
+            const now=new Date(); for(let i=0;i<18;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);keys.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));}
+            const labels=Array.from(keys).sort().reverse();
+            select.innerHTML='<option value="all">All months</option>'+labels.map(k=>{const [y,m]=k.split('-');const label=new Date(Number(y),Number(m)-1,1).toLocaleDateString('en',{month:'long',year:'numeric'});return '<option value="'+k+'">'+label+'</option>';}).join('');
+            select.value=labels.includes(previous)?previous:'all';
+        }
+        function delofiaRenderDashboardAnalytics(orders) {
+            const el=id=>document.getElementById(id);
+            const month=el('adminDashMonth')?.value||'all', from=el('adminDashFrom')?.value||'', to=el('adminDashTo')?.value||'';
+            const dated=orders.map(order=>({order,date:delofiaOrderDate(order)}));
+            let filtered=dated.filter(x=>{
+                if(!x.date) return month==='all'&&!from&&!to;
+                const key=x.date.getFullYear()+'-'+String(x.date.getMonth()+1).padStart(2,'0');
+                if(month!=='all'&&key!==month)return false;
+                const day=x.date.getFullYear()+'-'+String(x.date.getMonth()+1).padStart(2,'0')+'-'+String(x.date.getDate()).padStart(2,'0');
+                if(from&&day<from)return false;if(to&&day>to)return false;return true;
+            }).map(x=>x.order);
+            const total=filtered.reduce((a,o)=>a+delofiaOrderAmount(o),0);
+            if(el('adminDashPeriodOrders'))el('adminDashPeriodOrders').textContent=String(filtered.length);
+            if(el('adminDashPeriodAmount'))el('adminDashPeriodAmount').textContent=delofiaMoney(total);
+            const chartOrders=dated.filter(x=>x.date);
+            const now=new Date(), months=[];
+            for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const rows=chartOrders.filter(x=>x.date.getFullYear()===d.getFullYear()&&x.date.getMonth()===d.getMonth()).map(x=>x.order);months.push({key,label:d.toLocaleDateString('en',{month:'short'}),count:rows.length,amount:rows.reduce((a,o)=>a+delofiaOrderAmount(o),0)});}
+            const max=Math.max(1,...months.map(m=>m.amount));
+            if(el('adminDashMonthlyChart'))el('adminDashMonthlyChart').innerHTML=months.map(m=>'<div class="min-w-0 text-center flex flex-col justify-end h-40"><div class="text-[10px] text-gray-500 mb-1 break-words">'+(m.amount>=100000?(m.amount/1000).toFixed(0)+'k':Math.round(m.amount).toLocaleString('en-BD'))+'</div><div title="'+m.count+' orders, '+delofiaMoney(m.amount)+'" class="mx-auto w-full max-w-10 rounded-t-md bg-purple-500 hover:bg-purple-700" style="height:'+Math.max(m.amount?5:2,Math.round(m.amount/max*105))+'px"></div><div class="text-[10px] font-semibold text-gray-600 mt-2">'+m.label+'</div><div class="text-[10px] text-gray-400">'+m.count+' orders</div></div>').join('');
+            const delivered=filtered.filter(delofiaIsDelivered), cancelled=filtered.filter(delofiaIsCancelled), undelivered=filtered.filter(o=>!delofiaIsDelivered(o)&&!delofiaIsCancelled(o));
+            const dc=delivered.length, cc=cancelled.length, uc=undelivered.length, count=filtered.length||0;
+            const dp=count?dc/count*100:0, up=count?(dc+uc)/count*100:0;
+            if(el('adminDashDeliveryDonut'))el('adminDashDeliveryDonut').style.background=count?'conic-gradient(#16a34a 0% '+dp+'%,#7c3aed '+dp+'% '+up+'%,#f97316 '+up+'% 100%)':'conic-gradient(#e5e7eb 0% 100%)';
+            if(el('adminDashDeliveredCount'))el('adminDashDeliveredCount').textContent=String(dc);
+            if(el('adminDashDeliveryLegend'))el('adminDashDeliveryLegend').innerHTML='<div class="flex items-center justify-between gap-2"><span><i class="inline-block h-3 w-3 rounded-sm bg-green-600 mr-2"></i>Delivered</span><strong>'+dc+' ('+Math.round(dp)+'%)</strong></div><div class="flex items-center justify-between gap-2"><span><i class="inline-block h-3 w-3 rounded-sm bg-purple-600 mr-2"></i>Not delivered</span><strong>'+uc+' ('+(count?Math.round(uc/count*100):0)+'%)</strong></div><div class="flex items-center justify-between gap-2"><span><i class="inline-block h-3 w-3 rounded-sm bg-orange-500 mr-2"></i>Cancelled</span><strong>'+cc+' ('+(count?Math.round(cc/count*100):0)+'%)</strong></div>';
+            if(el('adminDashDeliveredAmount'))el('adminDashDeliveredAmount').textContent=delofiaMoney(delivered.reduce((a,o)=>a+delofiaOrderAmount(o),0));
+            if(el('adminDashUndeliveredAmount'))el('adminDashUndeliveredAmount').textContent=delofiaMoney(undelivered.reduce((a,o)=>a+delofiaOrderAmount(o),0));
+            if(el('adminDashChartCancelledAmount'))el('adminDashChartCancelledAmount').textContent=delofiaMoney(cancelled.reduce((a,o)=>a+delofiaOrderAmount(o),0));
+        }
         function delofiaProductIsStockOut(p) {
             if (p?.stockOut === true) return true;
             const readQty = item => {
@@ -7059,6 +7128,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
             const orders = Array.isArray(window.orders) ? window.orders : [];
             const products = Array.isArray(window.products) ? window.products : [];
+            delofiaInitDashboardMonths(orders);
+            delofiaRenderDashboardAnalytics(orders);
             set('adminDashTotalOrders', String(orders.length));
             set('adminDashTotalProducts', String(products.length));
             const orderTotal = orders.reduce((sum, order) => sum + delofiaOrderAmount(order), 0);
