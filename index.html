@@ -1368,6 +1368,16 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 }
 #adminLogoPreview img, #brandLogoMark img { object-fit: contain !important; background: transparent !important; }
 </style>
+
+<style id="delofia-mobile-filter-cleanup-v1">
+/* On phones, category tiles already appear below, so keep only the price-range slider in this filter panel. */
+@media (max-width: 640px) {
+  #productFilters > div > div:first-child { display: none !important; }
+  #productFilters > div > button[onclick="resetProductFilters()"] { display: none !important; }
+  #productFilters > div { display: block !important; }
+  #productFilters > div > div.rounded-xl.border { width: 100% !important; }
+}
+</style>
 </head>
 <body class="bg-brand-bgLight text-gray-800 min-h-screen flex flex-col">
 <!-- Top Announcement Bar -->
