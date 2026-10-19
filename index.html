@@ -1999,6 +1999,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 
                 <!-- Admin Tabs -->
                 <div id="adminTabsScroller" class="bg-purple-50 border-b border-purple-100 px-3 sm:px-6 flex gap-4 text-xs font-bold flex-shrink-0 overflow-x-auto whitespace-nowrap touch-pan-x" style="-webkit-overflow-scrolling:touch; scrollbar-width:thin; overscroll-behavior-x:contain;">
+                    <button onclick="switchAdminTab('dashboard')" id="tabBtnDashboard" class="flex-shrink-0 py-3 text-gray-500 hover:text-purple-800"><i class="fas fa-chart-pie mr-1"></i> Dashboard</button>
                     <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="flex-shrink-0 py-3 text-purple-800 border-b-2 border-purple-700">
                         <i class="fas fa-shopping-cart mr-1"></i> Direct Orders (<span id="ordersCount">0</span>)
                     </button>
@@ -2031,11 +2032,13 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                 <div class="flex-1 min-h-0 p-3 sm:p-6 overflow-y-auto overflow-x-hidden custom-scrollbar bg-gray-50" style="-webkit-overflow-scrolling:touch;">
                     <div id="adminTabDashboard" class="hidden">
                       <div class="mb-5"><p class="text-xs font-bold uppercase tracking-widest text-purple-600">Overview</p><h2 class="text-2xl font-black text-purple-950 mt-1">Dashboard</h2><p class="text-sm text-gray-500 mt-1">Your store at a glance</p></div>
-                      <div class="grid grid-cols-2 gap-3">
-                        <div class="rounded-2xl border border-purple-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Total Orders</div><div id="adminDashTotalOrders" class="mt-3 text-2xl font-black text-purple-950">—</div></div>
-                        <div class="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Total Products</div><div id="adminDashTotalProducts" class="mt-3 text-2xl font-black text-purple-950">—</div></div>
-                        <div class="rounded-2xl border border-red-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Stock Out</div><div id="adminDashStockOut" class="mt-3 text-2xl font-black text-purple-950">—</div></div>
+                      <div class="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                        <button type="button" onclick="openDashboardOrders()" class="text-left rounded-2xl border border-purple-100 bg-white p-4 shadow-sm hover:border-purple-400 hover:shadow-md"><div class="text-xs font-semibold text-gray-500">Total Orders</div><div id="adminDashTotalOrders" class="mt-3 text-2xl font-black text-purple-950">—</div><div class="mt-2 text-[11px] font-bold text-purple-700">View all orders →</div></button>
+                        <button type="button" onclick="openDashboardProducts()" class="text-left rounded-2xl border border-blue-100 bg-white p-4 shadow-sm hover:border-blue-300 hover:shadow-md"><div class="text-xs font-semibold text-gray-500">Total Products</div><div id="adminDashTotalProducts" class="mt-3 text-2xl font-black text-purple-950">—</div><div class="mt-2 text-[11px] font-bold text-purple-700">View all products →</div></button>
+                        <button type="button" onclick="openDashboardStockOut()" class="text-left rounded-2xl border border-red-100 bg-white p-4 shadow-sm hover:border-red-300 hover:shadow-md"><div class="text-xs font-semibold text-gray-500">Stock Out</div><div id="adminDashStockOut" class="mt-3 text-2xl font-black text-purple-950">—</div><div class="mt-2 text-[11px] font-bold text-purple-700">View stock-out items →</div></button>
                         <div class="rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Stock Value</div><div id="adminDashStockValue" class="mt-3 text-2xl font-black text-purple-950">—</div></div>
+                        <div class="rounded-2xl border border-green-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Total Order Amount</div><div id="adminDashOrderAmount" class="mt-3 text-xl font-black text-green-800">—</div><div class="mt-1 text-[11px] text-gray-500">All saved orders</div></div>
+                        <div class="rounded-2xl border border-orange-100 bg-white p-4 shadow-sm"><div class="text-xs font-semibold text-gray-500">Cancelled Order Amount</div><div id="adminDashCancelledAmount" class="mt-3 text-xl font-black text-orange-700">—</div><div class="mt-1 text-[11px] text-gray-500">Orders marked Cancelled</div></div>
                       </div>
                       <div class="mt-5 rounded-2xl border border-purple-100 bg-white p-4 shadow-sm"><h3 class="font-bold text-purple-950">Quick Actions</h3><div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"><button onclick="switchAdminTab('orders')" class="rounded-xl bg-purple-700 px-4 py-3 text-left text-sm font-bold text-white"><i class="fas fa-shopping-cart mr-2"></i>Manage Orders</button><button onclick="switchAdminTab('products')" class="rounded-xl bg-purple-50 px-4 py-3 text-left text-sm font-bold text-purple-900"><i class="fas fa-boxes mr-2"></i>Manage Products</button></div></div>
                       <p id="adminDashNote" class="mt-3 text-xs text-gray-500">Stock totals depend on saved stock quantity fields.</p>
@@ -7024,12 +7027,44 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         }
         window.toggleDelofiaAdminDrawer = toggleDelofiaAdminDrawer;
 
+        function delofiaOrderAmount(order) {
+            for (const key of ['grandTotal','totalAmount','total','amount','orderTotal','payableAmount']) {
+                const n = Number(order?.[key]);
+                if (order?.[key] !== undefined && order?.[key] !== null && order?.[key] !== '' && Number.isFinite(n)) return n;
+            }
+            return 0;
+        }
+        function delofiaIsCancelled(order) { return /cancel/i.test(String(order?.status || order?.orderStatus || '')); }
+        function delofiaProductIsStockOut(p) {
+            if (p?.stockOut === true) return true;
+            const readQty = item => {
+                for (const key of ['stockQty','stock','quantity','inventory']) {
+                    if (item && item[key] !== undefined && item[key] !== null && item[key] !== '' && Number.isFinite(Number(item[key]))) return Number(item[key]);
+                }
+                return null;
+            };
+            const qty = readQty(p);
+            if (qty !== null) return qty <= 0;
+            let foundVariant = false, anyAvailable = false;
+            for (const group of (Array.isArray(p?.variantGroups) ? p.variantGroups : [])) for (const option of (Array.isArray(group?.options) ? group.options : [])) {
+                const variants = Array.isArray(option?.childVariants) && option.childVariants.length ? option.childVariants : [option];
+                for (const v of variants) { const n = readQty(v); if (n !== null) { foundVariant = true; if (n > 0) anyAvailable = true; } }
+            }
+            return foundVariant && !anyAvailable;
+        }
+        function openDashboardOrders() { switchAdminTab('orders'); }
+        function openDashboardProducts() { window.delofiaAdminProductFilter = 'all'; switchAdminTab('products'); renderAdminProductsList(); }
+        function openDashboardStockOut() { window.delofiaAdminProductFilter = 'stockout'; switchAdminTab('products'); renderAdminProductsList(); }
         function refreshDelofiaAdminDashboard() {
             const set = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
             const orders = Array.isArray(window.orders) ? window.orders : [];
             const products = Array.isArray(window.products) ? window.products : [];
             set('adminDashTotalOrders', String(orders.length));
             set('adminDashTotalProducts', String(products.length));
+            const orderTotal = orders.reduce((sum, order) => sum + delofiaOrderAmount(order), 0);
+            const cancelledTotal = orders.filter(delofiaIsCancelled).reduce((sum, order) => sum + delofiaOrderAmount(order), 0);
+            set('adminDashOrderAmount', '৳ ' + Math.round(orderTotal).toLocaleString('en-BD'));
+            set('adminDashCancelledAmount', '৳ ' + Math.round(cancelledTotal).toLocaleString('en-BD'));
             let stockOut = 0, stockValue = 0, stockKnown = false;
             const readQty = item => {
                 for (const key of ['stockQty','stock','quantity','inventory']) {
@@ -7038,33 +7073,23 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 return null;
             };
             for (const p of products) {
-                const directQty = readQty(p);
-                if (directQty !== null) {
-                    stockKnown = true;
-                    if (directQty <= 0) stockOut++;
-                    const price = Number(p.price ?? p.salePrice ?? p.sellingPrice);
-                    if (directQty > 0 && Number.isFinite(price) && price > 0) stockValue += directQty * price;
-                }
-                for (const group of (Array.isArray(p.variantGroups) ? p.variantGroups : [])) {
-                    for (const option of (Array.isArray(group.options) ? group.options : [])) {
+                if (p?.stockOut === true) stockOut++;
+                else {
+                    const directQty = readQty(p);
+                    if (directQty !== null) { stockKnown = true; if (directQty <= 0) stockOut++; const price = Number(p.price ?? p.salePrice ?? p.sellingPrice); if (directQty > 0 && Number.isFinite(price) && price > 0) stockValue += directQty * price; }
+                    for (const group of (Array.isArray(p.variantGroups) ? p.variantGroups : [])) for (const option of (Array.isArray(group.options) ? group.options : [])) {
                         const variants = Array.isArray(option.childVariants) && option.childVariants.length ? option.childVariants : [option];
-                        for (const v of variants) {
-                            const qty = v.stockQty;
-                            if (qty === undefined || qty === null || qty === '' || !Number.isFinite(Number(qty))) continue;
-                            stockKnown = true;
-                            if (Number(qty) <= 0) stockOut++;
-                            const price = Number(v.price ?? option.price ?? p.price ?? p.salePrice);
-                            if (Number(qty) > 0 && Number.isFinite(price) && price > 0) stockValue += Number(qty) * price;
-                        }
+                        for (const v of variants) { const qty = readQty(v); if (qty === null) continue; stockKnown = true; if (qty <= 0) stockOut++; const price = Number(v.price ?? option.price ?? p.price ?? p.salePrice); if (qty > 0 && Number.isFinite(price) && price > 0) stockValue += qty * price; }
                     }
                 }
             }
-            set('adminDashStockOut', stockKnown ? String(stockOut) : '—');
+            set('adminDashStockOut', stockKnown || products.some(p => p?.stockOut === true) ? String(stockOut) : '—');
             set('adminDashStockValue', stockKnown ? '৳ ' + Math.round(stockValue).toLocaleString('en-BD') : '—');
-            set('adminDashNote', stockKnown ? 'Stock totals use quantity fields found on products/variants. Please compare with inventory.' : 'Order/product counts are live. Stock totals need quantity values saved on products or variants.');
+            set('adminDashNote', 'Order totals use saved order amount fields; cancelled total includes orders whose status is Cancelled. Stock counts depend on saved stock fields or stockOut flags.');
         }
 
         function switchAdminTab(tab) {
+            if (tab === 'products' && !window.delofiaAdminProductFilter) window.delofiaAdminProductFilter = 'all';
             ['Dashboard', 'Orders', 'Customers', 'Shipping', 'Payment', 'Products', 'Reviews', 'Store', 'Password', 'Sessions'].forEach(t => {
                 const panel = document.getElementById(`adminTab${t}`);
                 const button = document.getElementById(`tabBtn${t}`);
@@ -8035,16 +8060,24 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         function renderAdminProductsList() {
             const list = document.getElementById('adminProductsList');
             if (!list) return;
-            const catalogProducts = Array.isArray(window.products) ? window.products : [];
+            const allCatalogProducts = Array.isArray(window.products) ? window.products : [];
+            const productFilter = window.delofiaAdminProductFilter || 'all';
+            const catalogProducts = productFilter === 'stockout' ? allCatalogProducts.filter(delofiaProductIsStockOut) : allCatalogProducts;
             list.innerHTML = '';
+            const filterBar = document.createElement('div');
+            filterBar.className = 'flex flex-wrap items-center justify-between gap-2 mb-3';
+            filterBar.innerHTML = '<strong class="text-sm text-gray-700">' + (productFilter === 'stockout' ? 'Stock-out products' : 'All products') + ' (' + catalogProducts.length + ')</strong><button type="button" class="rounded-lg bg-purple-100 text-purple-800 px-3 py-2 font-bold" onclick="window.delofiaAdminProductFilter=\'all\';renderAdminProductsList()">Show all products</button>';
+            list.appendChild(filterBar);
             if (!catalogProducts.length) {
                 const empty = document.createElement('div');
                 empty.className = 'p-4 text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded-xl';
-                empty.textContent = window.__productsLoadError
+                empty.textContent = productFilter === 'stockout'
+                    ? 'Saved stock quantity/stockOut field অনুযায়ী কোনো stock-out product পাওয়া যায়নি।'
+                    : (window.__productsLoadError
                     ? ('Firebase থেকে Product লোড হয়নি: ' + window.__productsLoadError)
                     : (window.__productsSnapshotLoaded
                         ? 'Firebase products collection-এ এখন কোনো Product পাওয়া যায়নি। Product মুছে ফেলা হয়নি; connection/rules পরীক্ষা করুন।'
-                        : 'Firebase থেকে Product লোড হচ্ছে...');
+                        : 'Firebase থেকে Product লোড হচ্ছে...'));
                 list.appendChild(empty);
                 return;
             }
