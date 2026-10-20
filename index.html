@@ -2144,6 +2144,16 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                                 <button onclick="clearAllOrders()" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-xl font-bold transition">Clear All Orders</button>
                             </div>
                         </div>
+                        <div class="mb-4 rounded-2xl border border-purple-200 bg-purple-50/60 p-3 sm:p-4">
+                            <div class="mb-3 font-bold text-purple-950">Filter orders</div>
+                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <label class="text-xs font-semibold text-gray-700">From date<input id="adminOrdersFromDate" type="date" onchange="renderOrdersTable()" class="mt-1 block w-full rounded-xl border border-purple-200 bg-white px-3 py-2 text-sm"></label>
+                                <label class="text-xs font-semibold text-gray-700">To date<input id="adminOrdersToDate" type="date" onchange="renderOrdersTable()" class="mt-1 block w-full rounded-xl border border-purple-200 bg-white px-3 py-2 text-sm"></label>
+                                <label class="text-xs font-semibold text-gray-700">Order status<select id="adminOrdersStatusFilter" onchange="renderOrdersTable()" class="mt-1 block w-full rounded-xl border border-purple-200 bg-white px-3 py-2 text-sm"><option value="all">All statuses</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="courier">Courier</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label>
+                                <div class="flex items-end"><button type="button" onclick="document.getElementById('adminOrdersFromDate').value='';document.getElementById('adminOrdersToDate').value='';document.getElementById('adminOrdersStatusFilter').value='all';renderOrdersTable()" class="w-full rounded-xl bg-purple-200 px-3 py-2.5 text-sm font-bold text-purple-900 hover:bg-purple-300">Clear filters</button></div>
+                            </div>
+                            <div id="adminOrdersFilterSummary" aria-live="polite" class="mt-3 text-xs font-semibold text-purple-950">Showing all orders</div>
+                        </div>
                         <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><strong>Security mode:</strong> Customer checkout cannot edit shared stock. After reviewing a new order, update stock manually from the Products tab. Automatic stock deduction needs a trusted server-side function.</div>
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                             <div class="overflow-x-auto">
@@ -7354,15 +7364,40 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if (!tbody) return;
             const allOrders = Array.isArray(window.orders) ? window.orders : [];
             const q = String(document.getElementById('adminOrdersSearch')?.value || '').trim().toLowerCase();
-            const visibleOrders = q ? allOrders.filter(o => {
+            const fromDate = document.getElementById('adminOrdersFromDate')?.value || '';
+            const toDate = document.getElementById('adminOrdersToDate')?.value || '';
+            const statusFilter = document.getElementById('adminOrdersStatusFilter')?.value || 'all';
+            const visibleOrders = allOrders.filter(o => {
                 const itemNames = Array.isArray(o.items) ? o.items.map(item => item?.productTitle || '').join(' ') : '';
-                return [o.orderId,o.date,o.customerName,o.phone,o.address,o.productTitle,o.variantSelection,itemNames]
+                const matchesSearch = !q || [o.orderId,o.date,o.customerName,o.phone,o.address,o.productTitle,o.variantSelection,itemNames]
                     .some(value => String(value || '').toLowerCase().includes(q));
-            }) : allOrders;
-            if (count) count.textContent = q ? `${visibleOrders.length}/${allOrders.length}` : String(allOrders.length);
+                if (!matchesSearch) return false;
+                const date = typeof delofiaOrderDate === 'function' ? delofiaOrderDate(o) : null;
+                if ((fromDate || toDate) && !date) return false;
+                if (date) {
+                    const day = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+                    if (fromDate && day < fromDate) return false;
+                    if (toDate && day > toDate) return false;
+                }
+                const status = delofiaOrderStatus(o);
+                if (statusFilter === 'delivered' && !delofiaIsDelivered(o)) return false;
+                if (statusFilter === 'cancelled' && !delofiaIsCancelled(o)) return false;
+                if (statusFilter === 'pending' && status !== 'pending') return false;
+                if (statusFilter === 'confirmed' && status !== 'confirmed') return false;
+                if (statusFilter === 'courier' && status !== 'courier') return false;
+                return true;
+            });
+            const deliveredCount = visibleOrders.filter(delofiaIsDelivered).length;
+            const cancelledCount = visibleOrders.filter(delofiaIsCancelled).length;
+            const pendingCount = visibleOrders.filter(o => delofiaOrderStatus(o) === 'pending').length;
+            const confirmedCount = visibleOrders.filter(o => delofiaOrderStatus(o) === 'confirmed').length;
+            const courierCount = visibleOrders.filter(o => delofiaOrderStatus(o) === 'courier').length;
+            if (count) count.textContent = (fromDate || toDate || statusFilter !== 'all' || q) ? `${visibleOrders.length}/${allOrders.length}` : String(allOrders.length);
+            const summary = document.getElementById('adminOrdersFilterSummary');
+            if (summary) summary.textContent = `Showing ${visibleOrders.length} of ${allOrders.length} orders · Delivered: ${deliveredCount} · Cancelled: ${cancelledCount} · Pending: ${pendingCount} · Confirmed: ${confirmedCount} · Courier: ${courierCount}`;
             tbody.innerHTML = '';
             if (!visibleOrders.length) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">${q ? 'No orders match this search.' : 'No direct orders placed yet.'}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">${(q || fromDate || toDate || statusFilter !== 'all') ? 'No orders match these filters.' : 'No direct orders placed yet.'}</td></tr>`;
                 return;
             }
             visibleOrders.forEach((o) => {
