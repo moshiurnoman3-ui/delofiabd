@@ -2405,7 +2405,8 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                             </div>
                             <!-- Campaign settings moved to dedicated Campaign Products tab -->
 
-<section class="border-t border-purple-100 pt-4 mt-4 space-y-3"><div><h5 class="font-bold text-purple-900 text-sm mb-1">Homepage Offer Slider</h5><p class="text-xs text-gray-500">কমপক্ষে ৫টি slide slot থাকবে। Desktop ছবি দাও; ফোনে আলাদা ছবি দিতে চাইলে Mobile image-ও upload করো। প্রতিটি slide চাইলে নির্দিষ্ট product-এ link করা যাবে।</p></div><label class="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 p-3"><input type="checkbox" id="settingHeroCarouselEnabled" class="h-4 w-4"><span class="text-sm font-bold">Enable offer slider (auto + swipe)</span></label><div><label for="settingHeroCarouselInterval" class="block text-xs font-bold text-gray-700 mb-1">Auto-slide interval</label><select id="settingHeroCarouselInterval" class="w-full border rounded-xl p-3 text-sm"><option value="2">2 seconds</option><option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></div><div id="adminHeroSlidesEditor" class="space-y-3"></div><button type="button" id="addHeroSlideButton" class="rounded-xl border border-purple-300 bg-white px-4 py-2 text-sm font-bold text-purple-800 hover:bg-purple-50">+ Add another slide</button><p id="adminHeroSlidesStatus" class="text-[11px] text-gray-500">ছবি save করার আগে size কমানো হবে।</p></section>
+<!-- Homepage Offer Slider removed -->
+<!-- <section class="border-t border-purple-100 pt-4 mt-4 space-y-3"><div><h5 class="font-bold text-purple-900 text-sm mb-1">Homepage Offer Slider</h5><p class="text-xs text-gray-500">কমপক্ষে ৫টি slide slot থাকবে। Desktop ছবি দাও; ফোনে আলাদা ছবি দিতে চাইলে Mobile image-ও upload করো। প্রতিটি slide চাইলে নির্দিষ্ট product-এ link করা যাবে।</p></div><label class="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 p-3"><input type="checkbox" id="settingHeroCarouselEnabled" class="h-4 w-4"><span class="text-sm font-bold">Enable offer slider (auto + swipe)</span></label><div><label for="settingHeroCarouselInterval" class="block text-xs font-bold text-gray-700 mb-1">Auto-slide interval</label><select id="settingHeroCarouselInterval" class="w-full border rounded-xl p-3 text-sm"><option value="2">2 seconds</option><option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></div><div id="adminHeroSlidesEditor" class="space-y-3"></div><button type="button" id="addHeroSlideButton" class="rounded-xl border border-purple-300 bg-white px-4 py-2 text-sm font-bold text-purple-800 hover:bg-purple-50">+ Add another slide</button><p id="adminHeroSlidesStatus" class="text-[11px] text-gray-500">ছবি save করার আগে size কমানো হবে।</p></section> -->
 <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl">Save Store & Social Settings</button>
                         </form>
                     </div>
@@ -3623,10 +3624,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             const s = settings || window.storeSettings || {};
             return {
                 heroBadge: s.heroBadge, heroTitle: s.heroTitle, heroDescription: s.heroDescription,
-                heroShopText: s.heroShopText, heroWhatsappText: s.heroWhatsappText,
-                heroCarouselEnabled: s.heroCarouselEnabled === true,
-                heroCarouselInterval: Number(s.heroCarouselInterval) || 5,
-                heroCarouselSlides: Array.isArray(s.heroCarouselSlides) ? s.heroCarouselSlides : []
+                heroShopText: s.heroShopText, heroWhatsappText: s.heroWhatsappText
             };
         }
         function cacheStorefrontHeroSettings(settings) {
@@ -4427,7 +4425,7 @@ function applyDelofiaCampaign(){
  startAutoScroll();
 }
 window.applyDelofiaCampaign=applyDelofiaCampaign;
-function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.dataset.delofiaFailedSrc===nextSrc){box.classList.add('hidden');if(fallback)fallback.classList.remove('hidden');return;}if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
+function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=false;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.dataset.delofiaFailedSrc===nextSrc){box.classList.add('hidden');if(fallback)fallback.classList.remove('hidden');return;}if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
         window.applyStorefrontHeroCarousel=applyStorefrontHeroCarousel;
         function moveHeroCarousel(delta){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));if(slides.length<2)return;heroCarouselCurrentIndex=(heroCarouselCurrentIndex+delta+slides.length)%slides.length;applyStorefrontHeroCarousel();}
         function openHeroCarouselProduct(){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const slide=slides[heroCarouselCurrentIndex];if(slide?.clickable&&slide.productId)window.openProductDetail?.(slide.productId);}
@@ -4464,9 +4462,7 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 storeSettings.campaignProductCodes = (Array.isArray(campaignProductSelectedIds) && campaignProductSelectedIds.length ? campaignProductSelectedIds : (document.getElementById('settingCampaignProductCodes')?.value || '').split(',').map(x=>x.trim()).filter(Boolean));
                 storeSettings.campaignStart = document.getElementById('settingCampaignStart')?.value || '';
                 storeSettings.campaignEnd = document.getElementById('settingCampaignEnd')?.value || '';
-                storeSettings.heroCarouselEnabled = !!document.getElementById('settingHeroCarouselEnabled')?.checked;
-                storeSettings.heroCarouselInterval = Math.max(2, Math.min(30, Number(document.getElementById('settingHeroCarouselInterval')?.value) || 5));
-                storeSettings.heroCarouselSlides = normalizeAdminHeroSlides(adminHeroSlides);
+                // Legacy offer-slider fields are no longer editable.
                 if (new Blob([JSON.stringify(storeSettings)]).size > 850000) throw new Error('Slider images are too large for Firestore. Use smaller banner images and try again.');
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
                 Object.entries(settingTextFields).forEach(([key, id]) => { const field = document.getElementById(id); if (field) storeSettings[key] = field.value.trim(); });
@@ -4496,23 +4492,22 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 settingGlobalShowPrice:'globalShowPrice',
                 settingWhatsappEnabled:'whatsappEnabled',
                 settingProductPhotoAutoRotate:'productPhotoAutoRotate',
-                settingCampaignEnabled:'campaignEnabled',
-                settingHeroCarouselEnabled:'heroCarouselEnabled'
+                settingCampaignEnabled:'campaignEnabled'
             };
             Object.entries(toggleKeys).forEach(([id,key])=>{
                 const el=document.getElementById(id);
                 if(!el||el.dataset.delofiaAutoSaveBound==='1')return;
                 el.dataset.delofiaAutoSaveBound='1';
                 el.addEventListener('change',async()=>{
-                    const previous=storeSettings[key];
-                    storeSettings[key]=!!el.checked;
+                    const previous=!!(window.storeSettings||storeSettings)[key];
+                    const latest={...(window.storeSettings||storeSettings),[key]:!!el.checked};
                     try{
                         if(!window.delofiaAdminFs?.setDoc||!window.delofiaAdminFs?.doc)throw new Error('Settings connection is not ready.');
-                        await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),{...storeSettings,[key]:!!el.checked});
-                        window.storeSettings=storeSettings;
-                        applyDelofiaCampaign?.();applyStorefrontHeroCarousel?.();
+                        await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),latest);
+                        Object.assign(storeSettings,latest);window.storeSettings=storeSettings;
+                        applyDelofiaCampaign?.();
                     }catch(err){
-                        storeSettings[key]=previous;el.checked=!!previous;
+                        storeSettings[key]=previous;window.storeSettings=storeSettings;el.checked=previous;
                         console.error('Could not save setting '+key,err);
                         alert('Setting save হয়নি। আবার চেষ্টা করো। '+(err?.message||''));
                     }
@@ -7484,10 +7479,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 const sfTheme = document.getElementById('settingStorefrontTheme'); if (sfTheme) sfTheme.value = storeSettings.storefrontTheme || 'dark';
                 const adTheme = document.getElementById('settingAdminTheme'); if (adTheme) adTheme.value = storeSettings.adminTheme || 'light';
                 pendingStoreLogo = null; applyStoreLogo();
-                const carouselEnabled = document.getElementById('settingHeroCarouselEnabled'); if (carouselEnabled) carouselEnabled.checked = storeSettings.heroCarouselEnabled === true;
-                const carouselInterval = document.getElementById('settingHeroCarouselInterval'); if (carouselInterval) carouselInterval.value = String(storeSettings.heroCarouselInterval || 5);
-                adminHeroSlides = normalizeAdminHeroSlides(storeSettings.heroCarouselSlides);
-                renderAdminHeroSlides();
+
             }
         }
 
