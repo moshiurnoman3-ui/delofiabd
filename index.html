@@ -9320,6 +9320,27 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
 </script>
 
 
+
+<style id="delofia-category-horizontal-swipe-hotfix">
+@media (max-width: 640px) {
+  body #delofiaCategoryLanding #delofiaCategoryCards {
+    display:flex !important; flex-direction:row !important; flex-wrap:nowrap !important;
+    justify-content:flex-start !important; width:100% !important; max-width:100% !important;
+    overflow-x:auto !important; overflow-y:hidden !important; direction:ltr !important;
+    touch-action:pan-x pan-y !important; overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch !important; scroll-snap-type:x proximity !important;
+    scrollbar-width:thin; pointer-events:auto !important; gap:10px !important;
+    padding:2px 2px 14px !important;
+  }
+  body #delofiaCategoryLanding #delofiaCategoryCards > .delofia-category-card {
+    display:flex !important; flex:0 0 68% !important; width:68% !important;
+    max-width:240px !important; min-width:145px !important; direction:ltr !important;
+    scroll-snap-align:start !important; touch-action:pan-x pan-y !important;
+    pointer-events:auto !important;
+  }
+}
+</style>
+
 </body>
 
 <style id="delofia-mobile-header-buttons-v36">
