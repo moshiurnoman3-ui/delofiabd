@@ -8676,10 +8676,12 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             document.getElementById('prodVideoUrl').value = p.videoUrl || '';
             document.getElementById('prodVideoApproved').checked = p.videoApproved !== false;
 
-            document.getElementById('prodImages').value = (p.images || []).filter(src => !src.startsWith('data:image/') && !isAutoDelofiaPlaceholderImage(src)).join(', ');
+            // Show every saved product image in the editable preview, including Supabase Storage URLs.
+            // Keep the optional URL textarea empty on edit so existing images are not duplicated on save.
+            selectedProductPhotoData = (p.images || []).filter(src => typeof src === 'string' && src && !isAutoDelofiaPlaceholderImage(src));
+            document.getElementById('prodImages').value = '';
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = p.photoAutoRotate === true;
             const productPhotoInterval = document.getElementById('prodPhotoInterval'); if (productPhotoInterval) productPhotoInterval.value = String(p.photoInterval || 4);
-            selectedProductPhotoData = (p.images || []).filter(src => src.startsWith('data:image/'));
             renderProductPhotoPreview();
             document.getElementById('prodDesc').value = p.description || '';
             const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = p.howToUse || '';
