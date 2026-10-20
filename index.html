@@ -2290,7 +2290,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         </div>
                         <div class="flex items-center justify-between gap-3 mb-4"><p id="campaignProductSelectedCount" class="text-sm font-bold text-purple-800">0 selected</p><button type="button" onclick="clearCampaignProductSelection()" class="text-sm font-bold text-gray-600 underline">Clear selection</button></div>
                         <div id="campaignProductPickerList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"><p class="text-sm text-gray-500">Loading products…</p></div>
-                        <div class="sticky bottom-0 mt-5 bg-white/95 backdrop-blur border-t border-purple-100 pt-4"><button type="button" onclick="saveCampaignProductSelection()" class="w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white p-3 font-bold shadow">Save selected products</button><p id="campaignProductSaveMessage" class="text-sm mt-2 text-center text-gray-600"></p></div>
+                        <div class="sticky bottom-0 mt-5 bg-white/95 backdrop-blur border-t border-purple-100 pt-4"><button type="button" onclick="saveCampaignProductSelection()" class="w-full rounded-xl bg-purple-700 hover:bg-purple-800 text-white p-3 font-bold shadow">Save campaign settings & products</button><p id="campaignProductSaveMessage" class="text-sm mt-2 text-center text-gray-600"></p></div>
                     </div>
 
                     <!-- TAB 4: STORE SETTINGS -->
@@ -7387,7 +7387,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if (tab === 'campaignproducts') {
                 const codes=Array.isArray(storeSettings.campaignProductCodes)?storeSettings.campaignProductCodes.map(String):[];
                 const catalog=Array.isArray(window.products)?window.products:[];
-                campaignProductSelectedIds=codes.map(code=>{const p=catalog.find(p=>String(p.id)===code||String(p.customCode||'')===code);return p?String(p.id):code;}).filter((id,i,a)=>a.indexOf(id)===i).slice(0,4);
+                campaignProductSelectedIds=codes.map(code=>{const p=catalog.find(p=>String(p.id)===code||String(p.customCode||'')===code);return p?String(p.id):code;}).filter((id,i,a)=>a.indexOf(id)===i);
                 renderCampaignProductPicker();
             }
             if (tab === 'store') {
