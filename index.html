@@ -5885,9 +5885,9 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             delofiaOrderSubmitInProgress = true;
             if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Placing Order…'; submitButton.classList.add('opacity-70', 'cursor-not-allowed'); }
             try {
-                if (!window.db) throw new Error('Database connection is not ready. Please refresh the page and try again.');
-                if (typeof window.fsDoc !== 'function' || typeof window.fsSetDoc !== 'function') {
-                    throw new Error('Firebase Firestore setup is incomplete on this page. Make sure the latest index.html is deployed to Firebase Hosting.');
+                // Checkout is saved through Supabase RPC; do not block it on legacy Firebase/Firestore globals.
+                if (!window.delofiaSupabase || typeof window.delofiaSupabase.rpc !== 'function') {
+                    throw new Error('Supabase connection is not ready. Please refresh the page and try again.');
                 }
                 // Atomically save the order and decrement inventory through a Supabase RPC.
                 // The database function locks product rows and validates stock before committing.
