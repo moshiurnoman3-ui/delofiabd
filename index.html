@@ -9955,6 +9955,12 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')delofiaToggl
 }
 </style>
 
+
+<style id="delofia-remove-hero-slider-final">
+/* Homepage Offer Slider was retired: hide the carousel and its reserved space on all devices. */
+#storefrontHeroCarousel, #heroCarouselViewport, #heroCarouselSlideLink, #heroCarouselImage, #heroCarouselPrev, #heroCarouselNext, #heroCarouselDots, #heroCarouselSlideCount { display:none !important; }
+#storefrontHeroCarousel { height:0 !important; min-height:0 !important; max-height:0 !important; margin:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important; }
+</style>
 <!-- Delofia storefront targeted fixes: consolidated final rules and safe interaction repairs -->
 <style id="delofia-storefront-final-fixes">
   /* Banner: use a predictable desktop ratio and keep image proportions intact. */
