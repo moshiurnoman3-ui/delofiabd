@@ -10596,13 +10596,15 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
     white-space: nowrap !important;
   }
   #delofiaMobileActionBar {
-    grid-template-areas: "home category wishlist cart search" !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    grid-template-areas: "home category wishlist cart account search" !important;
   }
   #delofiaMobileActionBar > button:nth-child(1) { grid-area: home !important; }
   #delofiaMobileActionBar > button:nth-child(2) { grid-area: category !important; }
   #delofiaMobileActionBar > button:nth-child(3) { grid-area: wishlist !important; }
   #delofiaMobileActionBar > button:nth-child(4) { grid-area: cart !important; }
-  #delofiaMobileActionBar > button#delofiaBottomSearchButton {
+  #delofiaMobileActionBar > button:nth-child(5) { grid-area: account !important; }
+  #delofiaMobileActionBar > button#delofiaBottomSearchButton { grid-area: search !important;
     grid-area: search !important;
     position: relative !important;
     z-index: 3 !important;
