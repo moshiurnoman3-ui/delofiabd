@@ -6843,15 +6843,30 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         const DELOFIA_ADMIN_UIDS = ['1925abce-f8ec-48f1-ad2f-f30a77d51987'];
         function isAuthorizedDelofiaAdmin(user) { return !!user && DELOFIA_ADMIN_UIDS.includes(user.uid); }
         function restoreAdminSession() {
-            // Security/UI fix: always require an explicit login when opening the Admin URL.
-            // Do not silently bypass the login screen using a persisted browser session.
-            localStorage.removeItem(ADMIN_SESSION_KEY);
-            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            // Restore the dashboard after refresh only when both the persisted Supabase
+            // Admin Auth user and this browser's valid 12-hour Admin session are present.
             const login = document.getElementById('adminLoginView');
             const dashboard = document.getElementById('adminDashboardView');
-            if (login) login.classList.remove('hidden');
-            if (dashboard) dashboard.classList.add('hidden');
-            return false;
+            const user = window.delofiaAdminAuth?.currentUser;
+            const session = getCurrentAdminSession();
+            const registered = session ? getAdminSessions()[session.id] : null;
+            const valid = !!user && isAuthorizedDelofiaAdmin(user) && !!session &&
+                session.expiresAt > Date.now() && !session.revoked && !registered?.revoked;
+            if (!valid) {
+                if (login) login.classList.remove('hidden');
+                if (dashboard) dashboard.classList.add('hidden');
+                if (session && (session.expiresAt <= Date.now() || session.revoked || registered?.revoked)) {
+                    localStorage.removeItem(ADMIN_SESSION_KEY);
+                    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                }
+                return false;
+            }
+            if (login) login.classList.add('hidden');
+            if (dashboard) dashboard.classList.remove('hidden');
+            startAdminSessionHeartbeat();
+            loadAdminData();
+            switchAdminTab('dashboard');
+            return true;
         }
         window.tryRestoreDelofiaAdminSession = restoreAdminSession;
         async function resetDelofiaAdminPassword() {
