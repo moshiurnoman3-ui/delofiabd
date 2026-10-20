@@ -8290,9 +8290,9 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     videoUrl,
                     videoApproved,
                     variantEnabled: document.getElementById('prodVariantsEnabled').checked,
-                    variantGroups: adminVariantGroups.map(g => ({
+                    variantGroups: adminVariantGroups.map((g, gi) => ({
                         name: String(g.name || '').trim(),
-                        options: (g.options || []).map(o => ({
+                        options: (g.options || []).map((o, oi) => ({
                             name: String(o.name || '').trim(),
                             customCode: String(o.customCode || '').trim() || ('VAR-' + prodId.replace(/[^a-zA-Z0-9]/g,'').slice(-12) + '-' + gi + '-' + oi),
                             image: o.image || '',
