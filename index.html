@@ -2446,6 +2446,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                                         <label class="block font-bold mb-1">Product Title</label>
                                         <input type="text" id="prodTitle" required placeholder="e.g. Honey Baze Stone Brown" class="w-full border rounded-xl p-2.5">
                                     </div>
+                                    <div><label class="block font-bold mb-1">Your Product ID / Code (Admin only)</label><input type="text" id="prodCustomCode" maxlength="60" placeholder="e.g. WB-001 (blank = auto-generate)" class="w-full border rounded-xl p-2.5"><p class="mt-1 text-[10px] text-gray-500">নিজেদের চেনার জন্য; customer-দের দেখানো হবে না।</p></div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
@@ -7928,6 +7929,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     row.className = 'grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 border-t pt-3';
                     const left = document.createElement('div'); left.className = 'space-y-2';
                     const optName = document.createElement('input'); optName.value = option.name || ''; optName.placeholder = 'Option name (Blue / Pink / Small / Large)'; optName.className = 'w-full border rounded-lg p-2 text-xs'; optName.oninput = () => updateAdminVariantOptionName(gi, oi, optName.value);
+                    const optCode = document.createElement('input'); optCode.value = option.customCode || ''; optCode.placeholder = 'Custom variant ID (e.g. PINK-01)'; optCode.maxLength = 60; optCode.className = 'w-full border rounded-lg p-2 text-xs'; optCode.oninput = () => { option.customCode = optCode.value; };
                     const upload = document.createElement('input'); upload.type = 'file'; upload.accept = 'image/*'; upload.className = 'block w-full text-[11px]'; upload.onchange = ev => handleVariantImageUpload(ev, gi, oi);
                     const hint = document.createElement('p'); hint.className = 'text-[10px] text-gray-500'; hint.textContent = option.image ? 'Image added ✓ (choose again to replace)' : 'Optional: upload this option’s photo';
                     const optionImageRemove = document.createElement('button'); optionImageRemove.type = 'button'; optionImageRemove.className = 'text-[10px] font-bold text-red-600 underline'; optionImageRemove.textContent = option.image ? 'Remove this option image' : 'No option image'; optionImageRemove.onclick = () => { option.image = ''; renderAdminVariantEditor(); };
@@ -7981,7 +7983,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                         });
                         const addChild = document.createElement('button'); addChild.type = 'button'; addChild.className = 'rounded bg-indigo-700 text-white px-3 py-2 text-xs font-bold'; addChild.textContent = '+ Add size / variant'; addChild.onclick = () => { option.childVariants.push({name:'',price:'',originalPrice:'',image:'',details:''}); renderAdminVariantEditor(); };
                     nestedWrap.appendChild(addChild);
-                    left.append(optName, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, variantRegularLabel, variantRegularInput, stockLabel, stockInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
+                    left.append(optName, optCode, upload, hint, optionImageRemove, compatibleLabel, compatibleInput, priceLabel, priceInput, variantRegularLabel, variantRegularInput, stockLabel, stockInput, descHead, showDescLabel, descControls, descEditor, nestedWrap); row.appendChild(left);
                     setTimeout(() => renderDescriptionTableEditor(descEditor.id, option.descriptionTable || adminBaseDescriptionTable, 'variant', gi, oi), 0);
                     if (option.image) { const preview = document.createElement('img'); preview.src = option.image; preview.className = 'w-20 h-20 object-contain bg-gray-50 border rounded-lg'; preview.alt = 'Variant preview'; row.appendChild(preview); }
                     const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'text-red-600 text-[11px] font-bold'; remove.textContent = 'Remove option'; remove.onclick = () => removeAdminVariantOption(gi, oi); row.appendChild(remove);
@@ -8231,8 +8233,10 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 // Read names directly from the visible editor at save time so a just-edited
                 // option cannot be omitted because of a stale UI state.
                 syncAdminVariantNamesFromEditor();
+                const customCode = String(document.getElementById('prodCustomCode')?.value || '').trim();
                 const productDoc = {
                     id: prodId,
+                    customCode: customCode || (existing?.customCode || ('PR-' + prodId.replace(/[^a-zA-Z0-9]/g,'').slice(-16))),
                     title,
                     price,
                     originalPrice: originalPrice > price ? originalPrice : 0,
@@ -8256,6 +8260,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                         name: String(g.name || '').trim(),
                         options: (g.options || []).map(o => ({
                             name: String(o.name || '').trim(),
+                            customCode: String(o.customCode || '').trim() || ('VAR-' + prodId.replace(/[^a-zA-Z0-9]/g,'').slice(-12) + '-' + gi + '-' + oi),
                             image: o.image || '',
                             price: o.price === '' || o.price === undefined || o.price === null ? null : (Number(o.price) || 0),
                             originalPrice: o.originalPrice === '' || o.originalPrice === undefined || o.originalPrice === null ? null : (Number(o.originalPrice) || 0),
@@ -8263,7 +8268,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                             descriptionTable: firestoreSafeDescriptionTable(o.descriptionTable || adminBaseDescriptionTable),
                             showDescriptionTable: o.showDescriptionTable !== false,
                             availableWith: Array.isArray(o.availableWith) ? o.availableWith : [],
-                            childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: String(cv.name || '').trim(), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), originalPrice: cv.originalPrice === '' || cv.originalPrice === undefined || cv.originalPrice === null ? null : (Number(cv.originalPrice) || 0), stockQty: Math.max(0, parseInt(cv.stockQty ?? 0, 10) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
+                            childVariants: Array.isArray(o.childVariants) ? o.childVariants.map((cv, ci) => ({ name: String(cv.name || '').trim(), customCode: String(cv.customCode || '').trim() || ('CH-' + prodId.replace(/[^a-zA-Z0-9]/g,'').slice(-12) + '-' + gi + '-' + oi + '-' + ci), price: cv.price === '' || cv.price === undefined || cv.price === null ? null : (Number(cv.price) || 0), originalPrice: cv.originalPrice === '' || cv.originalPrice === undefined || cv.originalPrice === null ? null : (Number(cv.originalPrice) || 0), stockQty: Math.max(0, parseInt(cv.stockQty ?? 0, 10) || 0), image: cv.image || '', details: cv.details || '' })).filter(cv => cv.name) : []
                         })).filter(o => o.name)
                     })).filter(g => g.name && g.options.length),
                     stockOut: document.getElementById('prodStockOut').checked,
@@ -8303,11 +8308,17 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if (!list) return;
             const allCatalogProducts = Array.isArray(window.products) ? window.products : [];
             const productFilter = window.delofiaAdminProductFilter || 'all';
-            const catalogProducts = productFilter === 'stockout' ? allCatalogProducts.filter(delofiaProductIsStockOut) : allCatalogProducts;
+            const searchCode = String(document.getElementById('adminProductsCodeSearch')?.value || '').trim().toLowerCase();
+            const catalogProducts = (productFilter === 'stockout' ? allCatalogProducts.filter(delofiaProductIsStockOut) : allCatalogProducts).filter(p => {
+                if (!searchCode) return true;
+                const values = [p.customCode, p.id, p.title];
+                (p.variantGroups || []).forEach(g => (g.options || []).forEach(o => { values.push(o.customCode, o.name); (o.childVariants || []).forEach(cv => values.push(cv.customCode, cv.name)); }));
+                return values.some(v => String(v || '').toLowerCase().includes(searchCode));
+            });
             list.innerHTML = '';
             const filterBar = document.createElement('div');
             filterBar.className = 'flex flex-wrap items-center justify-between gap-2 mb-3';
-            filterBar.innerHTML = '<strong class="text-sm text-gray-700">' + (productFilter === 'stockout' ? 'Stock-out products' : 'All products') + ' (' + catalogProducts.length + ')</strong><button type="button" class="rounded-lg bg-purple-100 text-purple-800 px-3 py-2 font-bold" onclick="window.delofiaAdminProductFilter=\'all\';renderAdminProductsList()">Show all products</button>';
+            filterBar.innerHTML = '<strong class="text-sm text-gray-700">' + (productFilter === 'stockout' ? 'Stock-out products' : 'Products') + ' (' + catalogProducts.length + ')</strong><div class="flex flex-wrap gap-2 w-full sm:w-auto"><input id="adminProductsCodeSearch" type="search" value="' + String(searchCode).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;') + '" oninput="renderAdminProductsList()" placeholder="Search product / variant ID or name…" class="min-w-0 flex-1 sm:w-80 border border-purple-200 rounded-xl px-3 py-2 text-sm"><button type="button" class="rounded-lg bg-purple-100 text-purple-800 px-3 py-2 font-bold" onclick="window.delofiaAdminProductFilter=\'all\';document.getElementById(\'adminProductsCodeSearch\').value=\'\';renderAdminProductsList()">Show all / clear</button></div>';
             list.appendChild(filterBar);
             if (!catalogProducts.length) {
                 const empty = document.createElement('div');
@@ -8495,6 +8506,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             document.getElementById('productFormTitle').innerText = 'Edit Product';
             document.getElementById('editProductId').value = p.id;
             document.getElementById('prodTitle').value = p.title;
+            const productCodeInput = document.getElementById('prodCustomCode'); if (productCodeInput) productCodeInput.value = p.customCode || '';
             document.getElementById('prodPrice').value = p.price;
             const originalPriceInput = document.getElementById('prodOriginalPrice'); if (originalPriceInput) originalPriceInput.value = p.originalPrice > p.price ? p.originalPrice : '';
             const showQtySelectorInput = document.getElementById('prodShowQuantitySelector'); if (showQtySelectorInput) showQtySelectorInput.checked = p.showQuantitySelector !== false;
@@ -8508,7 +8520,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 
             document.getElementById('prodVariantsEnabled').checked = !!p.variantEnabled;
             const showDescTable = document.getElementById('prodShowDescriptionTable'); if (showDescTable) showDescTable.checked = p.showDescriptionTable !== false;
-            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', image: o.image || '', price: o.price ?? '', originalPrice: o.originalPrice ?? '', stockQty: o.stockQty ?? 0, descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false, availableWith: o.availableWith || [], childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: cv.name || '', price: cv.price ?? '', originalPrice: cv.originalPrice ?? '', stockQty: cv.stockQty ?? 0, image: cv.image || '', details: cv.details || '' })) : [] })) })) : [];
+            adminVariantGroups = Array.isArray(p.variantGroups) ? p.variantGroups.map(g => ({ name: g.name || '', options: (g.options || []).map(o => ({ name: o.name || '', customCode: o.customCode || '', image: o.image || '', price: o.price ?? '', originalPrice: o.originalPrice ?? '', stockQty: o.stockQty ?? 0, descriptionTable: normalizeDescriptionTable(o.descriptionTable || p.descriptionTable), showDescriptionTable: o.showDescriptionTable !== false, availableWith: o.availableWith || [], childVariants: Array.isArray(o.childVariants) ? o.childVariants.map(cv => ({ name: cv.name || '', customCode: cv.customCode || '', price: cv.price ?? '', originalPrice: cv.originalPrice ?? '', stockQty: cv.stockQty ?? 0, image: cv.image || '', details: cv.details || '' })) : [] })) })) : [];
             adminBaseDescriptionTable = normalizeDescriptionTable(p.descriptionTable || { columns: 2, rows: [['Product Size', ''], ['Material', '']] });
             toggleAdminVariants();
             renderAdminVariantEditor();
