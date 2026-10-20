@@ -6814,13 +6814,29 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         function startAdminSessionHeartbeat() {
             if (adminSessionHeartbeat) clearInterval(adminSessionHeartbeat);
             adminSessionHeartbeat = setInterval(() => {
+                // Keep the UI session alive without treating a temporarily missing/stale
+                // secondary session-list entry as a global Supabase sign-out.
                 const current = getCurrentAdminSession();
-                const registered = current ? getAdminSessions()[current.id] : null;
-                if (!current || current.expiresAt <= Date.now() || current.revoked || registered?.revoked) { logoutAdmin(true); return; }
+                if (!current) return;
+                const sessions = getAdminSessions();
+                const registered = sessions[current.id];
+                if (current.revoked || registered?.revoked || current.expiresAt <= Date.now()) {
+                    // Only end the Admin UI session here. Do not call Supabase signOut,
+                    // because customer and admin currently share the same Supabase auth client.
+                    if (adminSessionHeartbeat) { clearInterval(adminSessionHeartbeat); adminSessionHeartbeat = null; }
+                    localStorage.removeItem(ADMIN_SESSION_KEY);
+                    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+                    document.getElementById('adminLoginView')?.classList.remove('hidden');
+                    document.getElementById('adminDashboardView')?.classList.add('hidden');
+                    const err = document.getElementById('adminAuthError');
+                    if (err) { err.textContent = 'Admin session expired. Please log in again.'; err.classList.remove('hidden'); }
+                    return;
+                }
                 current.lastSeen = Date.now();
                 localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(current));
-                const sessions = getAdminSessions(); sessions[current.id] = current; saveAdminSessions(sessions);
-                if (!document.getElementById('adminDashboardView').classList.contains('hidden')) renderAdminSessions();
+                sessions[current.id] = current;
+                saveAdminSessions(sessions);
+                if (!document.getElementById('adminDashboardView')?.classList.contains('hidden')) renderAdminSessions();
             }, 10000);
         }
         function getCurrentAdminSession() {
