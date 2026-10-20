@@ -4506,7 +4506,8 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 storeSettings.campaignTheme = document.getElementById('settingCampaignTheme')?.value || 'ocean';
                 storeSettings.campaignProductCodes = (Array.isArray(campaignProductSelectedIds) && campaignProductSelectedIds.length ? campaignProductSelectedIds : (document.getElementById('settingCampaignProductCodes')?.value || '').split(',').map(x=>x.trim()).filter(Boolean));
                 storeSettings.campaignStart = document.getElementById('settingCampaignStart')?.value || '';
-                storeSettings.campaignEnd = document.getElementById('settingCampaignEnd')?.value || '';\n                storeSettings.campaignCountdownEnabled = !!document.getElementById('settingCampaignCountdownEnabled')?.checked;
+                storeSettings.campaignEnd = document.getElementById('settingCampaignEnd')?.value || '';
+                storeSettings.campaignCountdownEnabled = !!document.getElementById('settingCampaignCountdownEnabled')?.checked;
                 // Legacy offer-slider fields are no longer editable.
                 if (new Blob([JSON.stringify(storeSettings)]).size > 850000) throw new Error('Slider images are too large for Firestore. Use smaller banner images and try again.');
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
@@ -7460,7 +7461,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                     campaignTheme:document.getElementById('settingCampaignTheme')?.value||'ocean',
                     campaignProductCodes:[...campaignProductSelectedIds],
                     campaignStart:document.getElementById('settingCampaignStart')?.value||'',
-                    campaignEnd:document.getElementById('settingCampaignEnd')?.value||'',\n                     campaignCountdownEnabled:!!document.getElementById('settingCampaignCountdownEnabled')?.checked
+                    campaignEnd:document.getElementById('settingCampaignEnd')?.value||'',
+                     campaignCountdownEnabled:!!document.getElementById('settingCampaignCountdownEnabled')?.checked
                 };
                 await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),next);
                 window.storeSettings=storeSettings=next;
