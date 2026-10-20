@@ -4653,6 +4653,7 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
         }
 
         function filterProducts() {
+            if (typeof window.applyDelofiaGlobalTheme === 'function') window.applyDelofiaGlobalTheme();
             delofiaCurrentProductPage = 1;
             const desktopInput = document.getElementById('searchInput');
             const mobileInput = document.getElementById('mobileSearchInput');
