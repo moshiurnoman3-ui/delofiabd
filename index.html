@@ -1487,7 +1487,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
       <button type="button" onclick="openWishlistModal()" aria-label="Open wishlist" class="mobile-action-wishlist"><i class="fas fa-heart"></i><span>Wishlist</span><b id="mobileWishlistCountBadge">0</b></button>
       <button type="button" onclick="openCartModal()" aria-label="Open cart" class="mobile-action-cart"><i class="fas fa-shopping-cart"></i><span>Cart</span><b id="mobileCartCountBadge">0</b></button>
       <button type="button" onclick="openCustomerAccount()" aria-label="Account"><i class="fas fa-user"></i><span>Account</span></button>
-      <button type="button" id="delofiaBottomSearchButton" onclick="delofiaToggleBottomSearch()" aria-label="Search products" aria-expanded="false" aria-controls="mobileProductSearchBar"><i class="fas fa-search"></i><span>Search</span></button>
+      <button type="button" id="delofiaBottomSearchButton" onclick="event.preventDefault();event.stopPropagation();window.delofiaToggleBottomSearch()" aria-label="Search products" aria-expanded="false" aria-controls="mobileProductSearchBar"><i class="fas fa-search"></i><span>Search</span></button>
     </nav>
 
     <main id="mainContainer" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -4434,8 +4434,8 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             const mark = document.getElementById('brandLogoMark');
             const preview = document.getElementById('adminLogoPreview');
             const src = storeSettings.logoImage || '';
-            if (mark) mark.innerHTML = src ? `<img src="${src}" alt="DELOFIA logo" class="w-full h-full object-cover">` : 'D';
-            if (preview && pendingStoreLogo === null) preview.innerHTML = src ? `<img src="${src}" alt="Current logo" class="w-full h-full object-cover">` : 'D';
+            if (mark) mark.innerHTML = src ? `<img src="${src}" alt="DELOFIA logo" class="w-full h-full object-contain" style="background:transparent;object-fit:contain">` : 'D';
+            if (preview && pendingStoreLogo === null) preview.innerHTML = src ? `<img src="${src}" alt="Current logo" class="w-full h-full object-contain" style="background:transparent;object-fit:contain">` : 'D';
         }
 
         const ADMIN_HERO_SLIDE_MIN=5, ADMIN_HERO_SLIDE_MAX=10;
@@ -10562,3 +10562,51 @@ document.addEventListener('DOMContentLoaded',window.applyDelofiaGlobalTheme);
 }
 </style>
 
+
+
+<style id="delofia-only-logo-search-fix-20261020">
+/* Minimal storefront-only fix: preserve transparent uploaded logo and keep the brand name visible. */
+header #brandLogoMark {
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+header #brandLogoMark img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: transparent !important;
+}
+header #brandLogo > div:last-child { display: block !important; }
+header #brandLogo > div:last-child span:first-child { display: block !important; }
+@media (max-width: 640px) {
+  header #brandLogo { gap: 6px !important; max-width: 48vw !important; }
+  header #brandLogoMark {
+    display: flex !important;
+    flex: 0 0 38px !important;
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    border-radius: 0 !important;
+  }
+  header #brandLogo > div:last-child span:first-child {
+    font-size: clamp(14px, 4vw, 17px) !important;
+    white-space: nowrap !important;
+  }
+  #delofiaMobileActionBar {
+    grid-template-areas: "home category wishlist cart search" !important;
+  }
+  #delofiaMobileActionBar > button:nth-child(1) { grid-area: home !important; }
+  #delofiaMobileActionBar > button:nth-child(2) { grid-area: category !important; }
+  #delofiaMobileActionBar > button:nth-child(3) { grid-area: wishlist !important; }
+  #delofiaMobileActionBar > button:nth-child(4) { grid-area: cart !important; }
+  #delofiaMobileActionBar > button#delofiaBottomSearchButton {
+    grid-area: search !important;
+    position: relative !important;
+    z-index: 3 !important;
+    pointer-events: auto !important;
+  }
+}
+</style>
