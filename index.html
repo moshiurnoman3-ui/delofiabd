@@ -4488,6 +4488,38 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             }
         }
 
+        // Persist important ON/OFF controls immediately without rebuilding settings from inactive tabs.
+        (function bindImmediateStoreSettingToggles(){
+            const toggleKeys={
+                settingRequireLoginToOrder:'requireLoginToOrder',
+                settingGlobalDirectOrderEnabled:'globalDirectOrderEnabled',
+                settingGlobalShowPrice:'globalShowPrice',
+                settingWhatsappEnabled:'whatsappEnabled',
+                settingProductPhotoAutoRotate:'productPhotoAutoRotate',
+                settingCampaignEnabled:'campaignEnabled',
+                settingHeroCarouselEnabled:'heroCarouselEnabled'
+            };
+            Object.entries(toggleKeys).forEach(([id,key])=>{
+                const el=document.getElementById(id);
+                if(!el||el.dataset.delofiaAutoSaveBound==='1')return;
+                el.dataset.delofiaAutoSaveBound='1';
+                el.addEventListener('change',async()=>{
+                    const previous=storeSettings[key];
+                    storeSettings[key]=!!el.checked;
+                    try{
+                        if(!window.delofiaAdminFs?.setDoc||!window.delofiaAdminFs?.doc)throw new Error('Settings connection is not ready.');
+                        await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),{...storeSettings,[key]:!!el.checked});
+                        window.storeSettings=storeSettings;
+                        applyDelofiaCampaign?.();applyStorefrontHeroCarousel?.();
+                    }catch(err){
+                        storeSettings[key]=previous;el.checked=!!previous;
+                        console.error('Could not save setting '+key,err);
+                        alert('Setting save হয়নি। আবার চেষ্টা করো। '+(err?.message||''));
+                    }
+                });
+            });
+        })();
+
         function applyStorefrontContent() {
             const fields = {
                 storefrontHeroBadge: ['heroBadge', 'Exclusive Offers'],
@@ -7378,7 +7410,17 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if(button){button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Saving…';}
             try {
                 if(!window.db || !window.delofiaAdminFs?.setDoc || !window.delofiaAdminFs?.doc) throw new Error('Settings connection is not ready.');
-                const next={...storeSettings,campaignProductCodes:[...campaignProductSelectedIds]};
+                const next={
+                    ...storeSettings,
+                    campaignEnabled:!!document.getElementById('settingCampaignEnabled')?.checked,
+                    campaignTitle:document.getElementById('settingCampaignTitle')?.value.trim()||'Special Campaign',
+                    campaignBadge:document.getElementById('settingCampaignBadge')?.value.trim()||'LIMITED TIME',
+                    campaignDescription:document.getElementById('settingCampaignDescription')?.value.trim()||'',
+                    campaignTheme:document.getElementById('settingCampaignTheme')?.value||'ocean',
+                    campaignProductCodes:[...campaignProductSelectedIds],
+                    campaignStart:document.getElementById('settingCampaignStart')?.value||'',
+                    campaignEnd:document.getElementById('settingCampaignEnd')?.value||''
+                };
                 await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),next);
                 window.storeSettings=storeSettings=next;
                 applyDelofiaCampaign();
