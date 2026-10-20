@@ -9341,6 +9341,44 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
 }
 </style>
 
+
+<style id="delofia-store-theme-product-atmosphere">
+/* Store Theme decorates the product grid/card surroundings, without changing product content or controls. */
+#productsGrid { position:relative; isolation:isolate; border-radius:22px; transition:background .35s ease,box-shadow .35s ease; }
+#productsGrid > .group { position:relative; isolation:isolate; border-color:color-mix(in srgb,var(--delofia-accent) 18%,#fff)!important; box-shadow:0 5px 18px color-mix(in srgb,var(--delofia-accent) 8%,transparent); transition:border-color .3s ease,box-shadow .3s ease,background .3s ease; }
+#productsGrid > .group::before,#productsGrid > .group::after { content:""; position:absolute; z-index:3; pointer-events:none; opacity:0; transition:opacity .3s ease; }
+body[data-delofia-store-theme="purple"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(192,132,252,.11),transparent 65%); }
+body[data-delofia-store-theme="purple"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#fcfaff 100%); }
+body[data-delofia-store-theme="winter"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(125,211,252,.24),transparent 70%),linear-gradient(180deg,rgba(240,249,255,.65),rgba(255,255,255,.1)); box-shadow:inset 0 0 24px rgba(125,211,252,.12); }
+body[data-delofia-store-theme="winter"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#f4fbff 72%,#e0f2fe 100%); border-color:#bae6fd!important; box-shadow:0 5px 0 rgba(186,230,253,.6),0 10px 20px rgba(14,116,144,.08); }
+body[data-delofia-store-theme="winter"] #productsGrid > .group::before { content:"❄"; top:-13px; right:9px; font-size:19px; color:#38bdf8; text-shadow:0 1px 8px #fff; opacity:.8; animation:delofia-card-snow-drift 4.5s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="winter"] #productsGrid > .group::after { content:"❅"; top:42%; left:-8px; font-size:16px; color:#7dd3fc; text-shadow:0 1px 8px #fff; opacity:.7; animation:delofia-card-snow-fall 6s linear infinite; }
+body[data-delofia-store-theme="summer"] #productsGrid { background:radial-gradient(ellipse at 90% 0%,rgba(253,186,116,.2),transparent 65%),linear-gradient(180deg,rgba(255,247,237,.7),transparent); }
+body[data-delofia-store-theme="summer"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#fffaf1 100%); border-color:#fed7aa!important; box-shadow:0 5px 16px rgba(234,88,12,.08); }
+body[data-delofia-store-theme="summer"] #productsGrid > .group::before { content:"✦"; top:-10px; right:12px; font-size:18px; color:#fb923c; opacity:.8; animation:delofia-card-sun-glow 3s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="ramadan"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(134,239,172,.18),transparent 68%); }
+body[data-delofia-store-theme="ramadan"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#f4fff7 100%); border-color:#bbf7d0!important; }
+body[data-delofia-store-theme="ramadan"] #productsGrid > .group::before { content:"✦"; top:-10px; right:12px; font-size:18px; color:#16a34a; opacity:.8; animation:delofia-card-sun-glow 3s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="eid"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(196,181,253,.2),transparent 68%); }
+body[data-delofia-store-theme="eid"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#faf5ff 100%); border-color:#ddd6fe!important; }
+body[data-delofia-store-theme="eid"] #productsGrid > .group::before { content:"✧"; top:-10px; right:12px; font-size:20px; color:#8b5cf6; opacity:.85; animation:delofia-card-sun-glow 3.2s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="qurbani"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(134,239,172,.18),transparent 68%); }
+body[data-delofia-store-theme="qurbani"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#f7fff7 100%); border-color:#bbf7d0!important; }
+body[data-delofia-store-theme="qurbani"] #productsGrid > .group::before { content:"✿"; top:-10px; right:12px; font-size:18px; color:#16a34a; opacity:.8; animation:delofia-card-sun-glow 3s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="rose"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(251,207,232,.28),transparent 68%); }
+body[data-delofia-store-theme="rose"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#fff5fa 100%); border-color:#fbcfe8!important; }
+body[data-delofia-store-theme="rose"] #productsGrid > .group::before { content:"✿"; top:-10px; right:12px; font-size:18px; color:#db2777; opacity:.8; animation:delofia-card-sun-glow 3s ease-in-out infinite alternate; }
+body[data-delofia-store-theme="ocean"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(103,232,249,.2),transparent 68%); }
+body[data-delofia-store-theme="ocean"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#f0fdff 100%); border-color:#a5f3fc!important; }
+body[data-delofia-store-theme="ocean"] #productsGrid > .group::before { content:"〰"; top:-12px; right:10px; font-size:22px; color:#0891b2; opacity:.8; animation:delofia-card-snow-drift 4s ease-in-out infinite alternate; }
+@keyframes delofia-card-snow-drift { from{transform:translate3d(0,-2px,0) rotate(-8deg)} to{transform:translate3d(-5px,5px,0) rotate(12deg)} }
+@keyframes delofia-card-snow-fall { 0%{transform:translate3d(0,-7px,0);opacity:.25} 50%{opacity:.85} 100%{transform:translate3d(3px,18px,0);opacity:.25} }
+@keyframes delofia-card-sun-glow { from{transform:translateY(0) scale(.9);filter:drop-shadow(0 0 0 transparent)} to{transform:translateY(3px) scale(1.12);filter:drop-shadow(0 0 5px currentColor)} }
+body.delofia-seasonal-effects-off #productsGrid > .group::before,body.delofia-seasonal-effects-off #productsGrid > .group::after { animation:none!important; }
+@media(max-width:640px){#productsGrid{padding:3px 2px 10px;border-radius:16px}body[data-delofia-store-theme="winter"] #productsGrid > .group::before{font-size:16px;top:-10px;right:7px}}
+@media(prefers-reduced-motion:reduce){#productsGrid > .group::before,#productsGrid > .group::after{animation:none!important;transition:none!important}}
+</style>
+
 </body>
 
 <style id="delofia-mobile-header-buttons-v36">
