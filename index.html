@@ -4416,7 +4416,15 @@ function applyDelofiaCampaign(){
  const hero=document.getElementById('delofiaCampaignHero');if(hero){const c=campaignThemeColors(storeSettings.campaignTheme);hero.style.background='linear-gradient(115deg,'+c[0]+','+c[1]+' 58%,'+c[2]+')';}
  const box=document.getElementById('delofiaCampaignProducts');if(!box)return;const codes=Array.isArray(storeSettings.campaignProductCodes)?storeSettings.campaignProductCodes.map(String):[];const catalog=Array.isArray(window.products)?window.products:[];const chosen=codes.length?codes.map(code=>catalog.find(p=>String(p.id)===code||String(p.customCode||'')===code)) .filter(Boolean):[];box.innerHTML='';if(!chosen.length){box.classList.add('hidden');return;}box.classList.remove('hidden');
  box.className='flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3';
+ box.style.scrollBehavior='smooth';
+ if(box._delofiaAutoScrollTimer){clearInterval(box._delofiaAutoScrollTimer);box._delofiaAutoScrollTimer=null;}
+ if(box._delofiaAutoScrollCleanup){box._delofiaAutoScrollCleanup();box._delofiaAutoScrollCleanup=null;}
  chosen.forEach(p=>{const card=document.createElement('button');card.type='button';card.className='flex-none w-40 sm:w-48 snap-start overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5';card.setAttribute('aria-label','View '+String(p.title||'campaign product'));const src=p.image||p.imageUrl||p.mainImage||p.photo||(Array.isArray(p.images)?p.images[0]:'');const img=document.createElement('img');img.className='aspect-square w-full object-cover bg-slate-50';img.loading='lazy';img.decoding='async';img.alt=String(p.title||'Product');if(src)img.src=src;const info=document.createElement('span');info.className='block p-2 sm:p-3';const name=document.createElement('span');name.className='block truncate text-xs sm:text-sm font-bold text-slate-800';name.textContent=String(p.title||'Product');const price=document.createElement('span');price.className='mt-1 block text-sm font-black text-slate-900';const amount=p.price??p.salePrice??p.sellingPrice;price.textContent=amount!=null&&amount!==''?'৳'+Number(amount).toLocaleString('en-BD'):'';info.append(name,price);card.append(img,info);card.addEventListener('click',()=>window.openProductDetail?.(p.id));box.appendChild(card);});
+ const startAutoScroll=()=>{if(box._delofiaAutoScrollTimer)clearInterval(box._delofiaAutoScrollTimer);box._delofiaAutoScrollTimer=setInterval(()=>{if(!box.isConnected||box.matches(':hover')||box.dataset.userScrolling==='1'||box.scrollWidth<=box.clientWidth+4)return;const max=box.scrollWidth-box.clientWidth;if(box.scrollLeft>=max-4)box.scrollTo({left:0,behavior:'smooth'});else box.scrollBy({left:Math.max(180,Math.round(box.clientWidth*.72)),behavior:'smooth'});},2800);};
+ const pause=()=>{box.dataset.userScrolling='1';if(box._delofiaResumeTimer)clearTimeout(box._delofiaResumeTimer);box._delofiaResumeTimer=setTimeout(()=>{box.dataset.userScrolling='0';},4500);};
+ box.addEventListener('wheel',pause,{passive:true});box.addEventListener('touchstart',pause,{passive:true});box.addEventListener('pointerdown',pause);box.addEventListener('pointerup',pause);box.addEventListener('mouseenter',()=>{box.dataset.userScrolling='1';});box.addEventListener('mouseleave',()=>{box.dataset.userScrolling='0';});
+ box._delofiaAutoScrollCleanup=()=>{if(box._delofiaAutoScrollTimer)clearInterval(box._delofiaAutoScrollTimer);if(box._delofiaResumeTimer)clearTimeout(box._delofiaResumeTimer);};
+ startAutoScroll();
 }
 window.applyDelofiaCampaign=applyDelofiaCampaign;
 function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=storeSettings.heroCarouselEnabled===true&&slides.length>0;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.dataset.delofiaFailedSrc===nextSrc){box.classList.add('hidden');if(fallback)fallback.classList.remove('hidden');return;}if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
@@ -6935,7 +6943,9 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             if (dashboard) dashboard.classList.remove('hidden');
             startAdminSessionHeartbeat();
             loadAdminData();
-            switchAdminTab('dashboard');
+            let savedTab='dashboard';
+            try { const candidate=localStorage.getItem('delofia_admin_active_tab_v1'); if(candidate && ['dashboard','orders','customers','shipping','payment','products','reviews','store','campaignproducts','password','sessions'].includes(candidate)) savedTab=candidate; } catch (_) {}
+            switchAdminTab(savedTab);
             return true;
         }
         window.tryRestoreDelofiaAdminSession = restoreAdminSession;
@@ -6977,7 +6987,10 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 error.classList.add('hidden');
                 document.getElementById('adminLoginView').classList.add('hidden');
                 document.getElementById('adminDashboardView').classList.remove('hidden');
-                writeCurrentAdminSession(); loadAdminData(); switchAdminTab('dashboard');
+                writeCurrentAdminSession(); loadAdminData();
+                let savedTab='dashboard';
+                try { const candidate=localStorage.getItem('delofia_admin_active_tab_v1'); if(candidate && ['dashboard','orders','customers','shipping','payment','products','reviews','store','campaignproducts','password','sessions'].includes(candidate)) savedTab=candidate; } catch (_) {}
+                switchAdminTab(savedTab);
             } catch (err) {
                 console.error('Admin sign-in failed:', err);
                 error.textContent = err?.code === 'auth/invalid-credential' || err?.code === 'auth/wrong-password' || err?.code === 'auth/user-not-found'
@@ -7359,9 +7372,21 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
         async function saveCampaignProductSelection(){
             const input=document.getElementById('settingCampaignProductCodes');
             const message=document.getElementById('campaignProductSaveMessage');
+            const button=document.querySelector('#adminTabCampaignproducts button[onclick="saveCampaignProductSelection()"]');
             if(input)input.value=campaignProductSelectedIds.join(', ');
-            try { await saveStoreSettings(null); if(message)message.textContent='Selected campaign products saved successfully 💜'; }
-            catch(err){if(message)message.textContent='Save failed: '+(err?.message||err);}
+            if(message)message.textContent='Saving…';
+            if(button){button.disabled=true;button.dataset.oldText=button.textContent;button.textContent='Saving…';}
+            try {
+                if(!window.db || !window.delofiaAdminFs?.setDoc || !window.delofiaAdminFs?.doc) throw new Error('Settings connection is not ready.');
+                const next={...storeSettings,campaignProductCodes:[...campaignProductSelectedIds]};
+                await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),next);
+                window.storeSettings=storeSettings=next;
+                applyDelofiaCampaign();
+                if(message)message.textContent='Campaign settings and all selected products saved 💜';
+            } catch(err) {
+                console.error('Campaign settings save failed:',err);
+                if(message)message.textContent='Save failed: '+(err?.message||err);
+            } finally {if(button){button.disabled=false;button.textContent=button.dataset.oldText||'Save campaign settings & products';}}
         }
         function switchAdminTab(tab) {
             if (tab === 'products' && !window.delofiaAdminProductFilter) window.delofiaAdminProductFilter = 'all';
@@ -7377,6 +7402,7 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
             const currentButton = document.getElementById(`tabBtn${currentTabName}`);
             if (currentPanel) currentPanel.classList.remove('hidden');
             if (currentButton) currentButton.className = 'py-3 text-purple-800 border-b-2 border-purple-700 font-bold';
+            try { localStorage.setItem('delofia_admin_active_tab_v1', tab); } catch (_) {}
             if (window.innerWidth <= 640) toggleDelofiaAdminDrawer(false);
             if (tab === 'dashboard') refreshDelofiaAdminDashboard();
             if (tab === 'payment') { populatePaymentAdminSettings(); renderCouponsAdmin(); }
