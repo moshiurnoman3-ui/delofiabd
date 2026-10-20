@@ -2758,6 +2758,16 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         // so repeat visits can paint products immediately while Supabase refreshes in background.
         const DELOFIA_DB_PAGE_SIZE = 30;
         const DELOFIA_PRODUCT_CACHE_TTL = 30 * 60 * 1000;
+        // Never leave the storefront or Admin panel showing an endless loading state when Supabase stalls.
+        function withDelofiaTimeout(promise, label, timeoutMs = 15000) {
+            let timer;
+            return Promise.race([
+                Promise.resolve(promise),
+                new Promise((_, reject) => {
+                    timer = setTimeout(() => reject(new Error(`${label} request timed out after ${Math.round(timeoutMs / 1000)} seconds. Check the Supabase connection and table permissions.`)), timeoutMs);
+                })
+            ]).finally(() => clearTimeout(timer));
+        }
         const productPageCacheKey = page => `delofia_supabase_products_page_v1_${page}`;
         async function fetchSupabaseProductPage(page=1, useCache=true) {
             const safePage = Math.max(1, Number(page) || 1);
@@ -2774,8 +2784,10 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             const start = (safePage - 1) * DELOFIA_DB_PAGE_SIZE;
             // Fetch product rows without an exact-count scan on the critical first-load path.
             // The storefront currently has fewer rows than one page, so the returned row count is sufficient.
-            const { data, error } = await supabase.from('products').select('*')
-                .order('id', { ascending: true }).range(start, start + DELOFIA_DB_PAGE_SIZE - 1);
+            const { data, error } = await withDelofiaTimeout(
+                supabase.from('products').select('*').order('id', { ascending: true }).range(start, start + DELOFIA_DB_PAGE_SIZE - 1),
+                'Products', 15000
+            );
             if (error) throw error;
             const rows = data || [];
             const count = rows.length;
@@ -2823,12 +2835,12 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         async function getDoc(r) {
             const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).select('*');
             if(table==='coupons') q=q.eq('code',id); else if(table==='store_settings') q=q.eq('setting_key',id); else if(table==='customer_profiles'||table==='customer_admin_data'||table==='admin_users') q=q.eq('user_id',id); else q=q.eq('id',id);
-            const {data,error}=await q.maybeSingle(); if(error) throw error; return snapOne(r,data);
+            const {data,error}=await withDelofiaTimeout(q.maybeSingle(), `Read ${table}`, 15000); if(error) throw error; return snapOne(r,data);
         }
         function applyConstraints(q, constraints=[]) { const fields={customerUid:'customer_uid',productId:'product_id',uid:'user_id',settingKey:'setting_key'}; for(const c of constraints){ const field=fields[c.field]||c.field; if(c.field && c.op==='==') q=q.eq(field,c.value); if(c.field && c.op==='!=') q=q.neq(field,c.value); if(c.direction) q=q.order(field,{ascending:c.direction!=='desc'}); } return q; }
         async function getDocs(r) {
             const table=tableName(r.segments[0]); let q=supabase.from(table).select('*');
-            q=applyConstraints(q,r.constraints||[]); const {data,error}=await q; if(error) throw error; return snapMany(r,data||[]);
+            q=applyConstraints(q,r.constraints||[]); const {data,error}=await withDelofiaTimeout(q, `Read ${table}`, 15000); if(error) throw error; return snapMany(r,data||[]);
         }
         async function setDoc(r, value, options={}) {
             const table=tableName(r.segments[0]), id=r.segments[1];
@@ -3392,6 +3404,10 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                     console.error('Supabase product page load failed:', error);
                     window.__productsLoadError = String(error?.message || error);
                     window.__productsSnapshotLoaded = true;
+                    const grid = document.getElementById('productsGrid');
+                    const count = document.getElementById('productCount');
+                    if (count) count.textContent = 'Products unavailable';
+                    if (grid) grid.innerHTML = `<div class="col-span-full rounded-2xl border border-amber-200 bg-amber-50 p-5 text-center"><p class="font-bold text-amber-900">Products could not load.</p><p class="mt-2 text-sm text-amber-800">${String(error?.message || error).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}</p><button type="button" onclick="window.__delofiaLoadProductPage(1, true)" class="mt-3 rounded-xl bg-purple-700 px-4 py-2 font-bold text-white">Retry</button></div>`;
                     window.dispatchEvent(new Event('delofia-products-updated'));
                 }
             };
