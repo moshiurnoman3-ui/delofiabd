@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-    <script id="delofia-store-theme-early-cache">try{const t=localStorage.getItem("delofia-store-theme-cache");if(["purple","ramadan","winter","summer","eid","qurbani","rose","ocean"].includes(t)){document.documentElement.dataset.delofiaStoreTheme=t;document.addEventListener("DOMContentLoaded",()=>{if(document.body)document.body.dataset.delofiaStoreTheme=t;});}}catch(_){}</script>
+    <script id="delofia-store-theme-early-cache">try{const t=localStorage.getItem("delofia-store-theme-cache");if(["purple","ramadan","winter","summer","eid","qurbani","rose","ocean","bow"].includes(t)){document.documentElement.dataset.delofiaStoreTheme=t;document.addEventListener("DOMContentLoaded",()=>{if(document.body)document.body.dataset.delofiaStoreTheme=t;});}}catch(_){}</script>
     <script>try { localStorage.setItem('delofiaCustomerTheme', 'light'); } catch (_) {}
     document.documentElement.classList.remove('dark');</script>
     <!-- Safe performance hints only; all existing application logic remains unchanged. -->
@@ -2341,7 +2341,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                       <p class="text-sm text-gray-600 mt-1 mb-4">এক জায়গা থেকে পুরো website-এর seasonal colour theme বদলাও। Theme settings save হবে এবং refresh-এর পরও থাকবে।</p>
                       <label for="globalStoreThemeSelect" class="block text-xs font-bold text-gray-700 mb-1">Season / Festival</label>
                       <select id="globalStoreThemeSelect" class="w-full rounded-xl border border-purple-200 p-3 mb-4">
-                        <option value="purple">💜 Delofia Purple (Default)</option><option value="ramadan">🌙 Ramadan & Iftar</option><option value="winter">❄️ Winter Wonderland</option><option value="summer">☀️ Summer Vibes</option><option value="eid">✨ Eid Celebration</option><option value="qurbani">🐄 Qurbani Eid</option><option value="rose">🌸 Rose Pink</option><option value="ocean">🌊 Ocean Blue</option>
+                        <option value="purple">💜 Delofia Purple (Default)</option><option value="ramadan">🌙 Ramadan & Iftar</option><option value="winter">❄️ Winter Wonderland</option><option value="summer">☀️ Summer Vibes</option><option value="eid">✨ Eid Celebration</option><option value="qurbani">🐄 Qurbani Eid</option><option value="rose">🌸 Rose Pink</option><option value="ocean">🌊 Ocean Blue</option><option value="bow">🎀 Bow Coquette</option>
                       </select>
                       <div class="rounded-2xl p-5 mb-4" id="globalStoreThemePreview"><div class="text-xs font-bold opacity-80">DELOFIA SEASONAL PREVIEW</div><div class="text-2xl font-black mt-2">A new look for your store</div><div class="mt-2 text-sm">Your products stay the same. Only the visual theme changes.</div></div>
                       <label class="flex items-center gap-3 rounded-xl bg-purple-50 p-3 mb-4"><input id="globalStoreThemeAnimations" type="checkbox" checked class="h-4 w-4"><span class="text-sm font-bold">Enable lightweight seasonal effects</span></label>
@@ -9648,6 +9648,10 @@ body[data-delofia-store-theme="rose"] #productsGrid > .group::before { content:"
 body[data-delofia-store-theme="ocean"] #productsGrid { background:radial-gradient(ellipse at 50% 0%,rgba(103,232,249,.2),transparent 68%); }
 body[data-delofia-store-theme="ocean"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#f0fdff 100%); border-color:#a5f3fc!important; }
 body[data-delofia-store-theme="ocean"] #productsGrid > .group::before { content:"〰"; top:-12px; right:10px; font-size:22px; color:#0891b2; opacity:.8; animation:delofia-card-snow-drift 4s ease-in-out infinite alternate; }
+ body[data-delofia-store-theme="bow"] #productsGrid { background:radial-gradient(ellipse at 15% 0%,rgba(251,207,232,.42),transparent 55%),radial-gradient(ellipse at 90% 10%,rgba(255,228,230,.6),transparent 58%),linear-gradient(180deg,#fff7fb 0%,#fff 72%); }
+ body[data-delofia-store-theme="bow"] #productsGrid > .group { background:linear-gradient(160deg,#fff 0%,#fff7fb 68%,#fff0f6 100%); border-color:#f9a8d4!important; box-shadow:0 5px 18px rgba(219,39,119,.09),inset 0 0 0 1px rgba(255,255,255,.8); }
+ body[data-delofia-store-theme="bow"] #productsGrid > .group::before { content:"🎀"; top:-12px; right:8px; font-size:20px; opacity:.95; filter:drop-shadow(0 2px 3px rgba(190,24,93,.12)); animation:delofia-card-sun-glow 3.4s ease-in-out infinite alternate; }
+ body[data-delofia-store-theme="bow"] #productsGrid > .group::after { content:"♡"; bottom:8px; left:8px; top:auto; font-size:16px; color:#f472b6; opacity:.65; }
 @keyframes delofia-card-snow-drift { from{transform:translate3d(0,-2px,0) rotate(-8deg)} to{transform:translate3d(-5px,5px,0) rotate(12deg)} }
 @keyframes delofia-card-snow-fall { 0%{transform:translate3d(0,-7px,0);opacity:.25} 50%{opacity:.85} 100%{transform:translate3d(3px,18px,0);opacity:.25} }
 @keyframes delofia-card-sun-glow { from{transform:translateY(0) scale(.9);filter:drop-shadow(0 0 0 transparent)} to{transform:translateY(3px) scale(1.12);filter:drop-shadow(0 0 5px currentColor)} }
@@ -9660,7 +9664,7 @@ body.delofia-seasonal-effects-off #productsGrid > .group::before,body.delofia-se
 <script id="delofia-storefront-quality-fixes">
 (function(){
 'use strict';
-const validThemes=['purple','ramadan','winter','summer','eid','qurbani','rose','ocean'];
+const validThemes=['purple','ramadan','winter','summer','eid','qurbani','rose','ocean','bow'];
 try{
  const originalApply=window.applyDelofiaGlobalTheme;
  if(typeof originalApply==='function'&&!originalApply.__delofiaCacheWrapped){
@@ -10533,6 +10537,7 @@ body[data-delofia-store-theme="eid"]{--delofia-accent:#7c3aed;--delofia-accent-d
 body[data-delofia-store-theme="qurbani"]{--delofia-accent:#16a34a;--delofia-accent-dark:#14532d;--delofia-soft:#f0fdf4}
 body[data-delofia-store-theme="rose"]{--delofia-accent:#db2777;--delofia-accent-dark:#831843;--delofia-soft:#fdf2f8}
 body[data-delofia-store-theme="ocean"]{--delofia-accent:#0891b2;--delofia-accent-dark:#164e63;--delofia-soft:#ecfeff}
+ body[data-delofia-store-theme="bow"]{--delofia-accent:#ec4899;--delofia-accent-dark:#9d174d;--delofia-soft:#fdf2f8}
 body[data-delofia-store-theme]:not([data-delofia-store-theme="purple"]) header{border-color:color-mix(in srgb,var(--delofia-accent) 22%,white)}
 body[data-delofia-store-theme]:not([data-delofia-store-theme="purple"]) #brandLogoMark{background:var(--delofia-accent)!important}
 body[data-delofia-store-theme]:not([data-delofia-store-theme="purple"]) #brandLogo span:first-of-type{color:var(--delofia-accent-dark)!important}
@@ -10547,7 +10552,7 @@ body[data-delofia-store-theme]:not([data-delofia-store-theme="purple"]) #globalS
 <script id="delofia-theme-and-category-picks-manager">
 (function(){
 const $=id=>document.getElementById(id);
-const themeMap={purple:['#7c3aed','#581c87','#f5f3ff'],ramadan:['#15803d','#052e16','#ecfdf5'],winter:['#0284c7','#0c4a6e','#f0f9ff'],summer:['#ea580c','#9a3412','#fff7ed'],eid:['#7c3aed','#312e81','#f5f3ff'],qurbani:['#16a34a','#14532d','#f0fdf4'],rose:['#db2777','#831843','#fdf2f8'],ocean:['#0891b2','#164e63','#ecfeff']};
+const themeMap={purple:['#7c3aed','#581c87','#f5f3ff'],ramadan:['#15803d','#052e16','#ecfdf5'],winter:['#0284c7','#0c4a6e','#f0f9ff'],summer:['#ea580c','#9a3412','#fff7ed'],eid:['#7c3aed','#312e81','#f5f3ff'],qurbani:['#16a34a','#14532d','#f0fdf4'],rose:['#db2777','#831843','#fdf2f8'],ocean:['#0891b2','#164e63','#ecfeff'],bow:['#ec4899','#9d174d','#fdf2f8']};
 function products(){return Array.isArray(window.products)?window.products:[]}
 function currentSettings(){return window.storeSettings||storeSettings||{}}
 window.applyDelofiaGlobalTheme=function(){const st=currentSettings(),theme=themeMap[st.globalStoreTheme] ? st.globalStoreTheme : 'purple';document.body.dataset.delofiaStoreTheme=theme;document.body.classList.toggle('delofia-seasonal-effects-off',st.globalStoreThemeAnimations===false);};
