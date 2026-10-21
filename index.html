@@ -21,8 +21,8 @@
     <meta property="og:title" content="Delofia — Draft · Dreamy · Delicacy">
     <meta property="og:description" content="Discover lovely lifestyle finds and thoughtful gifts at Delofia. Fast delivery across Bangladesh.">
     <meta property="og:url" content="https://delofiabd.vercel.app/">
-    <meta property="og:image" content="https://delofiabd.vercel.app/delofia-share-card.png">
-    <meta property="og:image:secure_url" content="https://delofiabd.vercel.app/delofia-share-card.png">
+    <meta property="og:image" content="https://delofiabd.vercel.app/delofia-share-card.png?v=2">
+    <meta property="og:image:secure_url" content="https://delofiabd.vercel.app/delofia-share-card.png?v=2">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -30,7 +30,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Delofia — Draft · Dreamy · Delicacy">
     <meta name="twitter:description" content="Discover lovely lifestyle finds and thoughtful gifts at Delofia. Fast delivery across Bangladesh.">
-    <meta name="twitter:image" content="https://delofiabd.vercel.app/delofia-share-card.png">
+    <meta name="twitter:image" content="https://delofiabd.vercel.app/delofia-share-card.png?v=2">
     <meta name="twitter:image:alt" content="DELOFIA — lovely finds and thoughtful gifts">
     <title>Delofia — Draft · Dreamy · Delicacy</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -7512,7 +7512,8 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
                 document.getElementById('settingCampaignTheme').value = storeSettings.campaignTheme || 'ocean';
                 document.getElementById('settingCampaignProductCodes').value = Array.isArray(storeSettings.campaignProductCodes) ? storeSettings.campaignProductCodes.join(', ') : '';
                 document.getElementById('settingCampaignStart').value = storeSettings.campaignStart || '';
-                document.getElementById('settingCampaignEnd').value = storeSettings.campaignEnd || '';\n                document.getElementById('settingCampaignCountdownEnabled').checked = storeSettings.campaignCountdownEnabled === true;
+                document.getElementById('settingCampaignEnd').value = storeSettings.campaignEnd || '';
+                document.getElementById('settingCampaignCountdownEnabled').checked = storeSettings.campaignCountdownEnabled === true;
                 document.getElementById('settingRequireLoginToOrder').checked = !!storeSettings.requireLoginToOrder;
                 document.getElementById('settingGlobalDirectOrderEnabled').checked = storeSettings.globalDirectOrderEnabled !== false;
                 document.getElementById('settingGlobalShowPrice').checked = storeSettings.globalShowPrice !== false;
