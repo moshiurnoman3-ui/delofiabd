@@ -5015,11 +5015,9 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             const directOrderDisabled = !isProductDirectOrderEnabled(selectedDetailProd);
             buyBtn.disabled = isStockOut || directOrderDisabled;
             buyBtn.classList.toggle('hidden', directOrderDisabled);
-            buyBtn.className = isStockOut
-                ? 'delofia-order-btn delofia-order-buy w-full font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2'
-                : directOrderDisabled
-                    ? 'w-full bg-gray-300 text-gray-600 font-bold py-3.5 px-6 rounded-2xl shadow cursor-not-allowed transition flex items-center justify-center gap-2'
-                    : 'delofia-order-btn delofia-order-buy w-full font-bold rounded-xl shadow-sm transition flex items-center justify-center gap-2';
+            buyBtn.className = directOrderDisabled
+                ? 'w-full bg-gray-300 text-gray-600 font-bold py-3.5 px-6 rounded-2xl shadow cursor-not-allowed transition flex items-center justify-center gap-2'
+                : 'w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-purple-200 transition flex items-center justify-center gap-2';
             if (isStockOut) {
                 buyBtn.style.cssText = 'box-sizing:border-box!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;width:100%!important;min-width:0!important;min-height:44px!important;margin:0!important;padding:10px 8px!important;border:1px solid #b91c1c!important;border-radius:11px!important;background:#dc2626!important;color:#fff!important;font-size:12px!important;font-weight:700!important;line-height:1.2!important;text-align:center!important;box-shadow:0 3px 8px rgba(127,29,29,.18)!important;cursor:not-allowed!important;';
             } else {
