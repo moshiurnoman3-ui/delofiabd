@@ -1592,6 +1592,13 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             <button onclick="closeProductDetail()" class="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm">
                 <i class="fas fa-times text-lg"></i>
             </button>
+            <nav id="delofiaProductBreadcrumb" aria-label="Breadcrumb" class="flex flex-wrap items-center gap-2 px-5 pt-5 pr-16 text-sm text-gray-500">
+                <button type="button" onclick="closeProductDetail();delofiaShowHome()" class="hover:text-purple-700 hover:underline">Home</button>
+                <i class="fas fa-chevron-right text-[10px] text-gray-400"></i>
+                <button type="button" id="delofiaProductBreadcrumbCategory" onclick="closeProductDetail();delofiaShowCategoryLanding()" class="hover:text-purple-700 hover:underline">Shop</button>
+                <i class="fas fa-chevron-right text-[10px] text-gray-400"></i>
+                <span id="delofiaProductBreadcrumbName" class="font-semibold text-gray-800" aria-current="page">Product</span>
+            </nav>
             <div class="grid grid-cols-1 md:grid-cols-2">
                 <!-- Gallery Section -->
                 <div class="p-6 bg-purple-50/50 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-purple-100">
@@ -1650,6 +1657,20 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         <div id="pendingVariantLinesBox" class="hidden mb-4 rounded-lg border border-purple-100 bg-purple-50 px-3 py-2 text-xs text-purple-900"></div>
                     </div>
 
+                    <section class="delofia-product-trust-grid grid grid-cols-1 sm:grid-cols-3 gap-2 mt-5 mb-2" aria-label="Shopping information">
+                        <div class="flex items-start gap-2 rounded-xl border border-purple-100 bg-purple-50/70 p-3">
+                            <i class="fas fa-truck text-purple-700 mt-0.5"></i>
+                            <div><p class="text-xs font-bold text-gray-800">Delivery estimate</p><p class="text-[11px] leading-relaxed text-gray-600">Time confirmed for your location at checkout or with support.</p></div>
+                        </div>
+                        <div class="flex items-start gap-2 rounded-xl border border-purple-100 bg-white p-3">
+                            <i class="fas fa-box-open text-purple-700 mt-0.5"></i>
+                            <div><p class="text-xs font-bold text-gray-800">Careful packaging</p><p class="text-[11px] leading-relaxed text-gray-600">Packed with care before dispatch.</p></div>
+                        </div>
+                        <div class="flex items-start gap-2 rounded-xl border border-purple-100 bg-white p-3">
+                            <i class="fas fa-headset text-purple-700 mt-0.5"></i>
+                            <div><p class="text-xs font-bold text-gray-800">Customer support</p><p class="text-[11px] leading-relaxed text-gray-600">Ask us about delivery or your order.</p></div>
+                        </div>
+                    </section>
                     <!-- Direct Order Action Buttons -->
                     <div class="space-y-3 pt-4 border-t border-purple-100">
                         <button id="detailAddCartBtn" onclick="addSelectedVariantsToCart()" class="w-full bg-purple-100 hover:bg-purple-200 text-purple-900 font-bold py-3 px-6 rounded-2xl transition flex items-center justify-center gap-2"><i class="fas fa-cart-plus"></i> Add to Cart</button>
@@ -4942,6 +4963,13 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             detailQtyVal = 1;
             document.getElementById('detailQty').innerText = detailQtyVal;
             document.getElementById('detailTitle').innerText = selectedDetailProd.title;
+            const breadcrumbName = document.getElementById('delofiaProductBreadcrumbName');
+            if (breadcrumbName) breadcrumbName.textContent = selectedDetailProd.title || 'Product';
+            const breadcrumbCategory = document.getElementById('delofiaProductBreadcrumbCategory');
+            if (breadcrumbCategory) {
+                const categoryName = selectedDetailProd.category || selectedDetailProd.categoryName || selectedDetailProd.category_name || 'Shop';
+                breadcrumbCategory.textContent = typeof categoryName === 'string' ? categoryName : 'Shop';
+            }
             updateDetailWishlistButton();
             const detailPriceEl = document.getElementById('detailPrice');
             detailPriceEl.innerText = isProductPriceVisible(selectedDetailProd) ? `৳${Number(selectedDetailProd.price).toFixed(2)}` : '';
@@ -10817,3 +10845,20 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
   }
 }
 </style>
+<style id="delofia-product-details-finish-v1">
+@media(min-width:768px){
+ #productDetailModal:not(.hidden)>div{width:min(96vw,1180px)!important;max-width:1180px!important}
+ #productDetailModal:not(.hidden)>div>nav#delofiaProductBreadcrumb{padding:22px 30px 8px!important}
+ #productDetailModal:not(.hidden)>div>div[class*="grid-cols-"]{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)!important}
+ #productDetailModal #detailMainImage{object-fit:contain!important}
+ #productDetailModal .delofia-product-trust-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:640px){
+ #productDetailModal:not(.hidden)>div>nav#delofiaProductBreadcrumb{padding:16px 16px 8px!important;font-size:12px!important}
+ #productDetailModal .delofia-product-trust-grid{grid-template-columns:1fr!important}
+ #productDetailModal .delofia-product-trust-grid>div{padding:10px 12px!important}
+ #productDetailModal:not(.hidden){padding-bottom:calc(92px + env(safe-area-inset-bottom))!important}
+ body.delofia-product-detail-open #delofiaMobileActionBar{display:grid!important;position:fixed!important;z-index:99999!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+}
+</style>
+
