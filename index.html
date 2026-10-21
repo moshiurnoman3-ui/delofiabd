@@ -3979,7 +3979,6 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
                         <div>
-                            <span class="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-bold inline-block mb-1">${product.category || 'Other'}${subCategoryDisplay ? ' • ' + subCategoryDisplay : ''}</span>
                             <h3 onclick="openProductDetail('${product.id}')" class="font-bold text-gray-900 text-sm hover:text-purple-700 transition cursor-pointer line-clamp-2 mb-2">${product.title || 'Product Title'}</h3>
                             ${isProductPriceVisible(product) ? (() => { const sale = Math.max(0, Number(product.price) || 0); const regular = Number(product.originalPrice) || 0; const hasDiscount = regular > sale && sale >= 0; const pct = hasDiscount ? Math.round((regular - sale) / regular * 100) : 0; return `<div class="mb-3"><div class="flex flex-wrap items-center gap-2"><span class="text-purple-700 font-extrabold text-lg">৳${sale.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>${hasDiscount ? `<span class="text-xs text-gray-400 line-through">৳${regular.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>` : ''}</div>${hasDiscount ? `<span class="inline-flex mt-1 bg-pink-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">${pct}% OFF · SAVE ৳${(regular-sale).toLocaleString('en-BD', {maximumFractionDigits:2})}</span>` : ''}</div>`; })() : `<div class="mb-3 rounded-lg bg-purple-50 p-2"><p class="text-[11px] text-gray-700 font-semibold mb-2">For price, contact us</p><div class="flex flex-wrap gap-1.5">${getPriceContactLinksHTML(product)}</div></div>`}
                         </div>
@@ -3989,10 +3988,6 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                               <button type="button" aria-label="Add to cart" title="Add to cart" onclick="${product.variantEnabled && Array.isArray(product.variantGroups) && product.variantGroups.length ? `openProductDetail('${product.id}')` : `addProductToCart('${product.id}')`}" class="flex-1 min-w-0 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 font-bold py-2.5 rounded-xl text-base transition flex items-center justify-center"><i class="fas fa-shopping-cart" aria-hidden="true"></i></button>
                               <a aria-label="Order via WhatsApp" title="Order via WhatsApp" href="https://wa.me/${getWhatsappDigits()}?text=${encodeURIComponent('Hi Delofia! I want to order this product.\nProduct: ' + (product.title || 'Product') + '\nProduct ID: ' + (product.id || product.productId || 'N/A') + '\nWebsite: ' + window.location.href + '\nPlease confirm availability and ordering details.') }" target="_blank" rel="noopener noreferrer" class="flex-1 min-w-0 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold py-2.5 rounded-xl text-base transition flex items-center justify-center"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
                             </div>`}
-                            <div class="flex justify-center gap-2 pt-1">
-                                <button type="button" data-delofia-share-product="${escapeHtml(String(product.id))}" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
-                                <button type="button" data-delofia-copy-product="${escapeHtml(String(product.id))}" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
-                            </div>
 </div>
                     </div>
                 `;
@@ -6911,6 +6906,33 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
  #productDetailModal:not(.hidden) .delofia-product-order-actions #detailBuyBtn i,
  #productDetailModal:not(.hidden) .delofia-product-order-actions #detailWhatsappBtn i,
  #productDetailModal:not(.hidden) .delofia-product-order-actions #delofiaDetailCallBtn i{font-size:14px!important}
+}
+</style>
+
+
+<style id="delofia-home-card-cleanup-and-mobile-scroll-v1">
+/* Keep home product cards compact; category is still available in filters/details. */
+#productsGrid .delofia-home-category-badge{display:none!important}
+@media(max-width:640px){
+ body.delofia-product-detail-open{overflow:hidden!important}
+ #productDetailModal:not(.hidden){
+   position:fixed!important;inset:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+   -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
+   padding:0 0 calc(92px + env(safe-area-inset-bottom))!important;
+   box-sizing:border-box!important;
+ }
+ #productDetailModal:not(.hidden)>div{
+   max-height:none!important;height:auto!important;min-height:0!important;
+   overflow:visible!important;margin:0 auto!important;
+   padding-bottom:calc(100px + env(safe-area-inset-bottom))!important;
+ }
+ #productDetailModal:not(.hidden)>div>div:last-child{
+   scroll-margin-bottom:calc(100px + env(safe-area-inset-bottom))!important;
+ }
+ #delofiaMobileActionBar{
+   position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;
+   z-index:99999!important;padding-bottom:env(safe-area-inset-bottom)!important;
+ }
 }
 </style>
 
