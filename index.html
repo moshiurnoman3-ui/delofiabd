@@ -5025,7 +5025,7 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 : 'w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-purple-200 transition flex items-center justify-center gap-2';
             buyBtn.innerHTML = isStockOut
                 ? '<i class="fas fa-lock"></i> Stock Out'
-                : '<i class="fas fa-shopping-bag"></i> Buy It Now (Direct Checkout)';
+                : '<i class="fas fa-shopping-bag"></i> Direct Order';
             const mainImg = document.getElementById('detailMainImage');
             mainImg.src = (selectedDetailProd.images && selectedDetailProd.images[0]) ? selectedDetailProd.images[0] : '';
             mainImg.alt = (selectedDetailProd.images && selectedDetailProd.images.length) ? 'Product' : 'No product photo uploaded';
@@ -6815,6 +6815,49 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
  #productDetailModal .delofia-product-order-actions{gap:8px!important}
  #productDetailModal .delofia-order-btn{min-height:42px;padding:9px 6px;border-radius:10px;font-size:11.5px;gap:5px}
  #productDetailModal .delofia-order-btn i{font-size:14px}
+}
+</style>
+
+
+<style id="delofia-product-order-buttons-override-v2">
+#productDetailModal .delofia-product-order-actions{
+ display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;
+}
+#productDetailModal .delofia-product-order-actions #detailAddCartBtn,
+#productDetailModal .delofia-product-order-actions #detailBuyBtn,
+#productDetailModal .delofia-product-order-actions #detailWhatsappBtn,
+#productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:100%!important;min-width:0!important;min-height:42px!important;height:auto!important;
+ margin:0!important;padding:9px 7px!important;border:0!important;border-radius:10px!important;
+ color:#fff!important;font-size:12px!important;font-weight:700!important;line-height:1.2!important;
+ text-align:center!important;text-decoration:none!important;box-shadow:0 2px 5px rgba(15,23,42,.10)!important;
+ gap:6px!important;white-space:normal!important;
+}
+#productDetailModal .delofia-product-order-actions #detailAddCartBtn{background:#f58a20!important}
+#productDetailModal .delofia-product-order-actions #detailBuyBtn{background:#062522!important}
+#productDetailModal .delofia-product-order-actions #detailWhatsappBtn{background:#20a965!important}
+#productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn{background:#24438f!important}
+#productDetailModal .delofia-product-order-actions #detailAddCartBtn i,
+#productDetailModal .delofia-product-order-actions #detailBuyBtn i,
+#productDetailModal .delofia-product-order-actions #detailWhatsappBtn i,
+#productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn i{font-size:14px!important;flex:0 0 auto!important}
+#productDetailModal .delofia-product-order-actions #detailAddCartBtn span,
+#productDetailModal .delofia-product-order-actions #detailBuyBtn span,
+#productDetailModal .delofia-product-order-actions #detailWhatsappBtn span,
+#productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn span{display:inline!important}
+@media(min-width:641px){
+ #productDetailModal .delofia-product-order-actions #detailAddCartBtn,
+ #productDetailModal .delofia-product-order-actions #detailBuyBtn,
+ #productDetailModal .delofia-product-order-actions #detailWhatsappBtn,
+ #productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn{min-height:44px!important;font-size:13px!important}
+}
+@media(max-width:380px){
+ #productDetailModal .delofia-product-order-actions{gap:7px!important}
+ #productDetailModal .delofia-product-order-actions #detailAddCartBtn,
+ #productDetailModal .delofia-product-order-actions #detailBuyBtn,
+ #productDetailModal .delofia-product-order-actions #detailWhatsappBtn,
+ #productDetailModal .delofia-product-order-actions #delofiaDetailCallBtn{font-size:10.5px!important;padding:8px 4px!important;gap:4px!important}
 }
 </style>
 
