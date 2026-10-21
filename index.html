@@ -1592,7 +1592,10 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             <button onclick="closeProductDetail()" class="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-gray-200 text-gray-700 w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm">
                 <i class="fas fa-times text-lg"></i>
             </button>
-            <div class="grid grid-cols-1 md:grid-cols-2">
+            <nav id="delofiaProductBreadcrumb" aria-label="Breadcrumb" class="px-5 sm:px-7 pt-5 text-sm text-gray-500 flex flex-wrap items-center gap-2">
+                <button type="button" onclick="closeProductDetail(); window.scrollTo({top:0,behavior:'smooth'});" class="hover:text-purple-700">Home</button><i class="fas fa-chevron-right text-[10px]"></i><span id="delofiaProductBreadcrumbCategory">Products</span><i class="fas fa-chevron-right text-[10px]"></i><span id="delofiaProductBreadcrumbTitle" class="font-semibold text-gray-800"></span>
+            </nav>
+            <div class="grid grid-cols-1 md:grid-cols-[1.08fr_0.92fr]">
                 <!-- Gallery Section -->
                 <div class="p-6 bg-purple-50/50 flex flex-col justify-between items-center border-b md:border-b-0 md:border-r border-purple-100">
                     <div class="w-full flex-1 flex flex-col justify-center items-center">
@@ -1637,6 +1640,18 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                             <div id="detailPriceSocialLinks" class="flex flex-wrap gap-2"></div>
                         </div>
                         <div id="detailVariantOptions" class="hidden mb-6 space-y-4"></div>
+                        <section id="delofiaEstimatedDelivery" class="my-5 rounded-2xl border border-purple-100 bg-purple-50/60 p-4" aria-label="Estimated delivery">
+                            <h3 class="flex items-center gap-2 text-sm font-extrabold text-purple-950 mb-3"><i class="fas fa-truck text-lg text-purple-700"></i> Estimated Delivery</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="rounded-xl bg-white border border-purple-100 p-3"><p class="text-xs text-gray-500 mb-1">Inside Dhaka</p><p class="font-bold text-gray-900">24–48 hours</p></div>
+                                <div class="rounded-xl bg-white border border-purple-100 p-3"><p class="text-xs text-gray-500 mb-1">Outside Dhaka</p><p class="font-bold text-gray-900">27–72 hours</p></div>
+                            </div>
+                        </section>
+                        <section class="grid grid-cols-2 sm:grid-cols-3 gap-2 my-5" aria-label="Shopping benefits">
+                            <div class="rounded-xl bg-gray-50 border border-gray-100 p-3 text-center"><i class="fas fa-box-open text-purple-700 text-lg"></i><p class="text-xs font-bold mt-2">Safe Packaging</p></div>
+                            <div class="rounded-xl bg-gray-50 border border-gray-100 p-3 text-center"><i class="fas fa-headset text-purple-700 text-lg"></i><p class="text-xs font-bold mt-2">Customer Support</p></div>
+                            <div class="rounded-xl bg-gray-50 border border-gray-100 p-3 text-center col-span-2 sm:col-span-1"><i class="fas fa-heart text-purple-700 text-lg"></i><p class="text-xs font-bold mt-2">Carefully Packed</p></div>
+                        </section>
                         
                         <!-- Quantity Selector -->
                         <div class="mb-6">
@@ -4942,6 +4957,10 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             detailQtyVal = 1;
             document.getElementById('detailQty').innerText = detailQtyVal;
             document.getElementById('detailTitle').innerText = selectedDetailProd.title;
+            const breadcrumbTitle = document.getElementById('delofiaProductBreadcrumbTitle');
+            const breadcrumbCategory = document.getElementById('delofiaProductBreadcrumbCategory');
+            if (breadcrumbTitle) breadcrumbTitle.textContent = selectedDetailProd.title || 'Product';
+            if (breadcrumbCategory) breadcrumbCategory.textContent = selectedDetailProd.category || selectedDetailProd.categoryName || 'Products';
             updateDetailWishlistButton();
             const detailPriceEl = document.getElementById('detailPrice');
             detailPriceEl.innerText = isProductPriceVisible(selectedDetailProd) ? `৳${Number(selectedDetailProd.price).toFixed(2)}` : '';
@@ -9509,6 +9528,21 @@ if(grid&&typeof MutationObserver!=='undefined'){const observer=new MutationObser
 })();
 </script>
 
+<style id="delofia-product-detail-redesign-safe-v1">
+@media (min-width: 768px) {
+  #productDetailModal { align-items:flex-start !important; }
+  #productDetailModal > div { max-width:1120px !important; margin:24px auto !important; }
+  #productDetailModal #detailMainImage { object-fit:contain !important; }
+}
+@media (max-width: 640px) {
+  body:has(#productDetailModal:not(.hidden)) { padding-bottom:0 !important; }
+  body:has(#productDetailModal:not(.hidden)) #delofiaMobileActionBar { display:none !important; }
+  body:has(#productDetailModal:not(.hidden)) #productDetailModal { position:fixed !important; inset:0 !important; z-index:100 !important; padding:0 !important; overflow-y:auto !important; align-items:flex-start !important; }
+  body:has(#productDetailModal:not(.hidden)) #productDetailModal > div { width:100% !important; max-width:none !important; min-height:100dvh !important; margin:0 !important; border-radius:0 !important; border:0 !important; overflow:visible !important; padding-bottom:calc(20px + env(safe-area-inset-bottom)) !important; }
+  #productDetailModal #delofiaProductBreadcrumb { padding-top:58px !important; }
+  #productDetailModal #detailMainImage { max-height:52vh !important; object-fit:contain !important; }
+}
+</style>
 </body>
 
 <style id="delofia-mobile-header-buttons-v36">
