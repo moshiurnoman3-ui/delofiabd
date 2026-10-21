@@ -6957,6 +6957,24 @@ body > main,
 }
 </style>
 
+
+<style id="delofia-global-bg-b069db-canvas-fix-v2">
+/* Make the actual storefront canvas transparent so the requested purple background is visible. */
+html, body {
+  background: #B069DB !important;
+  background-color: #B069DB !important;
+}
+body.bg-brand-bgLight {
+  background: #B069DB !important;
+  background-color: #B069DB !important;
+}
+#mainContainer {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+/* Preserve white surfaces for readability; only page canvas and gaps use the chosen background. */
+</style>
+
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
