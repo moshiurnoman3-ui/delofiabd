@@ -6721,6 +6721,59 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 }
 </style>
 \n
+
+<style id="delofia-product-detail-polish-and-persistent-mobile-nav-v1">
+/* Product detail visual polish only: preserve all existing product/cart/checkout logic. */
+@media (min-width: 768px) {
+  #productDetailModal:not(.hidden) { padding:18px !important; background:rgba(24,12,39,.58) !important; }
+  #productDetailModal:not(.hidden) > div {
+    width:min(96vw,1180px) !important; max-width:1180px !important;
+    max-height:94dvh !important; min-height:0 !important; height:auto !important;
+    overflow-y:auto !important; border-radius:24px !important;
+    border:1px solid #e9d5ff !important; box-shadow:0 24px 80px rgba(35,12,65,.22) !important;
+  }
+  #productDetailModal > div > div[class*="grid-cols-"] {
+    grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr) !important;
+    align-items:stretch !important;
+  }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:first-child {
+    padding:24px !important; background:#faf7ff !important;
+  }
+  #productDetailModal div.aspect-square {
+    width:100% !important; max-width:none !important; height:auto !important;
+    max-height:none !important; aspect-ratio:1/1 !important;
+  }
+  #productDetailModal #detailThumbnails { max-width:100% !important; gap:10px !important; }
+  #productDetailModal #detailThumbnails img { width:clamp(56px,7vw,86px) !important; height:clamp(56px,7vw,86px) !important; border-radius:12px !important; }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:last-child { padding:30px !important; }
+  #productDetailModal #detailTitle { font-size:clamp(24px,2.2vw,34px) !important; line-height:1.2 !important; }
+  #productDetailModal #detailAddCartBtn, #productDetailModal #detailBuyBtn, #productDetailModal #detailWhatsappBtn { min-height:48px !important; border-radius:14px !important; }
+}
+/* Keep all six existing mobile shortcuts visible, including while product details are open. */
+@media (max-width:640px) {
+  #delofiaMobileActionBar,
+  body.delofia-product-detail-open #delofiaMobileActionBar {
+    display:grid !important; position:fixed !important; z-index:9999 !important;
+    left:0 !important; right:0 !important; bottom:0 !important; top:auto !important;
+    width:100% !important; grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+    padding:5px max(3px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(3px,env(safe-area-inset-left)) !important;
+    background:rgba(255,255,255,.98) !important; backdrop-filter:blur(12px) !important;
+    border-top:1px solid #e9d5ff !important; border-radius:14px 14px 0 0 !important;
+    box-shadow:0 -5px 20px rgba(76,29,149,.13) !important;
+  }
+  #delofiaMobileActionBar button { min-height:48px !important; font-size:clamp(8px,2.3vw,10px) !important; }
+  #delofiaMobileActionBar button i { font-size:17px !important; }
+  body.delofia-product-detail-open { padding-bottom:calc(82px + env(safe-area-inset-bottom)) !important; }
+  #productDetailModal:not(.hidden) { z-index:50 !important; padding:0 0 calc(82px + env(safe-area-inset-bottom)) !important; }
+  #productDetailModal:not(.hidden) > div { padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important; }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:first-child { padding:16px !important; }
+  #productDetailModal div.aspect-square { width:100% !important; max-width:none !important; height:auto !important; max-height:none !important; aspect-ratio:1/1 !important; }
+  #productDetailModal > div > div[class*="grid-cols-"] > div:last-child { padding:20px 16px 24px !important; }
+  #productDetailModal #detailTitle { font-size:25px !important; line-height:1.25 !important; padding-right:34px !important; }
+  #productDetailModal #detailAddCartBtn, #productDetailModal #detailBuyBtn, #productDetailModal #detailWhatsappBtn { min-height:48px !important; border-radius:14px !important; }
+}
+</style>
+
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
