@@ -1624,14 +1624,12 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                     <div>
                         <span class="text-xs font-bold text-purple-600 uppercase tracking-widest mb-2 block">DELOFIA</span>
                         <h2 id="detailTitle" class="text-2xl font-bold text-gray-900 mb-2"></h2>
-                        <div class="mb-4">
-                            <button type="button" id="detailWishlistButton" onclick="toggleDetailWishlist()" class="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-pink-50 hover:bg-pink-100 text-pink-700 px-4 py-2 font-bold text-sm transition" aria-label="Add product to wishlist">
-                                <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel">Add to Wishlist</span>
+                        <div class="flex items-center gap-2 mb-4">
+                            <button type="button" id="detailWishlistButton" onclick="toggleDetailWishlist()" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-pink-200 bg-pink-50 hover:bg-pink-100 text-pink-400 transition" aria-label="Add product to wishlist" title="Add to Wishlist">
+                                <i id="detailWishlistIcon" class="far fa-heart"></i><span id="detailWishlistLabel" class="hidden">Add to Wishlist</span>
                             </button>
-                            <div class="flex gap-2 mt-2">
-                                <button type="button" data-delofia-share-current="1" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
-                                <button type="button" data-delofia-copy-current="1" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
-                            </div>
+                            <button type="button" data-delofia-share-current="1" aria-label="Share product" title="Share product" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700"><i class="fas fa-share-alt"></i></button>
+                            <button type="button" data-delofia-copy-current="1" aria-label="Copy product link" title="Copy product link" class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700"><i class="fas fa-link"></i></button>
                         </div>
                         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
                             <span id="detailPrice" class="text-3xl font-extrabold text-purple-700"></span>
@@ -3974,8 +3972,8 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" width="600" height="600" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
-                        ${Number(product.originalPrice) > Number(product.price) && Number(product.price) >= 0 ? `<div class="absolute top-2 right-12 bg-pink-500 text-white text-[11px] font-black px-2.5 py-1 rounded-br-xl rounded-tl-xl shadow">${Math.round((Number(product.originalPrice)-Number(product.price))/Number(product.originalPrice)*100)}% OFF</div>` : ''}
-                        <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute top-2 right-2 z-10 w-10 h-10 rounded-full bg-white/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-gray-500'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
+
+                        <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute bottom-2 right-2 z-10 w-10 h-10 rounded-full border border-pink-100 bg-pink-50/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-pink-300'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
                         ${product.stockOut ? '<div class="absolute bottom-2 left-2 pointer-events-none"><span class="inline-flex rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-extrabold text-white shadow">STOCK OUT</span></div>' : ''}
                     </div>
                     <div class="p-4 flex-1 flex flex-col justify-between">
