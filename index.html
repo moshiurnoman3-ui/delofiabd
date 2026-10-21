@@ -6937,6 +6937,26 @@ body.delofia-product-detail-open { overflow:hidden !important; overscroll-behavi
 }
 </style>
 
+
+<style id="delofia-global-bg-b069db-v1">
+/* User-requested site-wide base background. Keep product cards, forms, dialogs and admin panels readable. */
+html, body {
+  background-color: #B069DB !important;
+}
+body {
+  background-color: #B069DB !important;
+}
+/* Let the main storefront canvas inherit the new background instead of painting over it. */
+body > #app,
+body > #root,
+body > .app,
+body > main,
+#app > main,
+#root > main {
+  background-color: transparent !important;
+}
+</style>
+
 </body>
 <style id="delofia-mobile-header-buttons-v36">
 @media (max-width: 640px) {
