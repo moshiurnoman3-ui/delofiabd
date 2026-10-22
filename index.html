@@ -2471,6 +2471,12 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
 
 <!-- Homepage Offer Slider removed -->
 <!-- <section class="border-t border-purple-100 pt-4 mt-4 space-y-3"><div><h5 class="font-bold text-purple-900 text-sm mb-1">Homepage Offer Slider</h5><p class="text-xs text-gray-500">কমপক্ষে ৫টি slide slot থাকবে। Desktop ছবি দাও; ফোনে আলাদা ছবি দিতে চাইলে Mobile image-ও upload করো। প্রতিটি slide চাইলে নির্দিষ্ট product-এ link করা যাবে।</p></div><label class="flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 p-3"><input type="checkbox" id="settingHeroCarouselEnabled" class="h-4 w-4"><span class="text-sm font-bold">Enable offer slider (auto + swipe)</span></label><div><label for="settingHeroCarouselInterval" class="block text-xs font-bold text-gray-700 mb-1">Auto-slide interval</label><select id="settingHeroCarouselInterval" class="w-full border rounded-xl p-3 text-sm"><option value="2">2 seconds</option><option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select></div><div id="adminHeroSlidesEditor" class="space-y-3"></div><button type="button" id="addHeroSlideButton" class="rounded-xl border border-purple-300 bg-white px-4 py-2 text-sm font-bold text-purple-800 hover:bg-purple-50">+ Add another slide</button><p id="adminHeroSlidesStatus" class="text-[11px] text-gray-500">ছবি save করার আগে size কমানো হবে।</p></section> -->
+                            <section class="rounded-2xl border border-purple-200 bg-purple-50/60 p-4 space-y-4">
+                                <div><h5 class="font-bold text-purple-950">Shop by Collection</h5><p class="text-xs text-gray-600 mt-1">All Categories-এর নিচের collection card এখান থেকে control করুন। Image URL দিলে ছবি দেখাবে; ফাঁকা রাখলে category-র product image ব্যবহার হবে।</p></div>
+                                <label class="flex items-center gap-2 text-sm font-bold text-purple-900"><input id="settingShopCollectionsEnabled" type="checkbox" class="h-4 w-4"> Show Shop by Collection section</label>
+                                <div id="adminShopCollectionFields" class="space-y-3"></div>
+                                <p id="shopCollectionsSaveHint" class="text-xs text-gray-600">সব পরিবর্তন নিচের Save Store & Social Settings button দিয়ে save করুন।</p>
+                            </section>
 <button type="submit" class="w-full bg-purple-700 hover:bg-purple-800 text-white font-bold py-3 rounded-2xl">Save Store & Social Settings</button>
                         </form>
                     </div>
@@ -4561,6 +4567,9 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 storeSettings.campaignStart = document.getElementById('settingCampaignStart')?.value || '';
                 storeSettings.campaignEnd = document.getElementById('settingCampaignEnd')?.value || '';
                 storeSettings.campaignCountdownEnabled = !!document.getElementById('settingCampaignCountdownEnabled')?.checked;
+                storeSettings.shopCollectionsEnabled = !!document.getElementById('settingShopCollectionsEnabled')?.checked;
+                storeSettings.shopCollections = readAdminShopCollections();
+
                 // Legacy offer-slider fields are no longer editable.
                 if (new Blob([JSON.stringify(storeSettings)]).size > 850000) throw new Error('Slider images are too large for Firestore. Use smaller banner images and try again.');
                 const settingTextFields = { heroBadge: 'settingHeroBadge', heroTitle: 'settingHeroTitle', heroDescription: 'settingHeroDescription', heroShopText: 'settingHeroShopText', heroWhatsappText: 'settingHeroWhatsappText', footerBrand: 'settingFooterBrand', footerDescription: 'settingFooterDescription', footerContactHeading: 'settingFooterContactHeading', footerDeliveryHeading: 'settingFooterDeliveryHeading', footerInsideDelivery: 'settingFooterInsideDelivery', footerOutsideDelivery: 'settingFooterOutsideDelivery', footerFollowHeading: 'settingFooterFollowHeading', footerCopyright: 'settingFooterCopyright' };
@@ -7859,6 +7868,7 @@ body.bg-brand-bgLight {
             }
             if (tab === 'store') {
                 renderCategoryControls();
+                renderAdminShopCollectionsControls();
                 document.getElementById('settingCampaignEnabled').checked = !!storeSettings.campaignEnabled;
                 document.getElementById('settingCampaignTitle').value = storeSettings.campaignTitle || '';
                 document.getElementById('settingCampaignBadge').value = storeSettings.campaignBadge || '';
@@ -9609,25 +9619,29 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
     const section = $('delofiaShopCollections'), holder = $('delofiaShopCollectionCards');
     if (!section || !holder) return;
     if (!categories.length) { section.classList.add('hidden'); return; }
-    const themes = [
+    const defaults = [
       { title: 'Cute & Cozy', subtitle: 'Little things, big happiness', tone: 'pink', icon: 'fa-heart' },
       { title: 'Everyday Essentials', subtitle: 'Simple. Useful. Lovely.', tone: 'lavender', icon: 'fa-star' },
       { title: 'Gift Picks', subtitle: 'Thoughtful little surprises', tone: 'mint', icon: 'fa-gift' },
       { title: 'Home Vibes', subtitle: 'Cozy spaces, happy you', tone: 'peach', icon: 'fa-mug-hot' }
     ];
-    const available = categories.slice(0, Math.min(4, categories.length));
-    holder.innerHTML = available.map((name, i) => {
+    const settings = window.storeSettings || {};
+    const configured = Array.isArray(settings.shopCollections) ? settings.shopCollections : [];
+    const available = configured.length ? configured.filter(c => c && c.enabled !== false && categories.includes(String(c.category || ''))) : categories.slice(0,4).map((category,i)=>({...defaults[i],category,enabled:true,imageUrl:''}));
+    holder.innerHTML = available.map((item, i) => {
+      const name = String(item.category || '');
       const products = productList().filter(p => String(p.category || 'Other') === name);
-      const img = products.map(p => p.image || p.imageUrl || p.images?.[0]).find(v => typeof v === 'string' && /^https?:\/\//.test(v));
-      const t = themes[i];
+      const productImg = products.map(p => p.image || p.imageUrl || p.images?.[0]).find(v => typeof v === 'string' && /^https?:\/\//.test(v));
+      const img = /^https?:\/\//.test(String(item.imageUrl || '')) ? item.imageUrl : productImg;
+      const t = defaults[i % defaults.length];
       return `<button type="button" class="delofia-collection-card tone-${t.tone}" data-delofia-collection-category="${esc(name)}">
         <span class="delofia-collection-art">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : `<i class="fas ${t.icon}" aria-hidden="true"></i>`}</span>
-        <span class="delofia-collection-title">${esc(t.title)}</span><span class="delofia-collection-subtitle">${esc(t.subtitle)}</span>
+        <span class="delofia-collection-title">${esc(item.title || name)}</span><span class="delofia-collection-subtitle">${esc(item.subtitle || '')}</span>
         <span class="delofia-collection-cta">Explore <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
       </button>`;
     }).join('');
     holder.querySelectorAll('[data-delofia-collection-category]').forEach(button => button.addEventListener('click', () => window.delofiaOpenCategory(button.getAttribute('data-delofia-collection-category'))));
-    section.classList.toggle('hidden', available.length === 0);
+    section.classList.toggle('hidden', settings.shopCollectionsEnabled === false || available.length === 0);
   }
   window.delofiaOpenCategory = function (name) {
     activeCategory = String(name || 'Other'); activeSubcategory = 'all'; currentView = 'categoryProducts';
@@ -11298,3 +11312,42 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
 @media(min-width:640px){.delofia-collection-card{padding:12px}.delofia-collection-art{aspect-ratio:1/0.75}}
 @media(prefers-reduced-motion:reduce){.delofia-collection-card{transition:none}}
 </style>
+
+<script id="delofia-shop-collections-admin">
+(function(){
+  const defaults=[
+    {title:'Cute & Cozy',subtitle:'Little things, big happiness',tone:'pink',enabled:true},
+    {title:'Everyday Essentials',subtitle:'Simple. Useful. Lovely.',tone:'lavender',enabled:true},
+    {title:'Gift Picks',subtitle:'Thoughtful little surprises',tone:'mint',enabled:true},
+    {title:'Home Vibes',subtitle:'Cozy spaces, happy you',tone:'peach',enabled:true}
+  ];
+  const $=id=>document.getElementById(id);
+  window.renderAdminShopCollectionsControls=function(){
+    const host=$('adminShopCollectionFields'); if(!host)return;
+    const st=window.storeSettings||{};
+    $('settingShopCollectionsEnabled').checked=st.shopCollectionsEnabled!==false;
+    const saved=Array.isArray(st.shopCollections)&&st.shopCollections.length?st.shopCollections:defaults.map(x=>({...x,category:(window.getProductCategories?.()||[])[0]||'' ,imageUrl:''}));
+    const cats=Array.isArray(window.categories)?window.categories:[];
+    const fallback=[...new Set((Array.isArray(window.products)?window.products:[]).map(p=>String(p.category||'Other')).filter(Boolean))];
+    const options=[...new Set([...cats,...fallback])];
+    host.innerHTML=saved.slice(0,8).map((item,i)=>`<div class="rounded-xl border border-purple-100 bg-white p-3 space-y-2">
+      <div class="flex items-center justify-between"><strong class="text-sm text-purple-950">Collection ${i+1}</strong><label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" data-sc-enabled="${i}" ${item.enabled!==false?'checked':''}> Show</label></div>
+      <label class="block text-xs font-semibold">Collection name<input data-sc-title="${i}" maxlength="45" class="mt-1 w-full border rounded-lg p-2.5 text-sm" value="${escVal(item.title||'')}"></label>
+      <label class="block text-xs font-semibold">Category<select data-sc-category="${i}" class="mt-1 w-full border rounded-lg p-2.5 text-sm"><option value="">Choose category</option>${options.map(c=>`<option value="${escVal(c)}" ${String(item.category||'')===c?'selected':''}>${escVal(c)}</option>`).join('')}</select></label>
+      <label class="block text-xs font-semibold">Subtitle<input data-sc-subtitle="${i}" maxlength="90" class="mt-1 w-full border rounded-lg p-2.5 text-sm" value="${escVal(item.subtitle||'')}"></label>
+      <label class="block text-xs font-semibold">Image URL (optional)<input data-sc-image="${i}" type="url" class="mt-1 w-full border rounded-lg p-2.5 text-sm" placeholder="https://..." value="${escVal(item.imageUrl||'')}"></label>
+      <label class="block text-xs font-semibold">Display order<input data-sc-order="${i}" type="number" min="1" max="8" class="mt-1 w-24 border rounded-lg p-2 text-sm" value="${Number(item.order)||i+1}"></label>
+    </div>`).join('');
+  };
+  function escVal(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+  window.readAdminShopCollections=function(){
+    const host=$('adminShopCollectionFields');if(!host)return [];
+    return [...host.querySelectorAll('[data-sc-title]')].map(title=>{
+      const i=title.getAttribute('data-sc-title');
+      const get=key=>host.querySelector('[data-sc-'+key+'="'+i+'"]');
+      const imageUrl=(get('image')?.value||'').trim();
+      return {title:title.value.trim(),category:get('category')?.value||'',subtitle:get('subtitle')?.value.trim()||'',imageUrl:/^https?:\/\//i.test(imageUrl)?imageUrl:'',enabled:!!get('enabled')?.checked,order:Math.max(1,Number(get('order')?.value)||Number(i)+1)};
+    }).filter(x=>x.category).sort((a,b)=>a.order-b.order).slice(0,8);
+  };
+})();
+</script>
