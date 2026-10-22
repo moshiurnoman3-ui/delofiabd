@@ -11151,3 +11151,69 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
   margin-bottom: 4px !important;
 }
 </style>
+
+
+<style id="delofia-mobile-logo-size-final-fix">
+/* Final override: previous mobile rules later in the file were shrinking/hiding the logo. */
+@media (max-width: 640px) {
+  header > div.max-w-7xl {
+    min-height: 70px !important;
+    height: 70px !important;
+    overflow: visible !important;
+  }
+  header a#brandLogo {
+    display: flex !important;
+    flex: 1 1 0% !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    gap: 7px !important;
+    overflow: visible !important;
+    align-items: center !important;
+  }
+  header #brandLogoMark {
+    display: flex !important;
+    flex: 0 0 46px !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+    font-size: 23px !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+  }
+  header #brandLogoMark img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    background: transparent !important;
+  }
+  header #brandLogo > div:last-child {
+    display: block !important;
+    flex: 0 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+  header #brandLogo span:first-child {
+    display: block !important;
+    font-size: clamp(17px, 4.8vw, 21px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: 0 !important;
+    white-space: nowrap !important;
+  }
+  header #brandLogo span:last-child { display: none !important; }
+}
+@media (max-width: 360px) {
+  header > div.max-w-7xl { height: 62px !important; min-height: 62px !important; }
+  header #brandLogo { gap: 4px !important; }
+  header #brandLogoMark {
+    flex-basis: 34px !important;
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
+  }
+  header #brandLogo span:first-child { font-size: 16px !important; }
+}
+</style>
