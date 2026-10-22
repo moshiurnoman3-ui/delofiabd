@@ -11221,43 +11221,29 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
 
 <style id="delofia-mobile-logo-symbol-only">
 @media (max-width: 640px) {
-  /* Show the actual logo mark larger; hide the Delofia wordmark/tagline beside it. */
+  /* Enlarge the image itself, not just its surrounding header box. */
   header a#brandLogo {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    min-width: 0 !important;
-    gap: 0 !important;
-    margin-right: auto !important;
+    flex: 0 0 auto !important; width: auto !important; min-width: 0 !important;
+    gap: 0 !important; margin-right: auto !important; overflow: visible !important;
   }
-  header a#brandLogo > div:last-child {
-    display: none !important;
-  }
+  header a#brandLogo > div:last-child { display: none !important; }
   header #brandLogoMark {
-    display: flex !important;
-    flex: 0 0 56px !important;
-    width: 56px !important;
-    min-width: 56px !important;
-    height: 56px !important;
-    border-radius: 0 !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    font-size: 0 !important;
+    position: relative !important; display: flex !important; flex: 0 0 56px !important;
+    width: 56px !important; min-width: 56px !important; height: 56px !important;
+    border-radius: 0 !important; background: transparent !important; box-shadow: none !important;
+    overflow: visible !important; font-size: 0 !important;
   }
   header #brandLogoMark img {
-    display: block !important;
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
-    background: transparent !important;
+    display: block !important; position: absolute !important;
+    width: 170% !important; height: 170% !important; max-width: none !important;
+    left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important;
+    object-fit: contain !important; background: transparent !important;
   }
 }
 @media (max-width: 360px) {
   header #brandLogoMark {
-    flex-basis: 48px !important;
-    width: 48px !important;
-    min-width: 48px !important;
-    height: 48px !important;
+    flex-basis: 48px !important; width: 48px !important; min-width: 48px !important; height: 48px !important;
   }
+  header #brandLogoMark img { width: 170% !important; height: 170% !important; }
 }
 </style>
