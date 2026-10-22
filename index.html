@@ -4529,6 +4529,7 @@ function applyDelofiaCampaign(){
  startAutoScroll();
 }
 window.applyDelofiaCampaign=applyDelofiaCampaign;
+ document.addEventListener('DOMContentLoaded',()=>{window.applyDelofiaCampaign?.();window.applyFreeDeliveryOffer?.();},{once:true});
 function applyStorefrontHeroCarousel(){const box=document.getElementById('storefrontHeroCarousel'),fallback=document.getElementById('storefrontHeroFallback');if(!box)return;const slides=(Array.isArray(storeSettings.heroCarouselSlides)?storeSettings.heroCarouselSlides:[]).filter(s=>s&&(s.desktopImage||s.mobileImage));const active=false;box.classList.toggle('hidden',!active);if(fallback)fallback.classList.toggle('hidden',active);if(!active){if(heroCarouselTimer){clearInterval(heroCarouselTimer);heroCarouselTimer=null;}return;}heroCarouselCurrentIndex=((heroCarouselCurrentIndex%slides.length)+slides.length)%slides.length;const slide=slides[heroCarouselCurrentIndex],img=document.getElementById('heroCarouselImage'),link=document.getElementById('heroCarouselSlideLink'),mobile=window.matchMedia?.('(max-width: 640px)').matches;if(img){const nextSrc=(mobile&&slide.mobileImage)?slide.mobileImage:(slide.desktopImage||slide.mobileImage);if(img.dataset.delofiaFailedSrc===nextSrc){box.classList.add('hidden');if(fallback)fallback.classList.remove('hidden');return;}if(img.src!==nextSrc){img.loading='eager';img.fetchPriority='high';img.decoding='async';img.src=nextSrc;}img.alt=`Offer ${heroCarouselCurrentIndex+1}`;}const clickable=slide.clickable===true&&!!slide.productId&&(window.products||[]).some(p=>String(p.id)===String(slide.productId));if(link){link.disabled=!clickable;link.setAttribute('aria-label',clickable?'Open offer product':'Featured offer');}const dots=document.getElementById('heroCarouselDots');if(dots){dots.innerHTML='';slides.forEach((_,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Show offer ${i+1}`);b.setAttribute('aria-current',String(i===heroCarouselCurrentIndex));b.onclick=()=>{heroCarouselCurrentIndex=i;applyStorefrontHeroCarousel();};dots.appendChild(b);});}const count=document.getElementById('heroCarouselSlideCount');if(count)count.textContent=`Offer ${heroCarouselCurrentIndex+1} of ${slides.length}`;if(heroCarouselTimer)clearInterval(heroCarouselTimer);const sec=Math.max(2,Math.min(30,Number(storeSettings.heroCarouselInterval)||5));if(slides.length>1)heroCarouselTimer=setInterval(()=>{heroCarouselCurrentIndex=(heroCarouselCurrentIndex+1)%slides.length;applyStorefrontHeroCarousel();},sec*1000);}
         window.applyStorefrontHeroCarousel=applyStorefrontHeroCarousel;
         function moveHeroCarousel(delta){const slides=(storeSettings.heroCarouselSlides||[]).filter(s=>s&&(s.desktopImage||s.mobileImage));if(slides.length<2)return;heroCarouselCurrentIndex=(heroCarouselCurrentIndex+delta+slides.length)%slides.length;applyStorefrontHeroCarousel();}
@@ -4601,7 +4602,8 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 settingGlobalShowPrice:'globalShowPrice',
                 settingWhatsappEnabled:'whatsappEnabled',
                 settingProductPhotoAutoRotate:'productPhotoAutoRotate',
-                settingCampaignEnabled:'campaignEnabled'
+                settingCampaignEnabled:'campaignEnabled',
+                 settingFreeDeliveryOfferEnabled:'freeDeliveryOfferEnabled'
             };
             Object.entries(toggleKeys).forEach(([id,key])=>{
                 const el=document.getElementById(id);
@@ -4615,6 +4617,7 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                         await window.delofiaAdminFs.setDoc(window.delofiaAdminFs.doc('settings','store'),latest);
                         Object.assign(storeSettings,latest);window.storeSettings=storeSettings;
                         applyDelofiaCampaign?.();
+                        if(key==='freeDeliveryOfferEnabled') applyFreeDeliveryOffer?.();
                     }catch(err){
                         storeSettings[key]=previous;window.storeSettings=storeSettings;el.checked=previous;
                         console.error('Could not save setting '+key,err);
