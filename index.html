@@ -1635,6 +1635,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                             <span id="detailPrice" class="text-3xl font-extrabold text-purple-700"></span>
                             <span id="detailOriginalPrice" class="hidden text-sm text-gray-400 line-through"></span>
                             <span id="detailDiscountBadge" class="hidden text-xs font-extrabold text-white bg-pink-500 px-2.5 py-1 rounded-full"></span>
+                            <span id="detailFreeDeliveryBadge" class="hidden text-xs font-extrabold text-white bg-emerald-600 px-2.5 py-1 rounded-full">FREE DELIVERY</span>
                             <span id="detailStockBadge" class="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded-full">In Stock</span><span id="detailAvailableQty" class="hidden text-xs text-gray-600 font-semibold"></span>
                         </div>
                         <div id="detailPriceContact" class="hidden mb-4 rounded-xl border border-purple-100 bg-purple-50 p-3">
@@ -2638,6 +2639,11 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                                             <input type="checkbox" id="prodDirectOrderEnabled" checked class="rounded text-purple-600">
                                             Enable Direct Order / Checkout
                                         </label>
+                                        <label class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 font-bold text-emerald-800">
+                                            <input type="checkbox" id="prodFreeDelivery" class="rounded text-emerald-600">
+                                            Free Delivery for this product
+                                        </label>
+                                        <p class="text-[11px] text-gray-500">শুধু এই product-এ Free Delivery হবে। Cart-এ অন্য normal-delivery product থাকলে regular delivery charge থাকবে।</p>
                                         <label class="block rounded-xl border border-emerald-200 bg-emerald-50 p-3 font-bold text-gray-700">
                                             <span class="block text-sm mb-1">Stock quantity (for products without variants)</span>
                                             <input type="number" min="0" step="1" id="prodStockQty" value="0" class="w-full border rounded-lg p-2 bg-white" />
@@ -3972,6 +3978,7 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
                         <img src="${mainImg}" loading="${productIndex < 4 ? 'eager' : 'lazy'}" decoding="async" fetchpriority="${productIndex < 4 ? 'high' : 'low'}" alt="${product.title || 'Product'}" width="600" height="600" class="w-full h-full object-contain p-1 product-card-image" data-product-images="${escapeHtml(JSON.stringify(productPhotoList))}" data-auto-rotate="${(storeSettings.productPhotoAutoRotate === true || product.photoAutoRotate === true) ? 'true' : 'false'}" data-photo-interval="${Math.max(2, Math.min(10, Number(storeSettings.productPhotoAutoRotate === true ? storeSettings.productPhotoInterval : product.photoInterval) || 4))}" onerror="this.removeAttribute('src')">
                         ${mainImg ? '' : '<div class="absolute inset-0 flex items-center justify-center text-center text-purple-300"><div><i class="fas fa-image text-4xl mb-2"></i><p class="text-xs font-semibold">No product photo</p></div></div>'}
                         <div class="absolute top-2 left-2 bg-purple-900/80 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">DELOFIA</div>
+                        ${product.freeDelivery === true ? '<div class="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-extrabold px-2 py-1 rounded-full shadow-sm">FREE DELIVERY</div>' : ''}
 
                         <button type="button" onclick="event.stopPropagation(); toggleWishlist('${String(product.id).replace("'", "\\'")}')" aria-label="Add to wishlist" title="Add to Wishlist" class="absolute bottom-2 right-2 z-10 w-10 h-10 rounded-full border border-pink-100 bg-pink-50/95 shadow-md flex items-center justify-center hover:scale-105 transition ${isInWishlist(product.id) ? 'text-pink-600' : 'text-pink-300'}"><i class="${isInWishlist(product.id) ? 'fas' : 'far'} fa-heart text-lg" id="wishlistHeart_${String(product.id).replace(' ', '_')}"></i></button>
                         ${product.stockOut ? '<div class="absolute bottom-2 left-2 pointer-events-none"><span class="inline-flex rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-extrabold text-white shadow">STOCK OUT</span></div>' : ''}
@@ -4965,6 +4972,8 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             const detailHasDiscount = isProductPriceVisible(selectedDetailProd) && detailRegularPrice > detailSalePrice;
             if (detailOriginalPriceEl) { detailOriginalPriceEl.textContent = detailHasDiscount ? `৳${detailRegularPrice.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}` : ''; detailOriginalPriceEl.classList.toggle('hidden', !detailHasDiscount); }
             if (detailDiscountBadgeEl) { detailDiscountBadgeEl.textContent = detailHasDiscount ? `${Math.round((detailRegularPrice-detailSalePrice)/detailRegularPrice*100)}% OFF · SAVE ৳${(detailRegularPrice-detailSalePrice).toLocaleString('en-BD', {maximumFractionDigits:2})}` : ''; detailDiscountBadgeEl.classList.toggle('hidden', !detailHasDiscount); }
+            const detailFreeDeliveryBadge = document.getElementById('detailFreeDeliveryBadge');
+            if (detailFreeDeliveryBadge) detailFreeDeliveryBadge.classList.toggle('hidden', selectedDetailProd.freeDelivery !== true);
             const detailQtyWrap = document.querySelector('#productDetailModal #detailQty')?.closest('.mb-6');
             if (detailQtyWrap) detailQtyWrap.classList.toggle('hidden', selectedDetailProd.showQuantitySelector === false);
             detailPriceEl.classList.toggle('hidden', !isProductPriceVisible(selectedDetailProd));
@@ -5769,6 +5778,16 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             const amount = d.type === 'percent' ? subtotal * Math.min(100, value) / 100 : value;
             return Math.min(subtotal, amount);
         }
+        function isCurrentCheckoutFreeDelivery() {
+            if (cartCheckoutMode) {
+                return Array.isArray(shoppingCart) && shoppingCart.length > 0 && shoppingCart.every(item => {
+                    const product = products.find(p => String(p.id) === String(item.productId));
+                    return product?.freeDelivery === true;
+                });
+            }
+            return currentCheckoutProduct?.freeDelivery === true;
+        }
+
         function recalculateTotals() {
             if (!currentCheckoutProduct) return;
 
@@ -5790,8 +5809,10 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             const districtRates = settings.districtRates || {};
             const overrideKey = Object.keys(districtRates).find(k => k.toLowerCase() === district.toLowerCase());
             if (overrideKey && (window.shippingSettings?.districtRatesEnabled?.[overrideKey] !== false)) shippingFee = Number(districtRates[overrideKey]) || 0;
+            const productFreeDelivery = isCurrentCheckoutFreeDelivery();
+            if (productFreeDelivery) shippingFee = 0;
 
-            document.getElementById('checkoutShipping').innerText = Number(shippingFee).toFixed(2);
+            document.getElementById('checkoutShipping').innerText = productFreeDelivery ? 'FREE DELIVERY' : Number(shippingFee).toFixed(2);
 
             const personalDiscount = getPersonalCustomerDiscount(subtotal);
             const combinedDiscount = Math.min(subtotal, Math.max(0, Number(appliedDiscount) || 0) + personalDiscount);
@@ -5986,6 +6007,10 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
             } else {
                 shipAreaName = city.toLowerCase() === 'dhaka' ? 'Inside Dhaka' : 'Outside Dhaka';
             }
+            // Only waive shipping when every product in this checkout is marked Free Delivery.
+            // Mixed carts keep the normal area/district delivery charge for the non-free items.
+            const productFreeDelivery = isCurrentCheckoutFreeDelivery();
+            if (productFreeDelivery) shipFee = 0;
 
             const requestedItemsNow = cartCheckoutMode
                 ? shoppingCart.map(item => ({ product: products.find(p => String(p.id) === String(item.productId)), quantity: Number(item.qty) || 1, variants: item.variants || {} }))
@@ -6019,7 +6044,7 @@ function applyStorefrontHeroCarousel(){const box=document.getElementById('storef
                 quantity: cartCheckoutMode ? shoppingCart.reduce((sum, i) => sum + Number(i.qty || 0), 0) : currentCheckoutQty,
                 unitPrice: cartCheckoutMode ? subtotal : (Number(currentCheckoutUnitPrice) || 0),
                 variantUnitPrice: Number(currentCheckoutUnitPrice) || 0,
-                items: cartCheckoutMode ? shoppingCart.map(i => ({ productId:i.productId, productTitle:i.title, variants:{...(i.variants||{})}, variantSelection:Object.values(i.variants || {}).filter(Boolean).join(' / '), quantity:Number(i.qty)||1, unitPrice:Number(i.unitPrice)||0, lineTotal:(Number(i.qty)||1)*(Number(i.unitPrice)||0), image:i.image||'' })) : [{ productId:currentCheckoutProduct.id, productTitle:currentCheckoutProduct.title, variants:{...(currentCheckoutVariants||{})}, variantSelection:Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '), quantity:currentCheckoutQty, unitPrice:Number(currentCheckoutUnitPrice)||0, lineTotal:(Number(currentCheckoutUnitPrice)||0)*currentCheckoutQty }],
+                items: cartCheckoutMode ? shoppingCart.map(i => ({ productId:i.productId, productTitle:i.title, freeDelivery: products.find(p => String(p.id) === String(i.productId))?.freeDelivery === true, variants:{...(i.variants||{})}, variantSelection:Object.values(i.variants || {}).filter(Boolean).join(' / '), quantity:Number(i.qty)||1, unitPrice:Number(i.unitPrice)||0, lineTotal:(Number(i.qty)||1)*(Number(i.unitPrice)||0), image:i.image||'' })) : [{ productId:currentCheckoutProduct.id, productTitle:currentCheckoutProduct.title, freeDelivery:currentCheckoutProduct.freeDelivery === true, variants:{...(currentCheckoutVariants||{})}, variantSelection:Object.values(currentCheckoutVariants || {}).filter(Boolean).join(' / '), quantity:currentCheckoutQty, unitPrice:Number(currentCheckoutUnitPrice)||0, lineTotal:(Number(currentCheckoutUnitPrice)||0)*currentCheckoutQty }],
                 subtotal: subtotal,
                 discount: discount,
                 couponCode: appliedCouponCode || '',
@@ -8723,6 +8748,7 @@ body.bg-brand-bgLight {
                     showDescriptionTable: document.getElementById('prodShowDescriptionTable')?.checked !== false,
                     showPrice,
                     directOrderEnabled,
+                    freeDelivery: document.getElementById('prodFreeDelivery')?.checked === true,
                     category,
                     subCategory: subCategories,
                     videoUrl,
@@ -9011,6 +9037,7 @@ body.bg-brand-bgLight {
             renderDescriptionTableEditor('baseDescriptionTableEditor', adminBaseDescriptionTable, 'base');
             document.getElementById('prodShowPrice').checked = p.showPrice;
             document.getElementById('prodDirectOrderEnabled').checked = p.directOrderEnabled !== false;
+            const freeDeliveryInput = document.getElementById('prodFreeDelivery'); if (freeDeliveryInput) freeDeliveryInput.checked = p.freeDelivery === true;
             document.getElementById('prodStockOut').checked = !!p.stockOut;
             const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = String(p.stockQty ?? 0);
             ensureProductFormModalPlacement();
@@ -9043,6 +9070,7 @@ body.bg-brand-bgLight {
             const originalPriceInput = document.getElementById('prodOriginalPrice'); if (originalPriceInput) originalPriceInput.value = '';
             const showQtySelectorInput = document.getElementById('prodShowQuantitySelector'); if (showQtySelectorInput) showQtySelectorInput.checked = true;
             const showStockQtyInput = document.getElementById('prodShowStockQuantity'); if (showStockQtyInput) showStockQtyInput.checked = false;
+            const freeDeliveryInput = document.getElementById('prodFreeDelivery'); if (freeDeliveryInput) freeDeliveryInput.checked = false;
             const howToUseInput = document.getElementById('prodHowToUse'); if (howToUseInput) howToUseInput.value = '';
             const prodStockQtyInput = document.getElementById('prodStockQty'); if (prodStockQtyInput) prodStockQtyInput.value = '0';
             const productPhotoRotate = document.getElementById('prodPhotoAutoRotate'); if (productPhotoRotate) productPhotoRotate.checked = false;
