@@ -2758,17 +2758,21 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         const SUPABASE_ANON_KEY = "sb_publishable_3ohS1p1TTXb2gbfnx6Wm8w_BUMmheTg";
         // Keep customer login persistent across reloads and normal visits.
         // Use an explicit durable browser storage key and keep Supabase token refresh enabled.
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        const authClientOptions = storageKey => ({
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
                 storage: window.localStorage,
-                storageKey: 'delofia-customer-auth-v1',
+                storageKey,
                 flowType: 'pkce'
             }
         });
+        // Keep customer and admin auth sessions in separate browser storage keys.
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, authClientOptions('delofia-customer-auth-v1'));
+        const adminSupabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, authClientOptions('delofia-admin-auth-v1'));
         window.delofiaSupabase = supabase;
+        window.delofiaAdminSupabaseAuth = adminSupabaseAuth;
 
         const tableMap = {
             products: 'products', orders: 'orders', coupons: 'coupons', reviews: 'reviews',
@@ -2887,40 +2891,43 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             return client;
         }
         const auth=makeAuthClient(), adminAuth=makeAuthClient();
-        let authStateEventReceived = false;
-        async function syncAuth(client){
-            const {data,error}=await supabase.auth.getSession();
-            if (error) { console.warn('Could not restore Delofia auth session:', error); return; }
-            // Do not let a delayed startup read overwrite a newer sign-in/token-refresh event.
-            if (!authStateEventReceived) client._setUser(currentUserFrom(data.session));
+        const authSdkFor = client => client === adminAuth ? adminSupabaseAuth : supabase;
+        const authStateReady = { customer:false, admin:false };
+        function watchAuthSdk(sdk, client, key) {
+            sdk.auth.onAuthStateChange((event,session)=>{
+                authStateReady[key] = true;
+                if (event === 'SIGNED_OUT' || session?.user || event === 'INITIAL_SESSION') {
+                    client._setUser(currentUserFrom(session));
+                }
+            });
         }
-        // INITIAL_SESSION is the authoritative startup restoration event; avoid parallel getSession races.
-        supabase.auth.onAuthStateChange((_event,session)=>{
-            authStateEventReceived = true;
-            if (_event === 'SIGNED_OUT' || session?.user || _event === 'INITIAL_SESSION') {
-                const u=currentUserFrom(session);
-                auth._setUser(u); adminAuth._setUser(u);
-            }
-        });
-        // On mobile, a suspended tab can miss token-refresh time. Recheck on resume;
-        // getSession uses the SDK refresh mechanism and transient errors never sign users out.
+        watchAuthSdk(supabase, auth, 'customer');
+        watchAuthSdk(adminSupabaseAuth, adminAuth, 'admin');
+        async function syncAuth(client) {
+            const sdk = authSdkFor(client);
+            const key = client === adminAuth ? 'admin' : 'customer';
+            const {data,error}=await sdk.auth.getSession();
+            if (error) { console.warn('Could not restore Delofia auth session:', error); return; }
+            if (!authStateReady[key]) client._setUser(currentUserFrom(data.session));
+        }
+        // Recheck both independent sessions when a suspended mobile tab resumes.
         let delofiaSessionResumePending = false;
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState !== 'visible' || delofiaSessionResumePending) return;
             delofiaSessionResumePending = true;
-            try { const {error} = await supabase.auth.getSession(); if (error) console.warn('Session resume check:', error.message); }
-            catch (error) { console.warn('Session resume unavailable:', error); }
+            try {
+                const results = await Promise.all([supabase.auth.getSession(), adminSupabaseAuth.auth.getSession()]);
+                for (const result of results) if (result.error) console.warn('Session resume check:', result.error.message);
+            } catch (error) { console.warn('Session resume unavailable:', error); }
             finally { delofiaSessionResumePending = false; }
         });
         const createUserWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signUp({email,password});if(error)throw error;const sessionUser=currentUserFrom(data.session);auth._setUser(sessionUser);return {user:sessionUser||currentUserFrom({user:data.user}),sessionCreated:!!data.session,needsEmailConfirmation:!!data.user&&!data.session};};
-        const signInWithEmailAndPassword=async(_a,email,password)=>{const {data,error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
-        const sendPasswordResetEmail=async(_a,email,options={})=>{const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
-        // Supabase emits INITIAL_SESSION after restoring browser storage. Do not race that
-        // restoration with a second getSession() or treat a temporary refresh/network
-        // failure as a logout. Only an explicit SIGNED_OUT event clears the UI session.
+        const signInWithEmailAndPassword=async(_a,email,password)=>{const sdk=authSdkFor(_a);const {data,error}=await sdk.auth.signInWithPassword({email,password});if(error)throw error;const u=currentUserFrom(data.session);_a._setUser(u);return {user:u};};
+        const sendPasswordResetEmail=async(_a,email,options={})=>{const sdk=authSdkFor(_a);const {error}=await sdk.auth.resetPasswordForEmail(email,{redirectTo:options.url});if(error)throw error;};
         const onAuthStateChanged=(_a,callback)=>{
             let active=true;
-            const {data}=supabase.auth.onAuthStateChange((event,session)=>{
+            const sdk=authSdkFor(_a);
+            const {data}=sdk.auth.onAuthStateChange((event,session)=>{
                 if(!active) return;
                 if(event==='SIGNED_OUT') {
                     _a._setUser(null);
@@ -2935,15 +2942,15 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             });
             return()=>{active=false;data.subscription.unsubscribe();};
         };
-        const signOut=async(_a)=>{const {error}=await supabase.auth.signOut();if(error)throw error;auth._setUser(null);adminAuth._setUser(null);};
-        const updatePassword=async(_u,password)=>{const {error}=await supabase.auth.updateUser({password});if(error)throw error;};
+        const signOut=async(_a)=>{const sdk=authSdkFor(_a);const {error}=await sdk.auth.signOut();if(error)throw error;_a._setUser(null);};
+        const updatePassword=async(_u,password)=>{const sdk=(_u && adminAuth.currentUser?.uid===_u.uid)?adminSupabaseAuth:supabase;const {error}=await sdk.auth.updateUser({password});if(error)throw error;};
         const reauthenticateWithCredential=async(_user,credential)=>{
             if(!credential?.email || !credential?.password) throw new Error('Please enter your current password.');
-            const {data,error}=await supabase.auth.signInWithPassword({email:credential.email,password:credential.password});
+            const sdk=(_user && adminAuth.currentUser?.uid===_user.uid)?adminSupabaseAuth:supabase;
+            const {data,error}=await sdk.auth.signInWithPassword({email:credential.email,password:credential.password});
             if(error) throw error;
             const verifiedUser=currentUserFrom(data.session);
-            auth._setUser(verifiedUser);
-            adminAuth._setUser(verifiedUser);
+            (_user && adminAuth.currentUser?.uid===_user.uid ? adminAuth : auth)._setUser(verifiedUser);
             return {user:verifiedUser};
         };
         const EmailAuthProvider={credential:(email,password)=>({email,password})};
