@@ -1515,6 +1515,12 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             <button type="button" onclick="delofiaShowHome()" class="rounded-full bg-purple-100 px-4 py-2 text-sm font-bold text-purple-800"><i class="fas fa-house mr-1"></i> Home</button>
           </div>
           <div id="delofiaCategoryCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+          <section id="delofiaShopCollections" class="delofia-shop-collections hidden mt-7 rounded-3xl p-4 sm:p-6" aria-label="Shop by Collection">
+            <div class="flex items-center justify-between gap-3 mb-4">
+              <div><p class="text-xs font-bold uppercase tracking-widest text-purple-500">A little something for you</p><h3 class="text-xl sm:text-2xl font-extrabold text-purple-950">✧ Shop by Collection</h3><p class="mt-1 text-sm text-purple-700">Curated finds for every mood ♡</p></div>
+            </div>
+            <div id="delofiaShopCollectionCards" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+          </section>
           <p id="delofiaCategoryEmpty" class="hidden py-10 text-center text-sm font-semibold text-gray-500">No categories available yet.</p>
         </section>
         <section id="delofiaCategoryProducts" class="hidden mb-6" aria-label="Products in selected category">
@@ -9597,6 +9603,31 @@ body.delofia-category-navigation #productsGrid > .group { display:flex !importan
       return `<button type="button" class="delofia-category-card" data-delofia-category="${esc(name)}">${categoryImage ? `<img class="delofia-category-image" src="${esc(categoryImage)}" alt="" loading="lazy">` : `<i class="fas fa-layer-group" aria-hidden="true"></i>`}<span class="min-w-0 flex-1">${esc(name)}<small class="block mt-1 text-xs font-semibold opacity-70">${count} product${count===1?'':'s'}</small></span><i class="fas fa-chevron-right !w-7 !h-7 !flex-none !bg-transparent"></i></button>`;
     }).join('');
     container.querySelectorAll('[data-delofia-category]').forEach(button => button.addEventListener('click', () => window.delofiaOpenCategory(button.getAttribute('data-delofia-category'))));
+    renderDelofiaShopCollections(categories);
+  }
+  function renderDelofiaShopCollections(categories) {
+    const section = $('delofiaShopCollections'), holder = $('delofiaShopCollectionCards');
+    if (!section || !holder) return;
+    if (!categories.length) { section.classList.add('hidden'); return; }
+    const themes = [
+      { title: 'Cute & Cozy', subtitle: 'Little things, big happiness', tone: 'pink', icon: 'fa-heart' },
+      { title: 'Everyday Essentials', subtitle: 'Simple. Useful. Lovely.', tone: 'lavender', icon: 'fa-star' },
+      { title: 'Gift Picks', subtitle: 'Thoughtful little surprises', tone: 'mint', icon: 'fa-gift' },
+      { title: 'Home Vibes', subtitle: 'Cozy spaces, happy you', tone: 'peach', icon: 'fa-mug-hot' }
+    ];
+    const available = categories.slice(0, Math.min(4, categories.length));
+    holder.innerHTML = available.map((name, i) => {
+      const products = productList().filter(p => String(p.category || 'Other') === name);
+      const img = products.map(p => p.image || p.imageUrl || p.images?.[0]).find(v => typeof v === 'string' && /^https?:\/\//.test(v));
+      const t = themes[i];
+      return `<button type="button" class="delofia-collection-card tone-${t.tone}" data-delofia-collection-category="${esc(name)}">
+        <span class="delofia-collection-art">${img ? `<img src="${esc(img)}" alt="" loading="lazy" decoding="async">` : `<i class="fas ${t.icon}" aria-hidden="true"></i>`}</span>
+        <span class="delofia-collection-title">${esc(t.title)}</span><span class="delofia-collection-subtitle">${esc(t.subtitle)}</span>
+        <span class="delofia-collection-cta">Explore <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+      </button>`;
+    }).join('');
+    holder.querySelectorAll('[data-delofia-collection-category]').forEach(button => button.addEventListener('click', () => window.delofiaOpenCategory(button.getAttribute('data-delofia-collection-category'))));
+    section.classList.toggle('hidden', available.length === 0);
   }
   window.delofiaOpenCategory = function (name) {
     activeCategory = String(name || 'Other'); activeSubcategory = 'all'; currentView = 'categoryProducts';
@@ -11246,4 +11277,24 @@ header #brandLogo > div:last-child span:first-child { display: block !important;
   }
   header #brandLogoMark img { width: 190% !important; height: 190% !important; }
 }
+</style>
+
+<style id="delofia-shop-collections-section">
+.delofia-shop-collections{background:linear-gradient(135deg,#f5efff 0%,#fff4fa 52%,#f5f0ff 100%);border:1px solid #eee4ff}
+.delofia-collection-card{min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;padding:9px;border-radius:20px;background:#fff;border:1px solid rgba(255,255,255,.95);box-shadow:0 5px 16px rgba(65,35,100,.07);transition:transform .18s ease}
+.delofia-collection-card:active{transform:scale(.98)}
+.delofia-collection-art{width:100%;aspect-ratio:1/0.82;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:14px;background:#f9e8f2;color:#b34d87}
+.delofia-collection-art img{width:100%;height:100%;object-fit:contain;mix-blend-mode:multiply}
+.delofia-collection-card.tone-lavender .delofia-collection-art{background:#eee7ff;color:#7950bc}
+.delofia-collection-card.tone-mint .delofia-collection-art{background:#e5f5eb;color:#39866a}
+.delofia-collection-card.tone-peach .delofia-collection-art{background:#fff0e5;color:#bd7653}
+.delofia-collection-art i{font-size:1.7rem}
+.delofia-collection-title{font-size:clamp(.76rem,2.5vw,.94rem);font-weight:800;color:#30205f;margin-top:10px;line-height:1.25}
+.delofia-collection-subtitle{font-size:.69rem;line-height:1.35;color:#75648d;margin-top:5px;min-height:2em}
+.delofia-collection-cta{margin-top:10px;border-radius:999px;padding:7px 12px;background:#f7dce9;color:#9d285f;font-size:.75rem;font-weight:800}
+.tone-lavender .delofia-collection-cta{background:#e7dcff;color:#5633a1}
+.tone-mint .delofia-collection-cta{background:#d7eddf;color:#276b52}
+.tone-peach .delofia-collection-cta{background:#ffe1d2;color:#a64e2f}
+@media(min-width:640px){.delofia-collection-card{padding:12px}.delofia-collection-art{aspect-ratio:1/0.75}}
+@media(prefers-reduced-motion:reduce){.delofia-collection-card{transition:none}}
 </style>
