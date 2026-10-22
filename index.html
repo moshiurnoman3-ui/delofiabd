@@ -2771,6 +2771,8 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         // Keep customer and admin auth sessions in separate browser storage keys.
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, authClientOptions('delofia-customer-auth-v1'));
         const adminSupabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, authClientOptions('delofia-admin-auth-v1'));
+        // Admin pages must query Supabase with the admin-authenticated client; customer pages use the customer client.
+        const delofiaDataClient = () => new URLSearchParams(window.location.search).get('admin') === '1' ? adminSupabaseAuth : supabase;
         window.delofiaSupabase = supabase;
         window.delofiaAdminSupabaseAuth = adminSupabaseAuth;
 
@@ -2861,13 +2863,13 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
         function snapOne(r, row) { const table=tableName(r.segments[0]); return { id:r.segments[1], exists:()=>!!row, data:()=>unwrap(table,row), ref:r }; }
         function snapMany(r, rows) { const table=tableName(r.segments[0]); const docs=rows.map(row=>({id:row.id || row.code || row.user_id || row.setting_key, data:()=>unwrap(table,row), exists:()=>true})); return { docs, size:docs.length, empty:!docs.length, metadata:{fromCache:false}, forEach:fn=>docs.forEach(fn) }; }
         async function getDoc(r) {
-            const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).select('*');
+            const table=tableName(r.segments[0]), id=r.segments[1]; let q=delofiaDataClient().from(table).select('*');
             if(table==='coupons') q=q.eq('code',id); else if(table==='store_settings') q=q.eq('setting_key',id); else if(table==='customer_profiles'||table==='customer_admin_data'||table==='admin_users') q=q.eq('user_id',id); else q=q.eq('id',id);
             const {data,error}=await q.maybeSingle(); if(error) throw error; return snapOne(r,data);
         }
         function applyConstraints(q, constraints=[]) { const fields={customerUid:'customer_uid',productId:'product_id',uid:'user_id',settingKey:'setting_key'}; for(const c of constraints){ const field=fields[c.field]||c.field; if(c.field && c.op==='==') q=q.eq(field,c.value); if(c.field && c.op==='!=') q=q.neq(field,c.value); if(c.direction) q=q.order(field,{ascending:c.direction!=='desc'}); } return q; }
         async function getDocs(r) {
-            const table=tableName(r.segments[0]); let q=supabase.from(table).select('*');
+            const table=tableName(r.segments[0]); let q=delofiaDataClient().from(table).select('*');
             q=applyConstraints(q,r.constraints||[]); const {data,error}=await q; if(error) throw error; return snapMany(r,data||[]);
         }
         async function setDoc(r, value, options={}) {
@@ -2875,9 +2877,9 @@ body.admin-only-mode #adminDashboardView:not(.hidden) { display:grid !important;
             let previous={}; if(options.merge){ try{const old=await getDoc(r); if(old.exists()) previous=old.data()||{};}catch(_){}}
             const payload=payloadFor(r,{...previous,...value});
             let conflict=table==='coupons'?'code':table==='store_settings'?'setting_key':(table==='customer_profiles'||table==='customer_admin_data'||table==='admin_users')?'user_id':'id';
-            const {error}=await supabase.from(table).upsert(payload,{onConflict:conflict}); if(error) throw error;
+            const {error}=await delofiaDataClient().from(table).upsert(payload,{onConflict:conflict}); if(error) throw error;
         }
-        async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=supabase.from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
+        async function deleteDoc(r) { const table=tableName(r.segments[0]), id=r.segments[1]; let q=delofiaDataClient().from(table).delete(); if(table==='coupons')q=q.eq('code',id);else if(table==='store_settings')q=q.eq('setting_key',id);else if(['customer_profiles','customer_admin_data','admin_users'].includes(table))q=q.eq('user_id',id);else q=q.eq('id',id); const {error}=await q; if(error)throw error; }
         function onSnapshot(r, next, fail=()=>{}) {
             let active=true, timer=null;
             const run=async()=>{try{if(!active)return; const result=r.kind==='doc'?await getDoc(r):await getDocs(r); if(active)next(result);}catch(e){if(active)fail(e);}};
